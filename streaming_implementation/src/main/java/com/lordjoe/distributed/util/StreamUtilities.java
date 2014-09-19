@@ -5,6 +5,7 @@ import com.lordjoe.distributed.*;
 import javax.annotation.*;
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
 import java.util.stream.*;
 
 /**
@@ -24,7 +25,8 @@ public class StreamUtilities {
      * @param <T>  type of stream
      * @return stream of objects
      */
-    public static @Nonnull <T> Stream<T> objectsFromFile(@Nonnull Path path, @Nonnull final IStringSerializer<T> ser) {
+    @Nonnull
+    public static <T> Stream<T> objectsFromFile(@Nonnull Path path, @Nonnull final IStringSerializer<T> ser) {
         try {
             if (Files.isDirectory(path)) {
                 throw new UnsupportedOperationException("Fix This"); // ToDo
@@ -49,25 +51,44 @@ public class StreamUtilities {
 
 
     /**
+     * force a stream to evaluate then return the results as a stream
+     *
+     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param <T> whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static  <T> Stream<T> realizeAndReturn(final Stream<T> inp) {
+        List<T> collect = inp.collect(Collectors.toList());
+        return collect.stream();
+    }
+
+
+    /**
      * convert a Stream containing Streams into a single stream
+     *
      * @param inp
      * @param <T>
      * @return
      */
-    public static  @Nonnull <T> Stream<T> streamsToStream(final Stream<Stream<T>> inp)  {
+    public static
+    @Nonnull
+    <T> Stream<T> streamsToStream(final Stream<Stream<T>> inp) {
         return StreamGenerator.toStream(inp);
     }
 
     /**
      * convert a Stream containing Streams into a single stream
+     *
      * @param inp
      * @param <T>
      * @return
      */
-    public static  @Nonnull <T> Stream<T> streamsToParallelStream(final Stream<Stream<T>> inp)  {
+    @SuppressWarnings("UnusedDeclaration")
+    @Nonnull
+    public static <T> Stream<T> streamsToParallelStream(final Stream<Stream<T>> inp) {
         return StreamGenerator.toParallelStream(inp);
     }
-
 
 
 }

@@ -17,6 +17,7 @@
 
 package org.apache.spark.examples;
 
+import com.lordjoe.distributed.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function2;
@@ -27,30 +28,27 @@ import java.util.*;
 import java.util.regex.*;
 
 /**
- *   org.apache.spark.examples.JavaWordCount
+ * org.apache.spark.examples.JavaWordCount
  */
 public final class JavaWordCount {
-  private static final Pattern SPACE = Pattern.compile(" ");
+    private static final Pattern SPACE = Pattern.compile(" ");
 
-  public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-    if (args.length < 1) {
-      System.err.println("Usage: JavaWordCount <file>");
-      return;
-    }
+        if (args.length < 1) {
+            System.err.println("Usage: JavaWordCount <file>");
+            return;
+        }
 
-    SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-      sparkConf.set("spark.mesos.coarse","true");
+        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
+        sparkConf.set("spark.mesos.coarse", "true");
+        SparkUtilities.guaranteeSparkMaster(sparkConf);
 
-  //  sparkConf.setMaster("local");
-  //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
-   // String[] jars = { "/SparkExamples/target/word-count-examples_2.10-1.0.0.jar" };
-  //  sparkConf.setJars(jars);
 
-    JavaSparkContext ctx = new JavaSparkContext(sparkConf);
-    JavaRDD<String> lines = ctx.textFile(args[0], 1);
-       // use my function not theirs
-    JavaRDD<String> words = lines.flatMap( new WordsMapFunction());
+        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaRDD<String> lines = ctx.textFile(args[0], 1);
+        // use my function not theirs
+        JavaRDD<String> words = lines.flatMap(new WordsMapFunction());
 
 //            new FlatMapFunction<String, String>() {
 //      @Override
@@ -63,24 +61,23 @@ public final class JavaWordCount {
 //         return Arrays.asList(split);
 //     }    });
 
-    JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
-      @Override
-      public Tuple2<String, Integer> call(String s) {
-        return new Tuple2<String, Integer>(s, 1);
-      }
-    });
+        JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(String s) {
+                return new Tuple2<String, Integer>(s, 1);
+            }
+        });
 
-    JavaPairRDD<String, Integer> counts = ones.reduceByKey(new Function2<Integer, Integer, Integer>() {
-      @Override
-      public Integer call(Integer i1, Integer i2) {
-        return i1 + i2;
-      }
-    });
+        JavaPairRDD<String, Integer> counts = ones.reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer i1, Integer i2) {
+                return i1 + i2;
+            }
+        });
 
-     List<Tuple2<String, Integer>> output = counts.sortByKey().collect();
-    for (Tuple2<?,?> tuple : output) {
-      System.out.println(tuple._1() + ": " + tuple._2());
+        List<Tuple2<String, Integer>> output = counts.sortByKey().collect();
+        for (Tuple2<?, ?> tuple : output) {
+            System.out.println(tuple._1() + ": " + tuple._2());
+        }
     }
-  //  ctx.stop();
-  }
 }

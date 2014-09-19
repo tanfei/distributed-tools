@@ -11,13 +11,15 @@ import java.util.stream.*;
  * User: Steve
  * Date: 8/29/2014
  */
-public class MapperAdaptor<VALUEIN,KOUT extends Serializable,VOUT extends Serializable> implements Function< VALUEIN, Stream<KeyValueObject<KOUT,VOUT>>> {
+public class MapperAdaptor<KEYIN extends Serializable,VALUEIN extends Serializable,KOUT extends Serializable,VOUT extends Serializable> implements Function<  KeyValueObject<KEYIN,VALUEIN>, Stream<KeyValueObject<KOUT,VOUT>>> {
 
-     private final IMapperFunction<VALUEIN,KOUT,VOUT> mapper;
+    private final IMapperFunction<KEYIN,VALUEIN,KOUT,VOUT> mapper;
 
-    public MapperAdaptor(final IMapperFunction<VALUEIN, KOUT, VOUT> pMapper) {
+    public MapperAdaptor(final IMapperFunction<KEYIN,VALUEIN, KOUT, VOUT> pMapper) {
         mapper = pMapper;
     }
+
+
 
     /**
      * Applies this function to the given argument.
@@ -25,8 +27,8 @@ public class MapperAdaptor<VALUEIN,KOUT extends Serializable,VOUT extends Serial
      * @param t the function argument
      * @return the function result
      */
-    @Override public Stream<KeyValueObject<KOUT, VOUT>> apply(final VALUEIN t) {
-        Iterable<KeyValueObject<KOUT, VOUT>> keyValueObjects = mapper.mapValues(t);
+    @Override public Stream<KeyValueObject<KOUT, VOUT>> apply(final KeyValueObject<KEYIN,VALUEIN> t) {
+        Iterable<KeyValueObject<KOUT, VOUT>> keyValueObjects = mapper.mapValues(t.key,t.value);
         return StreamSupport.stream(keyValueObjects.spliterator(),false);
     }
 

@@ -17,6 +17,7 @@
 
 package org.apache.spark.examples;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.util.*;
 import com.lordjoe.distributed.wordcount.*;
 import org.apache.spark.*;
@@ -38,8 +39,8 @@ public final class JavaLargeWordCount {
         }
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        sparkConf.setMaster("local");
-        //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
+        SparkUtilities.guaranteeSparkMaster(sparkConf);
+         //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
         // String[] jars = { "/SparkExamples/target/word-count-examples_2.10-1.0.0.jar" };
         //  sparkConf.setJars(jars);
 

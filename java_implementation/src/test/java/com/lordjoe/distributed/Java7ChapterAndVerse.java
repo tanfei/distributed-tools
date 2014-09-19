@@ -1,7 +1,6 @@
 package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.chapter_and_verse.*;
-import com.lordjoe.distributed.util.*;
 
 import java.io.*;
 import java.util.*;
@@ -31,29 +30,10 @@ public class Java7ChapterAndVerse {
         }
     }
 
-    public static void main(String[] args) {
-
-        ListKeyValueConsumer<ChapterKeyClass, LineAndLocationMatch> results = new ListKeyValueConsumer<>();
-
-        JavaMapReduce handler = new JavaMapReduce(new ChapterLinesMapper(), new LineSimilarityReducer(), IPartitionFunction.HASH_PARTITION, results);
-        if (args.length < 1) {
-            System.err.println("Usage: ChapterAndVerse <file>");
-            return;
-        }
-
-        File dir = new File(args[0]);
-        File[] files = dir.listFiles();
-        List<KeyValueObject<String, String>> holder = new ArrayList<KeyValueObject<String, String>>();
-        for (int i = 0; i < files.length; i++) {
-            String fileText = readFile(files[i]);
-            holder.add(new KeyValueObject<String, String>(files[i].getName(), fileText));
-        }
-        handler.performSourceMapReduce(holder);
-
-        List<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> list = results.getList();
-        for (KeyValueObject<ChapterKeyClass, LineAndLocationMatch> ky : list) {
+    public static void showMostSimilarLines(final Iterable<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> pList) {
+        for (KeyValueObject<ChapterKeyClass, LineAndLocationMatch> ky : pList) {
             LineAndLocationMatch value = ky.value;
-            if (value.similarity < 0.7)
+            if (value.similarity < 0.5)
                 continue;
             if (value.similarity == 1)
                    continue;
@@ -69,7 +49,36 @@ public class Java7ChapterAndVerse {
             System.out.println(value.similarity);
             System.out.println();
         }
+    }
+    /**
+     * sample - run with data as user.dir and books as the argument
+     * will read all books and report most similar lines
+     * @param args
+     */
+    public static void main(String[] args) {
+
+
+        JavaMapReduce handler = new JavaMapReduce(new ChapterLinesMapper(), new LineSimilarityReducer() );
+        if (args.length < 1) {
+            System.err.println("Usage: ChapterAndVerse <file>");
+            return;
+        }
+
+        File dir = new File(args[0]);
+        File[] files = dir.listFiles();
+        List<KeyValueObject<String, String>> holder = new ArrayList<KeyValueObject<String, String>>();
+        for (int i = 0; i < files.length; i++) {
+            String fileText = readFile(files[i]);
+            holder.add(new KeyValueObject<String, String>(files[i].getName(), fileText));
+        }
+
+        handler.mapReduceSource(holder);
+
+        Iterable<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> list = handler.collect();
+        showMostSimilarLines(list);
 
 
     }
+
+
 }

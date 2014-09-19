@@ -11,7 +11,7 @@ import java.util.regex.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class WordCountMapper implements IMapperFunction<String, String, Integer> {
+public class WordCountMapper implements IMapperFunction<String,String, String, Integer> {
 
     private static final Pattern SPACE = Pattern.compile(" ");
 
@@ -25,7 +25,7 @@ public class WordCountMapper implements IMapperFunction<String, String, Integer>
      * @param valuein
      * @return iterator over mapped key values
      */
-    @Nonnull @Override public Iterable<KeyValueObject<String, Integer>> mapValues(@Nonnull final String line) {
+    @Nonnull @Override public Iterable<KeyValueObject<String, Integer>> mapValues(@Nonnull final String location,@Nonnull final String line) {
         String[] split = SPACE.split(line);
         for (int i = 0; i < split.length; i++) {
             split[i] = regularizeString(split[i]);
@@ -38,14 +38,14 @@ public class WordCountMapper implements IMapperFunction<String, String, Integer>
           return holder;
     }
 
-
-    public Iterable<String> call(String s) {
-        String[] split = SPACE.split(s);
-        for (int i = 0; i < split.length; i++) {
-            split[i] = regularizeString(split[i]);
-        }
-        return Arrays.asList(split);
-    }
+//
+//    public Iterable<String> call(String s) {
+//        String[] split = SPACE.split(s);
+//        for (int i = 0; i < split.length; i++) {
+//            split[i] = regularizeString(split[i]);
+//        }
+//        return Arrays.asList(split);
+//    }
 
     public static String dropNonLetters(String s) {
         StringBuilder sb = new StringBuilder();
