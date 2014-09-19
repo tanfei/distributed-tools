@@ -8,35 +8,29 @@ import java.io.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public interface IMapReduce<K   extends Serializable,V   extends Serializable>{
+public interface IMapReduce<KEYIN extends Serializable,VIN extends Serializable, KEYOUT extends Serializable, VOUT extends Serializable>{
+
 
     /**
-     * perform any steps before mapping
+     * sources may be very implementation specific
+     * @param source some source of data - might be a hadoop directory or a Spark RDD - this will be cast internally
+     * @param otherData
      */
-    public void setupMap();
+     public void mapReduceSource( @Nonnull Object source,Object... otherData);
+
 
     /**
-     * this is what a Mapper does
-     * @param value  input value
-     * @return iterator over mapped key values
+     * take the results of another engine and ues it as the input
+     *
+     * @param source some other engine - usually this will be cast to a specific type
      */
-    public @Nonnull Iterable<KeyValueObject<K,V>> mapValues(@Nonnull V value);
+    public void chain( @Nonnull IMapReduce<?,?,KEYIN,VIN>  source);
+
 
     /**
-     * preform any steps after mapping
+     * the last step in mapReduce - returns the output as an iterable
+     * @return
      */
-    public void cleanUpMap();
-
-    /**
-     * perform any steps before mapping
-     */
-    public void setupReduce();
-
-    /**
-     * this is what a reducer does
-     * @param value  input value
-     * @return iterator over mapped key values
-     */
-    public @Nonnull Iterable<KeyValueObject<K,V>> returnValues(@Nonnull K key,@Nonnull Iterable<V> values);
+    public @Nonnull Iterable<KeyValueObject<KEYOUT, VOUT>> collect();
 
 }

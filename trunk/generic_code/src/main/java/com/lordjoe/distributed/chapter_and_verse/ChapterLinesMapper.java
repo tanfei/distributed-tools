@@ -11,7 +11,7 @@ import java.util.regex.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class ChapterLinesMapper implements IMapperFunction<KeyValueObject<String,String>, ChapterKeyClass, LineAndLocationMatch> {
+public class ChapterLinesMapper implements IMapperFunction<String,String, ChapterKeyClass, LineAndLocationMatch> {
 
     private static final Pattern SPACE = Pattern.compile("\n");
 
@@ -25,9 +25,9 @@ public class ChapterLinesMapper implements IMapperFunction<KeyValueObject<String
      * @param valuein
      * @return iterator over mapped key values
      */
-    @Nonnull @Override public Iterable<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> mapValues(@Nonnull final   KeyValueObject<String,String> wholeFile) {
-        String chapter = wholeFile.key;
-        String[] split = SPACE.split(wholeFile.value);
+    @Nonnull @Override public Iterable<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> mapValues(String fileName,String wholeFile) {
+        String chapter = fileName;
+        String[] split = SPACE.split(wholeFile);
         List<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>> holder = new ArrayList<KeyValueObject<ChapterKeyClass, LineAndLocationMatch>>();
         for (int i = 0; i < split.length; i++) {
             String s  = split[i].trim();

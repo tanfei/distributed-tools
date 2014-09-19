@@ -23,10 +23,10 @@ public class WordCountReducer implements IReducerFunction<String,Integer> {
         int count = 0;
         for (Integer value : values) {
           count += value;
-        }
+          }
         for (int i = 0; i < consumer.length; i++) {
-            IKeyValueConsumer<String, Integer> stringIntegerIKeyValueConsumer = consumer[i];
-            stringIntegerIKeyValueConsumer.consume(new KeyValueObject<String, Integer>(key,count));
+            IKeyValueConsumer<String, Integer> cnsm = consumer[i];
+            cnsm.consume(new KeyValueObject<String, Integer>(key, count));
 
         }
 

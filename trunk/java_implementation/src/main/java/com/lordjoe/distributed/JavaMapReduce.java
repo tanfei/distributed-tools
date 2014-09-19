@@ -1,9 +1,10 @@
 package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.util.*;
+import com.lordjoe.distributed.wordcount.*;
 
+import javax.annotation.*;
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 
@@ -12,15 +13,41 @@ import java.util.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public class JavaMapReduce<VALUEIN extends Serializable, K extends Serializable, V extends Serializable> extends AbstractMapReduceEngine<VALUEIN, K, V> {
+public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializable, K extends Serializable, V extends Serializable> extends AbstractMapReduceEngine<KEYIN,VALUEIN, K, V> {
 
+    public static final MapReduceEngineFactory FACTORY = new MapReduceEngineFactory() {
+        /**
+         * build an engine having been passed a
+         *
+         * @param pMapper  map function
+         * @param pRetucer reduce function
+         * @return
+         */
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
+            return new JavaMapReduce(pMapper,pRetucer);
+        }
 
-    public JavaMapReduce(final IMapperFunction<VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
+        /**
+         * build an engine having been passed a
+         *
+         * @param pMapper      map function
+         * @param pRetucer     reduce function
+         * @param pPartitioner partition function default is HashPartition
+         * @return
+         */
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
+            return new JavaMapReduce(pMapper,pRetucer,pPartitioner);
+        }
+    };
+
+    private final ListKeyValueConsumer results = new ListKeyValueConsumer<K, V>();
+
+    public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
         //noinspection unchecked
         this(mapper, reducer, IPartitionFunction.HASH_PARTITION,new ListKeyValueConsumer<K, V>());
     }
 
-    public JavaMapReduce(final IMapperFunction<VALUEIN, K, V> pMapper,
+    public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> pMapper,
                          final IReducerFunction<K, V> pRetucer,
                          IPartitionFunction<K> pPartitioner,
                          IKeyValueConsumer<K, V>... consumer) {
@@ -30,42 +57,19 @@ public class JavaMapReduce<VALUEIN extends Serializable, K extends Serializable,
         for (int i = 0; i < consumer.length; i++) {
             IKeyValueConsumer<K, V> cnsmr = consumer[i];
             addConsumer(cnsmr);
-
-        }
+         }
+        addConsumer(results);
      }
 
 
-    /**
-     * all the work is done here
-     *
-     * @param source
-     * @param sink
-     */
-    @Override
-    public void performMapReduce(final Path source, final Path sink) {
-        Iterable<KeyValueObject<K, V>> holder = performMap(source);
-        Iterable<List<KeyValueObject<K, V>>> partition = partition(holder);
-        performReduce(partition);
-
+    public ListKeyValueConsumer getResults() {
+        return results;
     }
 
 
 
-    /**
-     * all the work is done here
-     *
-     * @param source
-     * @param sink
-     */
-    //@Override
-    public void performSourceMapReduce(final Iterable<VALUEIN> pInputs) {
-        Iterable<KeyValueObject<K, V>> holder = performSourceMap(pInputs);
-        Iterable<List<KeyValueObject<K, V>>> partition = partition(holder);
-        performReduce(partition);
-   //      reportValues();
 
 
-    }
 
     protected void reportValues() {
         // todo move out and replace
@@ -89,8 +93,10 @@ public class JavaMapReduce<VALUEIN extends Serializable, K extends Serializable,
     protected void handlePartition(Iterable<KeyValueObject<K, V>> partition) {
         IReducerFunction reduce = getReduce();
         List<IKeyValueConsumer<K, V>> consumersList = getConsumers();
+        @SuppressWarnings("unchecked")
         IKeyValueConsumer<K, V>[] consumers = consumersList.toArray(new IKeyValueConsumer[consumersList.size()]);
         K key = null;
+        //noinspection unchecked
         List<V> holder = new ArrayList();
         for (KeyValueObject<K, V> kv : partition) {
             if (key == null || !kv.key.equals(key)) {
@@ -105,17 +111,24 @@ public class JavaMapReduce<VALUEIN extends Serializable, K extends Serializable,
     }
 
 
-    protected Iterable<KeyValueObject<K, V>> performMap(final Path source) {
-        ISourceFunction source1 = getSource();
-        Iterable<VALUEIN> inputs = source1.readInput(source);
-        return performSourceMap(inputs);
+    protected void performMapReduce(final Iterable<KeyValueObject<KEYIN, VALUEIN>> pInputs)
+    {
+        Iterable<KeyValueObject<K, V>> mapping = performSourceMap( pInputs);
+        Iterable<List<KeyValueObject<K, V>>> partitions = partition(mapping);
+        performReduce( partitions) ;
     }
+//
+//    protected Iterable<KeyValueObject<K, V>> performMap(final Path source) {
+//        ISourceFunction source1 = getSource();
+//        Iterable<VALUEIN> inputs = source1.readInput(source);
+//        return performSourceMap(inputs);
+//    }
 
-    protected Iterable<KeyValueObject<K, V>> performSourceMap(final Iterable<VALUEIN> pInputs) {
+    protected Iterable<KeyValueObject<K, V>> performSourceMap(final Iterable<KeyValueObject<KEYIN, VALUEIN>> pInputs) {
         IMapperFunction map = getMap();
         List<KeyValueObject<K, V>> holder = new ArrayList<>();
-        for (VALUEIN input : pInputs) {
-            Iterable<KeyValueObject<K, V>> iterable = map.mapValues(input);
+        for (KeyValueObject<KEYIN, VALUEIN> kvx : pInputs) {
+            Iterable<KeyValueObject<K, V>> iterable = map.mapValues(kvx.key,kvx.value);
             for (KeyValueObject<K, V> kv : iterable) {
                 holder.add(kv);
             }
@@ -155,4 +168,39 @@ public class JavaMapReduce<VALUEIN extends Serializable, K extends Serializable,
     }
 
 
+    /**
+     * sources may be very implementation specific
+     *
+     * @param source    some source of data - might be a hadoop directory or a Spark RDD - this will be cast internally
+     * @param otherData
+     */
+    @Override public void mapReduceSource(final Object source, final Object... otherData) {
+         if(source instanceof Iterable)  {
+             performMapReduce((Iterable)source);
+             return;
+         }
+
+    }
+
+
+
+    /**
+     * take the results of another engine and ues it as the input
+     *
+     * @param source some other engine - usually this will be cast to a specific type
+     */
+    @Override public void chain(final IMapReduce<?,?,KEYIN, VALUEIN> source) {
+        Iterable<KeyValueObject<KEYIN, VALUEIN>> sourceResults = source.collect();
+        mapReduceSource(sourceResults);
+    }
+
+    /**
+     * the last step in mapReduce - returns the output as an iterable
+     *
+     * @return
+     */
+    @Override public Iterable<KeyValueObject<K, V>> collect() {
+        //noinspection unchecked
+        return getResults().getList();
+    }
 }

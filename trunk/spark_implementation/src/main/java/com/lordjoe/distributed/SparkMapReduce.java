@@ -1,10 +1,12 @@
 package com.lordjoe.distributed;
 
+import com.lordjoe.distributed.wordcount.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import scala.*;
 
+import javax.annotation.*;
 import java.io.Serializable;
 import java.nio.file.*;
 import java.util.*;
@@ -14,20 +16,49 @@ import java.util.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public class SparkMapReduce<VALUEIN extends Serializable, K extends Serializable, V extends Serializable> extends AbstractMapReduceEngine<VALUEIN, K, V> implements Serializable {
+public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable>
+        extends AbstractMapReduceEngine<KEYIN, VALUEIN, K, V> implements Serializable {
 
-    private SparkConf sparkConf;
-    private JavaSparkContext ctx;
+    public static final MapReduceEngineFactory FACTORY = new MapReduceEngineFactory() {
+        /**
+         * build an engine having been passed a
+         *
+         * @param pMapper  map function
+         * @param pRetucer reduce function
+         * @return
+         */
+        @Override
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
+            return new SparkMapReduce(pMapper, pRetucer);
+        }
 
-    public SparkMapReduce(final IMapperFunction<VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
+        /**
+         * build an engine having been passed a
+         *
+         * @param pMapper      map function
+         * @param pRetucer     reduce function
+         * @param pPartitioner partition function default is HashPartition
+         * @return
+         */
+        @Override
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
+            return new SparkMapReduce(pMapper, pRetucer, pPartitioner);
+        }
+    };
+    // NOTE these are not serializable so they must be transient or an exception will be thrown on serialization
+    private transient SparkConf sparkConf;
+    private transient JavaSparkContext ctx;
+    private JavaRDD<KeyValueObject<K, V>> output;
+
+    public SparkMapReduce(final IMapperFunction<KEYIN, VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
         //noinspection unchecked
         this(mapper, reducer, IPartitionFunction.HASH_PARTITION);
     }
 
-    public SparkMapReduce(final IMapperFunction<VALUEIN, K, V> pMapper,
+    public SparkMapReduce(final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
                           final IReducerFunction<K, V> pRetucer,
                           IPartitionFunction<K> pPartitioner,
-                          IKeyValueConsumer<K,V>... pConsumer) {
+                          IKeyValueConsumer<K, V>... pConsumer) {
         setMap(pMapper);
         setReduce(pRetucer);
         setPartitioner(pPartitioner);
@@ -38,26 +69,25 @@ public class SparkMapReduce<VALUEIN extends Serializable, K extends Serializable
 
         }
         sparkConf = new SparkConf().setAppName("JavaWordCount");
-        sparkConf.setMaster("local");
-        //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
-        // String[] jars = { "/SparkExamples/target/word-count-examples_2.10-1.0.0.jar" };
-        //  sparkConf.setJars(jars);
+        SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
 
         ctx = new JavaSparkContext(sparkConf);
     }
 
 
     protected Partitioner sparkPartitioner = new Partitioner() {
-        @Override public int numPartitions() {
+        @Override
+        public int numPartitions() {
             return getNumberReducers();
         }
 
-        @Override public int getPartition(final Object key) {
+        @Override
+        public int getPartition(final Object key) {
             IPartitionFunction<K> partitioner = getPartitioner();
             int value = partitioner.getPartition((K) key);
             return value % numPartitions();
         }
-    } ;
+    };
 
     public SparkConf getSparkConf() {
         return sparkConf;
@@ -67,21 +97,6 @@ public class SparkMapReduce<VALUEIN extends Serializable, K extends Serializable
         return ctx;
     }
 
-//    /**
-//     * all the work is done here
-//     *
-//     * @param source
-//     * @param sink
-//     */
-//    @Override
-    public void performMapReduce(final Path source, final Path sink) {
-//        Iterable<KeyValueObject<K, V>> holder = performMap(source);
-//        Iterable<List<KeyValueObject<K, V>>> partition = partition(holder);
-//        performReduce(partition);
-//
-   }
-
-
 
     /**
      * all the work is done here
@@ -90,57 +105,99 @@ public class SparkMapReduce<VALUEIN extends Serializable, K extends Serializable
      * @param sink
      */
     //@Override
-    public void performSourceMapReduce(final JavaRDD<VALUEIN> pInputs) {
+    public void performSourceMapReduce(JavaRDD<KeyValueObject<KEYIN, VALUEIN>> pInputs) {
+
+        // if not commented out this line forces mappedKeys to be realized
+        //    pInputs = SparkUtilities.realizeAndReturn(pInputs,getCtx());
+
 
         FlatMapFunction<Iterator<KeyValueObject<K, V>>, Tuple2<K, V>> partitioner = (FlatMapFunction<Iterator<KeyValueObject<K, V>>, Tuple2<K, V>>) new PartitionAdaptor(getPartitioner());
 
-        throw new UnsupportedOperationException("Fix This"); // ToDo
-//        JavaRDD<Tuple2<K, V>> mappedKeys = pInputs.mapToPair(new PairFunction<VALUEIN, Object, Object>() {
-//
-//            @Override public Tuple2<Object, Object> call(final VALUEIN pVALUEIN) throws Exception {
-//                return null;
-//            }
-//        });
-//        JavaRDD<KeyValueObject<K, V>> mappedKeys = pInputs.flatMap(new MapFunctionAdaptor<VALUEIN, K, V>(getMap()));
-//
-//        JavaPairRDD<K, V> asTuples = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
-//
-//        //  SparkUtilities.showPairRDD(asTuples); // stop and look
-//
-//
-//        JavaPairRDD<K, V> kvJavaPairRDD =  asTuples.reduceByKey(new Function2<V, V, V>() {
-//            @Override public V call(final V pV, final V pV2) throws Exception {
-//                return null;
-//            }
-//        });
-// //       JavaPairRDD<K, V> kvJavaPairRDD = asTuples.partitionBy(sparkPartitioner);
-//
-//        // SparkUtilities.showPairRDD(asTuples); // stop and look
-//
-//
-//
-//        JavaRDD javaRDD = kvJavaPairRDD.mapPartitions(new ReduceFunctionAdaptor(getReduce()));
+        IMapperFunction map = getMap();
+        MapFunctionAdaptor<KEYIN, VALUEIN, K, V> ma = new MapFunctionAdaptor<KEYIN, VALUEIN, K, V>(map);
+
+        JavaRDD<KeyValueObject<K, V>> mappedKeys = pInputs.flatMap(ma);
+
+        // if not commented out this line forces mappedKeys to be realized
+        // mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys,getCtx());
+
+        JavaPairRDD<K, V> asTuples = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
+
+
+       asTuples = asTuples.sortByKey();
+        JavaPairRDD<K, Iterable<V>> byKey = asTuples.groupByKey();
+
+        IReducerFunction reduce = getReduce();
+           ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(reduce);
+
+        JavaRDD<KeyValueObject<K, V>> reduced = byKey.flatMap(f);
+
+
+
+
+      //  JavaPairRDD<K, V> kvJavaPairRDD = asTuples.partitionBy(sparkPartitioner);
+
+        // if not commented out this line forces kvJavaPairRDD to be realized
+        //kvJavaPairRDD = SparkUtilities.realizeAndReturn(kvJavaPairRDD,getCtx());
+
+
+
+
+        // if not commented out this line forces kvJavaPairRDD to be realized
+        reduced = SparkUtilities.realizeAndReturn(reduced,getCtx());
+
+        output = reduced;
+
+        //    List collect = javaRDD.collect(); // force evaluation
 //
 //        SparkUtilities.showRDD(javaRDD); // stop and look
     }
 
-//
-//        List collect = javaRDD.collect();
-//
-//
-//        showOutput();
-//    }
-//
-//    protected void showOutput() {
-//        List<IKeyValueConsumer<K, V>> consumers = getConsumers();
-//        ListKeyValueConsumer<K, V> cnsmr = (ListKeyValueConsumer<K, V>) consumers.get(0);
-//        List<KeyValueObject<K, V>> output = cnsmr.getList();
-//        Collections.sort(output, KeyValueObject.KEY_COMPARATOR);
-//        for (KeyValueObject<K, V> kv : output) {
-//            System.out.println(kv.key + ":" + kv.value);
-//        }
-//    }
-//
+    /**
+     * sources may be very implementation specific
+     *
+     * @param source    some source of data - might be a hadoop directory or a Spark RDD - this will be cast internally
+     * @param otherData
+     */
+    @Override
+    public void mapReduceSource(@Nonnull final Object source, final Object... otherData) {
+        if (source instanceof JavaRDD) {
+            performSourceMapReduce((JavaRDD) source);
+            return;
+        }
+        if (source instanceof Path) {
+            performMapReduce((Path) source);
+            return;
+        }
+        throw new IllegalArgumentException("cannot handle source of class " + source.getClass());
+    }
+
+    protected void performMapReduce(final Path pSource) {
+        throw new UnsupportedOperationException("Fix This"); // ToDo
+    }
+
+    /**
+     * take the results of another engine and ues it as the input
+     *
+     * @param source some other engine - usually this will be cast to a specific type
+     */
+    @Override
+    public void chain(@Nonnull final IMapReduce source) {
+        performSourceMapReduce(((SparkMapReduce) source).output);
+    }
+
+    /**
+     * the last step in mapReduce - returns the output as an iterable
+     *
+     * @return
+     */
+    @Nonnull
+    @Override
+    public Iterable<KeyValueObject<K, V>> collect() {
+        return output.collect();
+    }
+
+    //
 //    protected void performReduce(Iterable<List<KeyValueObject<K, V>>> partitions) {
 //        for (List<KeyValueObject<K, V>> partition : partitions) {
 //            handlePartition(partition);

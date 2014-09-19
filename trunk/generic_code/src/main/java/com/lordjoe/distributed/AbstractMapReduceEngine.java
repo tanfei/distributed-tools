@@ -1,8 +1,6 @@
 package com.lordjoe.distributed;
 
-import javax.annotation.*;
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 /**
@@ -10,68 +8,53 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public abstract class AbstractMapReduceEngine<VIN extends Serializable, K extends Serializable,V extends Serializable> implements IMapReduce<K,V> {
+public abstract class AbstractMapReduceEngine<KEYIN extends Serializable,VIN extends Serializable, KEYOUT extends Serializable, VOUT extends Serializable> implements IMapReduce<KEYIN,VIN, KEYOUT, VOUT> {
 
     public static final int DEFAULT_NUMBER_REDUCERS = 20;
 
     private int numberReducers = DEFAULT_NUMBER_REDUCERS;
-    private ISourceFunction<VIN> source;
-    private IMapperFunction<VIN,K,V> map;
-    private IReducerFunction<K,V> reduce;
-    private IPartitionFunction<K> partitioner = IPartitionFunction.HASH_PARTITION;
-    private List<IKeyValueConsumer<K,V>> consumer = new ArrayList<IKeyValueConsumer<K,V>>();
-    private ISinkFunction sink;
+      private IMapperFunction<KEYIN,VIN, KEYOUT, VOUT> map;
+    private IReducerFunction<KEYOUT, VOUT> reduce;
+    @SuppressWarnings("unchecked")
+    private IPartitionFunction<KEYOUT> partitioner = IPartitionFunction.HASH_PARTITION;
+    private List<IKeyValueConsumer<KEYOUT, VOUT>> consumers = new ArrayList<IKeyValueConsumer<KEYOUT, VOUT>>();
 
     protected AbstractMapReduceEngine() {
     }
 
-    public AbstractMapReduceEngine setSource(final ISourceFunction<VIN> pSource) {
-        source = pSource;
-        return this;
-    }
 
-    public AbstractMapReduceEngine setMap(final IMapperFunction<VIN,K,V> pMap) {
+    public AbstractMapReduceEngine setMap(final IMapperFunction<KEYIN,VIN, KEYOUT, VOUT> pMap) {
         map = pMap;
         return this;
     }
 
-    public AbstractMapReduceEngine setReduce(final IReducerFunction<K,V> pReduce) {
+    public AbstractMapReduceEngine setReduce(final IReducerFunction<KEYOUT, VOUT> pReduce) {
         reduce = pReduce;
         return this;
     }
 
-    public AbstractMapReduceEngine setPartitioner(final IPartitionFunction<K> p) {
+    public AbstractMapReduceEngine setPartitioner(final IPartitionFunction<KEYOUT> p) {
         partitioner = p;
         return this;
     }
 
-    public AbstractMapReduceEngine setSink(final ISinkFunction<K,V> pSink) {
-        sink = pSink;
-        return this;
-    }
 
-    public AbstractMapReduceEngine setSink(final IPartitionFunction<K> pPartitioner) {
-        partitioner = pPartitioner;
-        return this;
-    }
 
+    @SuppressWarnings("UnusedDeclaration")
     public AbstractMapReduceEngine setNumberReducers(int n) {
         numberReducers = n;
         return this;
     }
 
-    public AbstractMapReduceEngine addConsumer(IKeyValueConsumer<K, V> c) {
-        consumer.add(c);
+    public AbstractMapReduceEngine addConsumer(IKeyValueConsumer<KEYOUT, VOUT> c) {
+        consumers.add(c);
         return this;
     }
 
-    protected List<IKeyValueConsumer<K,V>> getConsumers() {
-        return consumer;
+    protected List<IKeyValueConsumer<KEYOUT, VOUT>> getConsumers() {
+        return consumers;
     }
 
-    public ISourceFunction getSource() {
-        return source;
-    }
 
     public IMapperFunction getMap() {
         return map;
@@ -81,11 +64,8 @@ public abstract class AbstractMapReduceEngine<VIN extends Serializable, K extend
         return reduce;
     }
 
-    public ISinkFunction getSink() {
-        return sink;
-    }
 
-    public IPartitionFunction<K> getPartitioner() {
+    public IPartitionFunction<KEYOUT> getPartitioner() {
         return partitioner;
     }
 
@@ -93,52 +73,6 @@ public abstract class AbstractMapReduceEngine<VIN extends Serializable, K extend
         return numberReducers;
     }
 
-    /**
-     * all the work is done here
-     * @param source
-     * @param sink
-     */
-    public abstract void performMapReduce(Path source,Path sink);
 
-    /**
-     * perform any steps before mapping
-     */
-    @Override public void setupMap() {
 
-    }
-
-    /**
-     * this is what a Mapper does
-     *
-     * @param value input value
-     * @return iterator over mapped key values
-     */
-    @Nonnull @Override public Iterable<KeyValueObject<K, V>> mapValues(@Nonnull final V value) {
-        return null;
-    }
-
-    /**
-     * preform any steps after mapping
-     */
-    @Override public void cleanUpMap() {
-
-    }
-
-    /**
-     * perform any steps before mapping
-     */
-    @Override public void setupReduce() {
-
-    }
-
-    /**
-     * this is what a reducer does
-     *
-     * @param key
-     * @param values
-     * @return iterator over mapped key values
-     */
-    @Nonnull @Override public Iterable<KeyValueObject<K, V>> returnValues(@Nonnull final K key, @Nonnull final Iterable<V> values) {
-        return null;
-    }
 }

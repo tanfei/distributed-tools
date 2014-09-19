@@ -82,15 +82,12 @@ public  class ChapterAndVerse {
         }
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-         sparkConf.set("spark.mesos.coarse","true");
-
-         sparkConf.setMaster("local");
-      //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
-       // String[] jars = { "/SparkExamples/target/word-count-examples_2.10-1.0.0.jar" };
-      //  sparkConf.setJars(jars);
+        sparkConf.set("spark.mesos.coarse","true");
+        SparkUtilities.guaranteeSparkMaster(sparkConf);
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
         JavaPairRDD<String,String> lines = ctx.wholeTextFiles(args[0]);
+
 
         SparkUtilities.showPairRDD(lines);
 

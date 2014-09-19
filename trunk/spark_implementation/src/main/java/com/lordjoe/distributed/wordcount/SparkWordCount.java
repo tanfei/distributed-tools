@@ -21,17 +21,21 @@ public class SparkWordCount {
          SparkMapReduce handler = new SparkMapReduce(new WordCountMapper(),new WordCountReducer(),IPartitionFunction.HASH_PARTITION,consumer);
         JavaSparkContext ctx = handler.getCtx();
 
-        JavaRDD<String> lines;
+        JavaRDD<KeyValueObject<String,String>> lines;
         if(args.length == 0) {
             final InputStream is = SparkWordCount.class.getResourceAsStream(MY_BOOK);
-             lines = SparkUtilities.fromInputStream(is, ctx);
+             lines = SparkUtilities.keysFromInputStream(MY_BOOK, is, ctx);
         }
         else {
-            lines = ctx.textFile(args[0], 1);
+              lines = null;
+            throw new UnsupportedOperationException("Fix This"); // ToDo
+         //   lines = ctx.textFile(args[0], 1);
         }
-        handler.performSourceMapReduce(lines);
 
-        for (KeyValueObject<String,Integer> o : consumer.getList()) {
+          handler.performSourceMapReduce(lines);
+
+        Iterable<KeyValueObject<String,Integer>> answer = handler.collect();
+        for (KeyValueObject<String,Integer> o : answer) {
             System.out.println(o.toString());
         }
 
