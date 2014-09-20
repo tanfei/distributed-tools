@@ -124,13 +124,18 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         JavaPairRDD<K, V> asTuples = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
 
 
-       asTuples = asTuples.sortByKey();
-        JavaPairRDD<K, Iterable<V>> byKey = asTuples.groupByKey();
+        JavaPairRDD<K, Tuple2<K, V>> kkv  = asTuples.mapToPair(new KeyKeyValuePairFunction<K, V>());
+        kkv = kkv.sortByKey();
+
+        JavaPairRDD<K, CombineByKeyAdaptor.KeyAndValues<K, V>> reducedSets = kkv.combineByKey(new CombineByKeyAdaptor.CombineStartKeyAndValues<K, V>(),
+                new CombineByKeyAdaptor.CombineContinueKeyAndValues<K, V>(),
+                new CombineByKeyAdaptor.CombineMergeKeyAndValues<K, V>()
+        );
 
         IReducerFunction reduce = getReduce();
-           ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(reduce);
+        ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(reduce);
 
-        JavaRDD<KeyValueObject<K, V>> reduced = byKey.flatMap(f);
+        JavaRDD<KeyValueObject<K, V>> reduced = reducedSets.flatMap(f);
 
 
 
@@ -144,7 +149,8 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized
-        reduced = SparkUtilities.realizeAndReturn(reduced,getCtx());
+        JavaSparkContext ctx1 = getCtx();
+        reduced = SparkUtilities.realizeAndReturn(reduced, ctx1);
 
         output = reduced;
 

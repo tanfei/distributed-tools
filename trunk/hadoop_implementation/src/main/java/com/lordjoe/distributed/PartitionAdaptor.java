@@ -1,8 +1,10 @@
 package com.lordjoe.distributed;
 
-import org.apache.spark.api.java.function.*;
-import scala.*;
-import scala.collection.*;
+
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
+
+import java.io.*;
 
 /**
  * com.lordjoe.distributed.PartitionAdaptor
@@ -10,14 +12,20 @@ import scala.collection.*;
  * Date: 9/4/2014
  */
 
-public class PartitionAdaptor<K,V>  implements FlatMapFunction<Iterator<Tuple2<K,V>>,Tuple2<K,V>>, java.io.Serializable {
-      private final IPartitionFunction<K> partitioner;
+public class PartitionAdaptor<K,V>  extends Partitioner<Text, Text> implements Serializable {
+    private final IPartitionFunction<K> partitioner;
+    private final IStringSerializer<K> serializer;
 
-    public PartitionAdaptor(final IPartitionFunction<K> pPartitioner) {
+    public PartitionAdaptor(final IPartitionFunction<K> pPartitioner, final IStringSerializer<K> pSerializer) {
         partitioner = pPartitioner;
+        serializer = pSerializer;
     }
 
-    @Override public java.lang.Iterable<Tuple2<K, V>> call(final Iterator<Tuple2<K, V>> t) throws Exception {
-        return null;
+    @Override
+    public int getPartition(final Text pKey, final Text pValue, final int nPartitions) {
+        K k = serializer.fromString(pKey.toString());  // todo handle number partitions
+        return partitioner.getPartition(k);
     }
+
+
 }

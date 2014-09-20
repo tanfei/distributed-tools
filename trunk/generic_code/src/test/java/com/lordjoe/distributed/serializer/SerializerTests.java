@@ -133,19 +133,18 @@ public class SerializerTests {
                 return new DumbPoint(x,y);
             }
         };
-               // use reflection to make a serializer for an unknown class
+        // better have no serializer
         try {
             IStringSerializer serializer = StringSerializers.getSerializer(DumbPoint.class);
             Assert.fail("no serializer registered yet");
         }
-        catch (Exception e) {
+        catch (Exception e) {  // we expect an exception
+         }
 
-
-        }
-
-
+         // register a serializer
         StringSerializers.registerSerializer(DumbPoint.class,ds);
-        // use reflection to make a serializer for an unknown class
+
+        // now look it up
         IStringSerializer serializer = StringSerializers.getSerializer(DumbPoint.class);
         for (int i = 0; i < 1000; i++) {
             DumbPoint p = new DumbPoint(RND.nextInt(1000),RND.nextInt(1000));
