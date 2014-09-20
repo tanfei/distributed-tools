@@ -21,6 +21,7 @@ public class MapperAdaptor<KEYIN extends Serializable,VALUEIN extends Serializab
     @Override
     protected void map(final Text key, final Text value, final Context context) throws IOException, InterruptedException {
 
+
         KEYIN k = null;
         VALUEIN v = null;
 

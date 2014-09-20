@@ -12,8 +12,28 @@ import java.util.*;
 public class StringSerializers {
 
     private static final Map<Class, IStringSerializer> serializers = new HashMap<Class, IStringSerializer>();
+    public static final IStringSerializer<String> STRING_STRING_SERIALIZER = new IStringSerializer<String>() {
+        @Override
+        public Class<? extends String> getSerializedClass() {
+            return String.class;
+        }
+
+        @Nonnull
+        @Override
+        public String asString(@Nonnull final String t) {
+            return t;
+        }
+
+        @Override
+        public String fromString(@Nonnull final String t) {
+            return t;
+        }
+    };
 
     public static IStringSerializer getSerializer(Class c) {
+        if(String.class == c)
+             return STRING_STRING_SERIALIZER; // hard code one easy case
+
         IStringSerializer ret = serializers.get(c);
         if (ret != null)
             return ret;

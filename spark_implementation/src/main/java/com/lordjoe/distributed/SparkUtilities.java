@@ -82,6 +82,7 @@ public class SparkUtilities implements Serializable {
         }
     }
 
+
     public static class KeyValueObjectToTuple2<K extends Serializable, V extends Serializable> implements FlatMapFunction2<KeyValueObject<K, V>, K, V> {
         @Override
         public Iterable<V> call(final KeyValueObject<K, V> pKVKeyValueObject, final K pK) throws Exception {
