@@ -3,13 +3,11 @@ package com.lordjoe.distributed;
 import com.lordjoe.distributed.wordcount.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
 import scala.*;
 
 import javax.annotation.*;
 import java.io.Serializable;
 import java.nio.file.*;
-import java.util.*;
 
 /**
  * com.lordjoe.distributed.SparkMapReduce
@@ -109,11 +107,9 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
         // if not commented out this line forces mappedKeys to be realized
         //    pInputs = SparkUtilities.realizeAndReturn(pInputs,getCtx());
+        JavaSparkContext ctx1 = getCtx();
 
-
-        FlatMapFunction<Iterator<KeyValueObject<K, V>>, Tuple2<K, V>> partitioner = (FlatMapFunction<Iterator<KeyValueObject<K, V>>, Tuple2<K, V>>) new PartitionAdaptor(getPartitioner());
-
-        IMapperFunction map = getMap();
+         IMapperFunction map = getMap();
         MapFunctionAdaptor<KEYIN, VALUEIN, K, V> ma = new MapFunctionAdaptor<KEYIN, VALUEIN, K, V>(map);
 
         JavaRDD<KeyValueObject<K, V>> mappedKeys = pInputs.flatMap(ma);
@@ -121,16 +117,22 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         // if not commented out this line forces mappedKeys to be realized
         // mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys,getCtx());
 
-        JavaPairRDD<K, V> asTuples = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
-
-
-        JavaPairRDD<K, Tuple2<K, V>> kkv  = asTuples.mapToPair(new KeyKeyValuePairFunction<K, V>());
-        kkv = kkv.sortByKey();
+        JavaPairRDD<K, Tuple2<K,V>> kkv = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
+      //
+           kkv = kkv.sortByKey();
 
         JavaPairRDD<K, CombineByKeyAdaptor.KeyAndValues<K, V>> reducedSets = kkv.combineByKey(new CombineByKeyAdaptor.CombineStartKeyAndValues<K, V>(),
                 new CombineByKeyAdaptor.CombineContinueKeyAndValues<K, V>(),
                 new CombineByKeyAdaptor.CombineMergeKeyAndValues<K, V>()
         );
+
+
+       // if not commented out this line forces kvJavaPairRDD to be realized
+       // reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx1);
+
+        PartitionAdaptor<K> prt = new PartitionAdaptor<K>(getPartitioner(),20);
+       // reducedSets = reducedSets.partitionBy(prt);
+       reducedSets = reducedSets.sortByKey();
 
         IReducerFunction reduce = getReduce();
         ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(reduce);
@@ -149,8 +151,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized
-        JavaSparkContext ctx1 = getCtx();
-        reduced = SparkUtilities.realizeAndReturn(reduced, ctx1);
+          reduced = SparkUtilities.realizeAndReturn(reduced, ctx1);
 
         output = reduced;
 
