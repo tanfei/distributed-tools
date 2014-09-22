@@ -1,8 +1,6 @@
 package com.lordjoe.distributed;
 
-import org.apache.spark.api.java.function.*;
-import scala.*;
-import scala.collection.*;
+import org.apache.spark.*;
 
 /**
  * com.lordjoe.distributed.PartitionAdaptor
@@ -10,14 +8,22 @@ import scala.collection.*;
  * Date: 9/4/2014
  */
 
-public class PartitionAdaptor<K,V>  implements FlatMapFunction<Iterator<Tuple2<K,V>>,Tuple2<K,V>>, java.io.Serializable {
-      private final IPartitionFunction<K> partitioner;
+public class PartitionAdaptor<K>  extends Partitioner {
+    private final IPartitionFunction<K> partitioner;
+    private final int numberPartitions;
 
-    public PartitionAdaptor(final IPartitionFunction<K> pPartitioner) {
+    public PartitionAdaptor(final IPartitionFunction<K> pPartitioner,int pnumberPartitions) {
         partitioner = pPartitioner;
+        numberPartitions = pnumberPartitions;
     }
 
-    @Override public java.lang.Iterable<Tuple2<K, V>> call(final Iterator<Tuple2<K, V>> t) throws Exception {
-        return null;
+    @Override
+    public int numPartitions() {
+        return numberPartitions;
+    }
+
+    @Override
+    public int getPartition(final Object inp) {
+        return partitioner.getPartition((K)inp);
     }
 }
