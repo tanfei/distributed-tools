@@ -4,6 +4,7 @@ import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.storage.*;
 import scala.*;
 
 import javax.annotation.*;
@@ -92,9 +93,10 @@ public class SparkUtilities implements Serializable {
 
     /**
      * convert anRDD of KeyValueObject to a JavaPairRDD of keys and values
+     *
      * @param inp input RDD
-     * @param <K>  key
-     * @param <V>  value
+     * @param <K> key
+     * @param <V> value
      * @return
      */
     @Nonnull
@@ -109,21 +111,23 @@ public class SparkUtilities implements Serializable {
     }
 
     /**
-      * convert anRDD of KeyValueObject to a JavaPairRDD of keys and values
-      * @param inp input RDD
-      * @param <K>  key
-      * @param <V>  value
-      * @return
-      */
-     @Nonnull
-     public static <K extends Serializable, V extends Serializable> JavaRDD<KeyValueObject<K, V>> fromTuples(@Nonnull JavaPairRDD<K, V> inp) {
-           return inp.map(new Function<Tuple2<K, V>, KeyValueObject<K, V>>() {
-             @Override
-             public KeyValueObject<K, V> call(final Tuple2<K, V> t) throws Exception {
-                 return new KeyValueObject(t._1(),t._2());
-             }
-         });
-     }
+     * convert anRDD of KeyValueObject to a JavaPairRDD of keys and values
+     *
+     * @param inp input RDD
+     * @param <K> key
+     * @param <V> value
+     * @return
+     */
+    @Nonnull
+    public static <K extends Serializable, V extends Serializable> JavaRDD<KeyValueObject<K, V>> fromTuples(@Nonnull JavaPairRDD<K, V> inp) {
+        return inp.map(new Function<Tuple2<K, V>, KeyValueObject<K, V>>() {
+            @Override
+            public KeyValueObject<K, V> call(final Tuple2<K, V> t) throws Exception {
+                KeyValueObject ret = new KeyValueObject(t._1(), t._2());
+                return ret;
+            }
+        });
+    }
 
 
     /**
@@ -134,8 +138,8 @@ public class SparkUtilities implements Serializable {
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static <T> JavaRDD<T> realizeAndReturn(@Nonnull final JavaRDD<T> inp, @Nonnull JavaSparkContext jcx) {
-        List<T> collect = inp.collect();    // break here and take a look
+    public static JavaRDD  realizeAndReturn(@Nonnull final JavaRDD  inp, @Nonnull JavaSparkContext jcx) {
+        List collect = inp.collect();    // break here and take a look
         return jcx.parallelize(collect);
     }
 
@@ -154,6 +158,21 @@ public class SparkUtilities implements Serializable {
         return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
     }
 
+    /**
+     * make an RDD from an iterable
+     * @param inp input iterator
+     * @param ctx  context
+     * @param <T> type
+     * @return  rdd from inerator as a list
+     */
+    public static  @Nonnull <T>   JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp,@Nonnull final  JavaSparkContext ctx) {
+        List<T> holder = new ArrayList<T>();
+        for (T k : inp) {
+            holder.add(k);
+        }
+        return ctx.parallelize(holder);
+    }
+
 
     /**
      * collector to examine RDD
@@ -161,9 +180,9 @@ public class SparkUtilities implements Serializable {
      * @param inp
      * @param <K>
      */
-    public static <K> void showRDD(JavaRDD<K> inp) {
-        List<K> collect = inp.collect();
-        for (K k : collect) {
+    public static  void showRDD(JavaRDD  inp) {
+        List  collect = inp.collect();
+        for (Object k : collect) {
             System.out.println(k.toString());
         }
         // now we must exit
@@ -176,13 +195,14 @@ public class SparkUtilities implements Serializable {
      * @param inp
      * @param <K>
      */
-    public static <K, V> void showPairRDD(JavaPairRDD<K, V> inp) {
-        List<Tuple2<K, V>> collect = inp.collect();
-        for (Tuple2<K, V> kvTuple2 : collect) {
+    public static  void showPairRDD(JavaPairRDD  inp) {
+        inp.persist(StorageLevel.MEMORY_ONLY());
+        List<Tuple2 > collect = inp.collect();
+        for (Tuple2  kvTuple2 : collect) {
             System.out.println(kvTuple2._1().toString() + " : " + kvTuple2._2().toString());
         }
         // now we must exit
-        throw new IllegalStateException("input RDD is consumed by show");
+      //  throw new IllegalStateException("input RDD is consumed by show");
     }
 
 

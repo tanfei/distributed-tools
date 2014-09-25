@@ -24,6 +24,6 @@ public class ChapterKeyClass implements Serializable,Comparable<ChapterKeyClass>
     @Override public int compareTo(final ChapterKeyClass o) {
         int ret = chapter.compareTo(o.chapter);
         if(ret != 0) return ret;
-        return Integer.compare(lineNumber,o.lineNumber);
+         return Integer.compare(lineNumber,o.lineNumber);
     }
 }

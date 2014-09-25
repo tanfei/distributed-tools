@@ -107,15 +107,17 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
         // if not commented out this line forces mappedKeys to be realized
         //    pInputs = SparkUtilities.realizeAndReturn(pInputs,getCtx());
-        JavaSparkContext ctx1 = getCtx();
+        JavaSparkContext ctx2 = getCtx();
 
-         IMapperFunction map = getMap();
+        IMapperFunction map = getMap();
         MapFunctionAdaptor<KEYIN, VALUEIN, K, V> ma = new MapFunctionAdaptor<KEYIN, VALUEIN, K, V>(map);
+
 
         JavaRDD<KeyValueObject<K, V>> mappedKeys = pInputs.flatMap(ma);
 
+
         // if not commented out this line forces mappedKeys to be realized
-        // mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys,getCtx());
+         mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys, ctx2);
 
         JavaPairRDD<K, Tuple2<K,V>> kkv = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
       //
@@ -151,7 +153,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized
-          reduced = SparkUtilities.realizeAndReturn(reduced, ctx1);
+          reduced = SparkUtilities.realizeAndReturn(reduced, ctx2);
 
         output = reduced;
 
@@ -175,6 +177,11 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         if (source instanceof Path) {
             performMapReduce((Path) source);
             return;
+        }
+        if(source instanceof Iterable) {
+            performSourceMapReduce(SparkUtilities.fromIterable((Iterable)source,getCtx()));
+            return;
+
         }
         throw new IllegalArgumentException("cannot handle source of class " + source.getClass());
     }

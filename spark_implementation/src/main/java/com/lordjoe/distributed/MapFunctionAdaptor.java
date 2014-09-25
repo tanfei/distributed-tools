@@ -3,6 +3,7 @@ package com.lordjoe.distributed;
 import org.apache.spark.api.java.function.*;
 
 import java.io.*;
+import java.util.*;
 
 /**
  * com.lordjoe.distributed.MapFunctionAdaptor
@@ -18,6 +19,8 @@ public class MapFunctionAdaptor<KEYIN extends Serializable,VALUEIN extends Seria
     }
 
     @Override public Iterable<KeyValueObject<KOUT, VOUT>> call(final KeyValueObject<KEYIN,VALUEIN> t) throws Exception {
+        if(t == null || t.key == null || t.value == null)
+            return Collections.EMPTY_LIST;
         Iterable<KeyValueObject<KOUT, VOUT>> keyValueObjects = mapper.mapValues(t.key,t.value);
         return keyValueObjects;
         //.toTuples(keyValueObjects);

@@ -40,8 +40,7 @@ public class CompositeIterable<T> implements Iterable<T>,Serializable {
         for (T o : inp) {
             holder.add(o);
         }
-
-        return holder;
+         return holder;
     }
 
 
