@@ -12,7 +12,8 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class ReduceFunctionAdaptor<K extends Serializable, V extends Serializable> implements FlatMapFunction<Tuple2<K,CombineByKeyAdaptor.KeyAndValues<K, V>>, KeyValueObject<K, V>>, Serializable {
+public class ReduceFunctionAdaptor<K extends Serializable, V extends Serializable>
+        implements FlatMapFunction<Tuple2<K,CombineByKeyAdaptor.KeyAndValues<K, V>>, KeyValueObject<K, V>>, Serializable {
     private final IReducerFunction<K, V> reducer;
     private Tuple2<K, V> first;
 

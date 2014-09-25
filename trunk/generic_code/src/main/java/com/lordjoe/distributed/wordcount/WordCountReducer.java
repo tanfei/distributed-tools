@@ -9,7 +9,7 @@ import javax.annotation.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class WordCountReducer implements IReducerFunction<String,Integer> {
+public class WordCountReducer implements IReducerFunction<String,Integer > {
 
 
     /**

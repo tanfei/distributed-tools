@@ -8,7 +8,7 @@ import java.io.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public interface IReducerFunction<K extends Serializable,V   extends Serializable> extends Serializable {
+public interface IReducerFunction<K extends Serializable,V   extends Serializable > extends Serializable {
     /**
       * this is what a reducer does
       * @param value  input value

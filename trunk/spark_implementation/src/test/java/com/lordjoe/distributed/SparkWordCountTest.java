@@ -13,7 +13,7 @@ public class SparkWordCountTest {
 
     @Test
     public void testWordCount() {
-        WordCountOperator.validateWordCount(SparkMapReduce.FACTORY);
+         WordCountOperator.validateWordCount(SparkMapReduce.FACTORY);
     }
 
 

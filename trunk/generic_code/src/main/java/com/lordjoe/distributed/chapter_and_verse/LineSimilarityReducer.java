@@ -4,6 +4,7 @@ import com.lordjoe.distributed.*;
 import net.ricecode.similarity.*;
 
 import javax.annotation.*;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -11,7 +12,7 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class LineSimilarityReducer implements IReducerFunction<ChapterKeyClass, LineAndLocationMatch> {
+public class LineSimilarityReducer implements IReducerFunction<ChapterKeyClass, LineAndLocationMatch >,Serializable {
 
     public static final int LINES_TO_CONSIDER = 200;
     private final SimilarityStrategy strategy;
