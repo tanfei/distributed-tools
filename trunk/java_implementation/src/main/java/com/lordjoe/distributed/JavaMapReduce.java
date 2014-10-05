@@ -23,7 +23,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
          * @param pRetucer reduce function
          * @return
          */
-        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
             return new JavaMapReduce(pMapper,pRetucer);
         }
 
@@ -35,7 +35,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
          * @param pPartitioner partition function default is HashPartition
          * @return
          */
-        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
             return new JavaMapReduce(pMapper,pRetucer,pPartitioner);
         }
     };

@@ -40,7 +40,7 @@ public class WordCountOperator {
     public static void validateWordCount(MapReduceEngineFactory factory) {
 
 
-        IMapReduce handler = factory.buildMEngine(new WordCountMapper(),new WordCountReducer() );
+        IMapReduce handler = factory.buildMapReduceEngine("WordCount", new WordCountMapper(), new WordCountReducer());
 
         Iterable<KeyValueObject<String,String>> lines = getFileLines();
         handler.mapReduceSource(lines);

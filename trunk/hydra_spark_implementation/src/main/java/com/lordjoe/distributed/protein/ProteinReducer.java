@@ -9,6 +9,7 @@ import javax.annotation.*;
 
 /**
  * org.systemsbiology.xtandem.protein.ProteinReducer
+ * Used for generating a fragment library
  * User: Steve
  * Date: 9/24/2014
  */

@@ -24,8 +24,8 @@ public interface MapReduceEngineFactory {
      * @return return a constructed instance
      */
     public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable>
-      IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
-                                                           @Nonnull IReducerFunction<K, V> pRetucer);
+      IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+                                                            @Nonnull IReducerFunction<K, V> pRetucer);
 
     /**
      * build an engine having been passed a
@@ -40,8 +40,8 @@ public interface MapReduceEngineFactory {
      */
     @SuppressWarnings("UnusedDeclaration")
     public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable>
-      IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
-                                                           @Nonnull IReducerFunction<K, V> pRetucer,
-                                                           IPartitionFunction<K> pPartitioner);
+      IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+                                                            @Nonnull IReducerFunction<K, V> pRetucer,
+                                                            IPartitionFunction<K> pPartitioner);
 
 }
