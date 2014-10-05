@@ -11,6 +11,7 @@ import java.util.*;
 
 /**
  * org.systemsbiology.xtandem.spark.ProteinMapper
+ * Used for generating a fragment library
  * User: Steve
  * Date: 9/24/2014
  */

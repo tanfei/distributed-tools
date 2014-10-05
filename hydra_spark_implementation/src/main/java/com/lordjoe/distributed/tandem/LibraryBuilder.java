@@ -17,7 +17,7 @@ import java.io.*;
 public class LibraryBuilder {
 
     private final SparkContext context;
-       private final XTandemMain application;
+    private final XTandemMain application;
 
     public LibraryBuilder(File congiguration) {
         context = new SparkContext("LibraryBuilder");
@@ -41,33 +41,34 @@ public class LibraryBuilder {
     }
 
     public static void main(String[] args) {
-        if(args.length == 0)    {
-             System.out.println("usage configFile fastaFile");
-             return;
-         }
+        if (args.length == 0) {
+            System.out.println("usage configFile fastaFile");
+            return;
+        }
         File config = new File(args[0]);
-        String fasta = args[1] ;
-         LibraryBuilder lb = new LibraryBuilder(config);
+        String fasta = args[1];
+        LibraryBuilder lb = new LibraryBuilder(config);
 
-        JavaSparkContext ctx = lb.getJavaContext();
-        JavaPairRDD<String, String> parsed = SparkSpectrumUtilities.parseFastaFile(fasta, ctx);
-
-      // if not commented out this line forces proteins to be realized
-        parsed = SparkUtilities.realizeAndReturn(parsed, ctx);
-
-        JavaRDD<KeyValueObject<String, String>> proteins = SparkUtilities.fromTuples(parsed);
-
-     // if not commented out this line forces proteins to be realized
-         proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
+        // if not commented out this line forces proteins to be realized
+        //    proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
 
         ProteinMapper pm = new ProteinMapper(lb.getApplication());
         ProteinReducer pr = new ProteinReducer(lb.getApplication());
 
-        SparkMapReduce handler = new SparkMapReduce(pm, pr );
+        //       ListKeyValueConsumer<String,String> consumer = new ListKeyValueConsumer();
+        SparkMapReduce handler = new SparkMapReduce("LibraryBuilder",pm, pr, IPartitionFunction.HASH_PARTITION);
+        JavaSparkContext ctx = handler.getCtx();
+
+        JavaPairRDD<String, String> parsed = SparkSpectrumUtilities.parseFastaFile(fasta, ctx);
+
+        // if not commented out this line forces proteins to be realized
+        //   parsed = SparkUtilities.realizeAndReturn(parsed, ctx);
+
+        JavaRDD<KeyValueObject<String, String>> proteins = SparkUtilities.fromTuples(parsed);
 
 
-       //  proteins = proteins.persist(StorageLevel.MEMORY_ONLY());
-     //   proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
+        //  proteins = proteins.persist(StorageLevel.MEMORY_ONLY());
+        //   proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
 
         handler.performSourceMapReduce(proteins);
 

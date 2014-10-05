@@ -3,6 +3,7 @@ package com.lordjoe.distributed.wordcount;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.util.*;
 import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.*;
 
 import java.io.*;
 
@@ -16,10 +17,13 @@ public class SparkWordCount {
 
 
 
-    public static void main(String[] args) {
-        ListKeyValueConsumer<String,Integer> consumer = new ListKeyValueConsumer();
-         SparkMapReduce handler = new SparkMapReduce(new WordCountMapper(),new WordCountReducer(),IPartitionFunction.HASH_PARTITION,consumer);
-        JavaSparkContext ctx = handler.getCtx();
+    @SuppressWarnings("unchecked")
+    public static void main(final String[] args) {
+        ListKeyValueConsumer consumer = new ListKeyValueConsumer();
+
+        SparkMapReduce handler = new SparkMapReduce("Spark Word Count",new NullStringMapper(),new NullStringReducer(),IPartitionFunction.HASH_PARTITION,consumer);
+   //     SparkMapReduce handler = new SparkMapReduce(new WordCountMapper(),new WordCountReducer(),IPartitionFunction.HASH_PARTITION,consumer);
+         JavaSparkContext ctx = handler.getCtx();
 
         JavaRDD<KeyValueObject<String,String>> lines;
         if(args.length == 0) {
@@ -27,9 +31,13 @@ public class SparkWordCount {
              lines = SparkUtilities.keysFromInputStream(MY_BOOK, is, ctx);
         }
         else {
-              lines = null;
-            throw new UnsupportedOperationException("Fix This"); // ToDo
-         //   lines = ctx.textFile(args[0], 1);
+            JavaRDD<String> justLines = ctx.textFile(args[0], 1);
+             lines = justLines.map(new Function<String, KeyValueObject<String, String>>() {
+                 @Override
+                 public KeyValueObject<String, String> call(final String s) throws Exception {
+                     return new KeyValueObject<String, String>(args[0],s);
+                 }
+             });
         }
 
           handler.performSourceMapReduce(lines);

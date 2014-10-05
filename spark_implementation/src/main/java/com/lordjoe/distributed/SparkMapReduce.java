@@ -26,8 +26,8 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
          * @return
          */
         @Override
-        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
-            return new SparkMapReduce(pMapper, pRetucer);
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
+            return new SparkMapReduce(name,pMapper, pRetucer);
         }
 
         /**
@@ -39,8 +39,8 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
          * @return
          */
         @Override
-        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMEngine(@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
-            return new SparkMapReduce(pMapper, pRetucer, pPartitioner);
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
+            return new SparkMapReduce(name,pMapper, pRetucer, pPartitioner);
         }
     };
     // NOTE these are not serializable so they must be transient or an exception will be thrown on serialization
@@ -48,12 +48,20 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
     private transient JavaSparkContext ctx;
     private JavaRDD<KeyValueObject<K, V>> output;
 
-    public SparkMapReduce(final IMapperFunction<KEYIN, VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
+    public SparkMapReduce(final String name,final IMapperFunction<KEYIN, VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
         //noinspection unchecked
-        this(mapper, reducer, IPartitionFunction.HASH_PARTITION);
+        this(  name,mapper, reducer, IPartitionFunction.HASH_PARTITION);
     }
 
-    public SparkMapReduce(final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+    public SparkMapReduce(final String name,final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
+                          final IReducerFunction<K, V> reducer,
+                          IPartitionFunction<K> pPartitioner,
+                          IKeyValueConsumer<K, V>... pConsumer) {
+
+        this(new SparkConf(),name,mapper, reducer, IPartitionFunction.HASH_PARTITION);
+    }
+
+    public SparkMapReduce(final SparkConf conf,final String name,final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
                           final IReducerFunction<K, V> pRetucer,
                           IPartitionFunction<K> pPartitioner,
                           IKeyValueConsumer<K, V>... pConsumer) {
@@ -66,10 +74,27 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
             addConsumer(cns);
 
         }
-        sparkConf = new SparkConf().setAppName("JavaWordCount");
+        sparkConf = conf.setAppName(name);
         SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
 
         ctx = new JavaSparkContext(sparkConf);
+    }
+
+    /**
+     * constructor when chaining jobs
+     * @param prev
+     * @param name
+     * @param mapper
+     * @param reducer
+     * @param pPartitioner
+     * @param pConsumer
+     */
+    public SparkMapReduce(final SparkMapReduce prev,final String name,final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
+                          final IReducerFunction<K, V> reducer,
+                          IPartitionFunction<K> pPartitioner,
+                          IKeyValueConsumer<K, V>... pConsumer) {
+        this(prev.getSparkConf(),name,mapper, reducer, IPartitionFunction.HASH_PARTITION);
+
     }
 
 
@@ -117,11 +142,15 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces mappedKeys to be realized
-         mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys, ctx2);
+        mappedKeys = SparkUtilities.realizeAndReturn(mappedKeys, ctx2);
 
-        JavaPairRDD<K, Tuple2<K,V>> kkv = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
-      //
-           kkv = kkv.sortByKey();
+        JavaPairRDD<K, Tuple2<K, V>> kkv = mappedKeys.mapToPair(new KeyValuePairFunction<K, V>());
+
+        // if not commented out this line forces mappedKeys to be realized
+        kkv = SparkUtilities.realizeAndReturn(kkv, ctx2);
+
+        //
+        kkv = kkv.sortByKey();
 
         JavaPairRDD<K, CombineByKeyAdaptor.KeyAndValues<K, V>> reducedSets = kkv.combineByKey(new CombineByKeyAdaptor.CombineStartKeyAndValues<K, V>(),
                 new CombineByKeyAdaptor.CombineContinueKeyAndValues<K, V>(),
@@ -129,12 +158,12 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         );
 
 
-       // if not commented out this line forces kvJavaPairRDD to be realized
-       // reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx1);
+        // if not commented out this line forces kvJavaPairRDD to be realized
+        // reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx1);
 
-        PartitionAdaptor<K> prt = new PartitionAdaptor<K>(getPartitioner(),20);
-       // reducedSets = reducedSets.partitionBy(prt);
-       reducedSets = reducedSets.sortByKey();
+        PartitionAdaptor<K> prt = new PartitionAdaptor<K>(getPartitioner(), 20);
+        // reducedSets = reducedSets.partitionBy(prt);
+        reducedSets = reducedSets.sortByKey();
 
         IReducerFunction reduce = getReduce();
         ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(reduce);
@@ -142,18 +171,14 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         JavaRDD<KeyValueObject<K, V>> reduced = reducedSets.flatMap(f);
 
 
-
-
-      //  JavaPairRDD<K, V> kvJavaPairRDD = asTuples.partitionBy(sparkPartitioner);
+        //  JavaPairRDD<K, V> kvJavaPairRDD = asTuples.partitionBy(sparkPartitioner);
 
         // if not commented out this line forces kvJavaPairRDD to be realized
         //kvJavaPairRDD = SparkUtilities.realizeAndReturn(kvJavaPairRDD,getCtx());
 
 
-
-
         // if not commented out this line forces kvJavaPairRDD to be realized
-          reduced = SparkUtilities.realizeAndReturn(reduced, ctx2);
+        reduced = SparkUtilities.realizeAndReturn(reduced, ctx2);
 
         output = reduced;
 
@@ -178,8 +203,8 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
             performMapReduce((Path) source);
             return;
         }
-        if(source instanceof Iterable) {
-            performSourceMapReduce(SparkUtilities.fromIterable((Iterable)source,getCtx()));
+        if (source instanceof Iterable) {
+            performSourceMapReduce(SparkUtilities.fromIterable((Iterable) source, getCtx()));
             return;
 
         }
