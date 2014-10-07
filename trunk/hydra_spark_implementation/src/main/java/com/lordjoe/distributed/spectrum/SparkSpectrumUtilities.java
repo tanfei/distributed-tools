@@ -2,9 +2,14 @@ package com.lordjoe.distributed.spectrum;
 
 import com.lordjoe.distributed.input.*;
 import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
+import org.systemsbiology.xtandem.hadoop.*;
+import scala.*;
 
 import javax.annotation.*;
+import java.lang.Boolean;
 
 /**
  * com.lordjoe.distributed.spectrum.SparkSpectrumUtilities
@@ -61,13 +66,28 @@ public class SparkSpectrumUtilities {
         Class keyClass = String.class;
         Class valueClass = String.class;
 
-        return ctx.newAPIHadoopFile(
+        JavaPairRDD<String, String>  spectraAsStrings = ctx.newAPIHadoopFile(
                 path,
                 inputFormatClass,
                 keyClass,
                 valueClass,
                 ctx.hadoopConfiguration()
         );
+        // filter out MS Level 1 spectra
+        spectraAsStrings = spectraAsStrings.filter( new Function<Tuple2<String,String>, Boolean>() {
+           public Boolean call(Tuple2<String,String> s) {
+               return !s._2().contains("msLevel=\"1\""); }
+         });
+        // parse scan tags as  IMeasuredSpectrum
+        JavaPairRDD<String, IMeasuredSpectrum> parsed = spectraAsStrings.mapToPair(new PairFunction<Tuple2<String, String>, String, IMeasuredSpectrum>() {
+            @Override
+            public Tuple2<String, IMeasuredSpectrum> call(final Tuple2<String, String> in) throws Exception {
+                String key = in._1();
+                RawPeptideScan scan = XTandemHadoopUtilities.readScan(in._2(), null);
+                return new Tuple2(key,scan);
+            }
+        });
+        return parsed;
     }
 
     @Nonnull
@@ -82,7 +102,7 @@ public class SparkSpectrumUtilities {
                 keyClass,
                 valueClass
         );
-        JavaPairRDD<String, IMeasuredSpectrum> spectra = spectraAsStrings.mapToPair(new MGFStringTupleToSpectrumTuple());
+           JavaPairRDD<String, IMeasuredSpectrum> spectra = spectraAsStrings.mapToPair(new MGFStringTupleToSpectrumTuple());
         return spectra;
     }
 
@@ -109,6 +129,10 @@ public class SparkSpectrumUtilities {
         JavaPairRDD<String, IMeasuredSpectrum> spectra = spectraAsStrings.mapToPair(new MGFStringTupleToSpectrumTuple());
         return spectra;
     }
+
+
+
+
 
     @Nonnull
     public static JavaPairRDD<String, IMeasuredSpectrum> parseAsMGF( @Nonnull final String path, @Nonnull final JavaSparkContext ctx) {

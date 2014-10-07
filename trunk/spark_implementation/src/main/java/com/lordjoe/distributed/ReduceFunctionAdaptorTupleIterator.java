@@ -12,17 +12,19 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class ReduceFunctionAdaptorTupleIterator<K extends Serializable, V extends Serializable> implements FlatMapFunction<Iterator<Tuple2<K, V>>, KeyValueObject<K, V>>, Serializable {
-    private final IReducerFunction<K, V> reducer;
+public class ReduceFunctionAdaptorTupleIterator<K extends Serializable, V extends Serializable,
+        KOUT extends Serializable, VOUT extends Serializable>
+        implements FlatMapFunction<Iterator<Tuple2<K, V>>, KeyValueObject<KOUT, VOUT>>, Serializable {
+    private final IReducerFunction<K, V,KOUT, VOUT> reducer;
     private   Tuple2<K, V> first;
 
-    public ReduceFunctionAdaptorTupleIterator(final IReducerFunction<K, V> pReducer) {
+    public ReduceFunctionAdaptorTupleIterator(final IReducerFunction<K, V,KOUT, VOUT> pReducer) {
         reducer = pReducer;
     }
 
-    @Override public Iterable<KeyValueObject<K, V>> call(final Iterator<Tuple2<K, V>> itr) throws Exception {
+    @Override public Iterable<KeyValueObject<KOUT, VOUT>> call(final Iterator<Tuple2<K, V>> itr) throws Exception {
         first = null;
-        final List<KeyValueObject<K, V>> holder = new ArrayList<KeyValueObject<K, V>>();
+        final List<KeyValueObject<KOUT, VOUT>> holder = new ArrayList<KeyValueObject<KOUT, VOUT>>();
          if(!itr.hasNext())
             return holder;
 
@@ -63,8 +65,8 @@ public class ReduceFunctionAdaptorTupleIterator<K extends Serializable, V extend
                 return itx;
             }
         };
-        final IKeyValueConsumer<K, V> consumer = new IKeyValueConsumer<K, V>() {
-            @Override public void consume(final KeyValueObject<K, V> kv) {
+        final IKeyValueConsumer<KOUT, VOUT> consumer = new IKeyValueConsumer<KOUT, VOUT>() {
+            @Override public void consume(final KeyValueObject<KOUT, VOUT> kv) {
                 holder.add(kv);
             }
         };

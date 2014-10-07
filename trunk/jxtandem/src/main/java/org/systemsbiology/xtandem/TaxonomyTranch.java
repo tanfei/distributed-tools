@@ -1,11 +1,13 @@
 package org.systemsbiology.xtandem;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.TaxonomyTranch
  * User: Steve
  * Date: Apr 1, 2011
  */
-public class TaxonomyTranch {
+public class TaxonomyTranch implements Serializable {
     public static final TaxonomyTranch[] EMPTY_ARRAY = {};
 
     /**

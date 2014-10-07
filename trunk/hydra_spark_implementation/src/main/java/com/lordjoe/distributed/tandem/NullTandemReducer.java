@@ -10,7 +10,7 @@ import javax.annotation.*;
  * User: Steve
  * Date: 10/1/2014
  */
-public class NullTandemReducer extends AbstractTandemFunction  implements IReducerFunction<String, String> {
+public class NullTandemReducer extends AbstractTandemFunction  implements IReducerFunction<String, String,String, String> {
     public NullTandemReducer(final XTandemMain pMain) {
         super(pMain);
     }

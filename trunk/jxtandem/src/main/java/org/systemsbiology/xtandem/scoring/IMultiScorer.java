@@ -1,11 +1,13 @@
 package org.systemsbiology.xtandem.scoring;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.scoring.IMultiScorer
  * User: Steve
  * Date: 1/12/12
  */
-public interface IMultiScorer {
+public interface IMultiScorer extends Serializable {
     public static final IMultiScorer[] EMPTY_ARRAY = {};
 
     /**

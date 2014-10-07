@@ -2,7 +2,7 @@ package com.lordjoe.distributed.tandem;
 
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.context.*;
-import com.lordjoe.distributed.protein.*;
+import com.lordjoe.distributed.hydra.protein.*;
 import com.lordjoe.distributed.spectrum.*;
 import org.apache.spark.api.java.*;
 import org.systemsbiology.xtandem.*;
@@ -30,6 +30,7 @@ public class LibraryBuilder {
         return context;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public JavaSparkContext getJavaContext() {
         SparkContext context1 = getContext();
         return context1.getCtx();
@@ -56,6 +57,7 @@ public class LibraryBuilder {
         ProteinReducer pr = new ProteinReducer(lb.getApplication());
 
         //       ListKeyValueConsumer<String,String> consumer = new ListKeyValueConsumer();
+        //noinspection unchecked
         SparkMapReduce handler = new SparkMapReduce("LibraryBuilder",pm, pr, IPartitionFunction.HASH_PARTITION);
         JavaSparkContext ctx = handler.getCtx();
 
@@ -70,13 +72,17 @@ public class LibraryBuilder {
         //  proteins = proteins.persist(StorageLevel.MEMORY_ONLY());
         //   proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
 
+        //noinspection unchecked
         handler.performSourceMapReduce(proteins);
 
+        //noinspection unchecked
         Iterable<KeyValueObject<String, String>> list = handler.collect();
 
         for (KeyValueObject<String, String> keyValueObject : list) {
             System.out.println(keyValueObject);
         }
+
+
 
 
     }

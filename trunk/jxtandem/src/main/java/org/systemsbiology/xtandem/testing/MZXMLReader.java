@@ -17,7 +17,6 @@ import java.util.*;
  * Date: 10/25/11
  */
 public class MZXMLReader {
-    public static final MZXMLReader[] EMPTY_ARRAY = {};
 
     private static int gNestedTotalScans;
     private static int gTotalScans;

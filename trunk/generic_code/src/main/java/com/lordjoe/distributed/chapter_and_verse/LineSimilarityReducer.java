@@ -12,7 +12,7 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class LineSimilarityReducer implements IReducerFunction<ChapterKeyClass, LineAndLocationMatch >,Serializable {
+public class LineSimilarityReducer implements IReducerFunction<ChapterKeyClass, LineAndLocationMatch,ChapterKeyClass, LineAndLocationMatch  >,Serializable {
 
     public static final int LINES_TO_CONSIDER = 200;
     private final SimilarityStrategy strategy;

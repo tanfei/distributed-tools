@@ -14,6 +14,7 @@ import org.systemsbiology.xml.*;
 import org.systemsbiology.xtandem.*;
 
 import java.io.*;
+import java.util.*;
 
 
 /**
@@ -136,7 +137,7 @@ public class JXTandemParserPart1 extends ConfiguredJobRunner implements IJobRunn
         public void reduceNormal(Text key, Iterable<Text> values,
                                  Context context) throws IOException, InterruptedException {
 
-
+            List<String> holder = new ArrayList<String>();
             String label = key.toString();
             boolean isDecoy = false;
             label = XTandemUtilities.conditionProteinLabel(label);
@@ -164,7 +165,8 @@ public class JXTandemParserPart1 extends ConfiguredJobRunner implements IJobRunn
 
                 incrementNumberAminoAcids(context, sequence);
                 incrementNumberMappedProteins(context);
-                loader.handleProtein(label, sequence, context);
+                if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+              //  loader.handleProtein(label, sequence, context);
 
                 // make a decoy
                 if (isGenerateDecoys() && !isDecoy) {
@@ -172,7 +174,8 @@ public class JXTandemParserPart1 extends ConfiguredJobRunner implements IJobRunn
                     String reverseSequence = new StringBuffer(sequence).reverse().toString();
                     incrementNumberAminoAcids(context, reverseSequence);
                     incrementNumberMappedProteins(context);
-                    loader.handleProtein("DECOY_" + label, reverseSequence, context);
+                    if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+                   // loader.handleProtein("DECOY_" + label, reverseSequence, context);
                 }
 
 

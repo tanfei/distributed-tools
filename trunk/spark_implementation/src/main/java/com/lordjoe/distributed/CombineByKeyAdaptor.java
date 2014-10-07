@@ -13,11 +13,11 @@ import java.util.*;
  * User: Steve
  * Date: 8/28/2014
  */
-public class CombineByKeyAdaptor<K extends Serializable, V extends Serializable> implements Serializable {
-    private final IReducerFunction<K, V> reducer;
+public class CombineByKeyAdaptor<K extends Serializable, V extends Serializable,KOUT extends Serializable, VOUT extends Serializable> implements Serializable {
+    private final IReducerFunction<K, V,KOUT,VOUT> reducer;
     private Tuple2<K, V> first;
 
-    public CombineByKeyAdaptor(final IReducerFunction<K, V> pReducer) {
+    public CombineByKeyAdaptor(final IReducerFunction<K, V,KOUT,VOUT> pReducer) {
         reducer = pReducer;
     }
 

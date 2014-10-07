@@ -527,38 +527,38 @@ public class XTandemHadoopUtilities {
     }
 
 
-    public static Map<Integer, Integer> guaranteeDatabaseSizes(final HadoopTandemMain pApplication) {
+    public static Map<Integer, Integer> guaranteeDatabaseSizes(final XTandemMain pApplication,Configuration conf) {
         Map<Integer, Integer> ret;
         //noinspection EmptyCatchBlock
         try {
-            ret = XTandemHadoopUtilities.readDatabaseSizes(pApplication);
+            ret = XTandemHadoopUtilities.readDatabaseSizes(pApplication,conf);
             System.err.println("Read Database Sizes");
             if (ret != null && ret.size() > 0)
                 return ret;
         } catch (Exception e) {
 
         }
-        return buildDatabaseSizes(pApplication);
+        return buildDatabaseSizes(pApplication,conf);
     }
 
-    protected static Map<Integer, Integer> buildDatabaseSizes(final HadoopTandemMain pApplication) {
+    protected static Map<Integer, Integer> buildDatabaseSizes(final XTandemMain pApplication,Configuration conf) {
         System.err.println("Rebuilding Size database");
         ElapsedTimer et = new ElapsedTimer();
 
-        Map<Integer, SearchDatabaseCounts> dbSizes = XTandemHadoopUtilities.buildFileSystemDatabaseSizes(pApplication);
+        Map<Integer, SearchDatabaseCounts> dbSizes = XTandemHadoopUtilities.buildFileSystemDatabaseSizes(pApplication,conf);
 
-        Map<Integer, Integer> integerIntegerMap = writeDatabaseSizes(pApplication, dbSizes);
+        Map<Integer, Integer> integerIntegerMap = writeDatabaseSizes(pApplication, dbSizes,conf);
         et.showElapsed("Rebuilt size  database");
         return integerIntegerMap;
     }
 
-    public static Map<Integer, Integer> writeDatabaseSizes(final HadoopTandemMain pApplication, final Map<Integer, SearchDatabaseCounts> pDbSizes) {
+    public static Map<Integer, Integer> writeDatabaseSizes(final XTandemMain pApplication, final Map<Integer, SearchDatabaseCounts> pDbSizes,
+             Configuration cfg) {
         Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
         if (pDbSizes.size() == 0) {
             return ret; // DO not wipe out a potentially better solution
         }
-        Configuration cfg = pApplication.getContext();
-        String paramsFile = pApplication.getDatabaseName() + ".sizes";
+           String paramsFile = pApplication.getDatabaseName() + ".sizes";
         Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
         PrintWriter out = null;
         try {
@@ -623,12 +623,12 @@ public class XTandemHadoopUtilities {
      * @param application !null application
      * @return possibly null descripotion - null is unreadable
      */
-    public static Map<Integer, Integer> readDatabaseSizes(HadoopTandemMain application) {
+    public static Map<Integer, Integer> readDatabaseSizes(XTandemMain application, Configuration config ) {
         try {
-            Configuration cfg = application.getContext();
+      //      Configuration cfg = application.getContext();
             String paramsFile = application.getDatabaseName() + ".sizes";
             Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
-            FileSystem fs = FileSystem.get(cfg);
+            FileSystem fs = FileSystem.get(config);
             if (!fs.exists(dd)) {
                 System.err.println("Cannot find file " + dd.toString());
                 return null;   // cant get it
@@ -1599,9 +1599,8 @@ public class XTandemHadoopUtilities {
      * @param application
      * @return
      */
-    protected static Map<Integer, SearchDatabaseCounts> buildFileSystemDatabaseSizes(final HadoopTandemMain application) {
-        Configuration cfg = application.getContext();
-        Path databasePath = XTandemHadoopUtilities.getRelativePath(application.getDatabaseName());
+    protected static Map<Integer, SearchDatabaseCounts> buildFileSystemDatabaseSizes(final XTandemMain application, Configuration cfg) {
+           Path databasePath = XTandemHadoopUtilities.getRelativePath(application.getDatabaseName());
         Map<Integer, SearchDatabaseCounts> ret = getDatabaseSizes(databasePath, cfg);
         return ret;
 

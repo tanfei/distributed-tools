@@ -1,15 +1,19 @@
-package org.systemsbiology.xtandem.hadoop;
+package com.lordjoe.distributed.hydra.scoring;
 
+import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.tandem.*;
 import com.lordjoe.utilities.*;
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.conf.*;
 import org.apache.hadoop.util.*;
+import org.apache.spark.api.java.*;
 import org.systemsbiology.xml.*;
 import org.systemsbiology.xtandem.*;
+import org.systemsbiology.xtandem.hadoop.*;
+import org.systemsbiology.xtandem.hadoop.ScoringReducer;
 import org.systemsbiology.xtandem.peptide.*;
 import org.systemsbiology.xtandem.scoring.*;
 
-import java.io.*;
+import javax.annotation.*;
 import java.util.*;
 
 /**
@@ -17,16 +21,15 @@ import java.util.*;
  * User: steven
  * Date: 3/7/11
  */
-public class ScanTagMapper extends AbstractTandemMapper<Writable> {
-    public static final ScanTagMapper[] EMPTY_ARRAY = {};
+public class ScanTagMapperFunction extends AbstractTandemFunction implements IMapperFunction<String, IMeasuredSpectrum  , String, IMeasuredSpectrum> {
+    public static final ScanTagMapperFunction[] EMPTY_ARRAY = {};
 
     /// Some debugging hooks when we walk interesting cases
-    public static final int[] INTERESTING_MASSES = { 2336, 2318};
+    public static final int[] INTERESTING_MASSES = {2336, 2318};
 
     public static final int REPORT_INTERVAL_SCANS = 1000;
 
     public static final Random RND = new Random();
-
 
 
     /// Some debugging hooks when we walk interesting cases
@@ -43,7 +46,6 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
     //  private final Map<Integer, List<Path>> m_DatabaseFiles = new HashMap<Integer, List<Path>>();
     private Map<Integer, Integer> m_DatabaseSizes = new HashMap<Integer, Integer>();
     private int m_MaxScoredPeptides;
-    private PrintWriter m_LogJamScan;
     private SpectrumCondition m_Condition;
     private int m_TotalScansProcessed;
     private long m_CohortProcessingTime;
@@ -51,7 +53,8 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
     private int m_KeyWriteCount;
     private long m_ParsingTime;
 
-    public ScanTagMapper() {
+    public ScanTagMapperFunction(final XTandemMain pMain) {
+        super(pMain);
     }
 
     public int getTotalScansProcessed() {
@@ -63,39 +66,36 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
     }
 
     @Override
-    protected void setup(final Context context) throws IOException, InterruptedException {
+    public void setup(JavaSparkContext context) {
         super.setup(context);
 
-        HadoopTandemMain app = getApplication();
+        XTandemMain app = getApplication();
         app.loadScoring();
-        m_DatabaseSizes = XTandemHadoopUtilities.readDatabaseSizes(app,app.getContext());
-        m_MaxScoredPeptides = XTandemHadoopUtilities.getMaxScoredPeptides(context.getConfiguration());
+        Configuration config = context.hadoopConfiguration();
+        m_DatabaseSizes = XTandemHadoopUtilities.readDatabaseSizes(app, config);
+        m_MaxScoredPeptides = XTandemHadoopUtilities.getMaxScoredPeptides(config);
 
 
-        boolean doHardCoded = app.getBooleanParameter(JXTandemLauncher.HARDCODED_MODIFICATIONS_PROPERTY,true);
+        boolean doHardCoded = app.getBooleanParameter(JXTandemLauncher.HARDCODED_MODIFICATIONS_PROPERTY, true);
         PeptideModification.setHardCodeModifications(doHardCoded);
 
 
         // sneaky trick to extract the version
         String version = VersionInfo.getVersion();
-        context.getCounter("Performance",  "Version-" + version ).increment(1);
-         // sneaky trick to extract the user
+        incrementCounter("Performance", "Version-" + version);
+        // sneaky trick to extract the user
         String uname = System.getProperty("user.name");
-        context.getCounter("Performance",  "User-" + uname ).increment(1);
+        incrementCounter("Performance", "User-" + uname);
 
-        // Only do this once
-        if (XTandemHadoopUtilities.isFirstMapTask(context)) {
-            long maxOnePeptide = XTandemHadoopUtilities.maxDatabaseSizes(m_DatabaseSizes);
-            context.getCounter("Performance", "MaxFragmentsAtMass").increment(maxOnePeptide);
-            long totalDatabaseFragments = XTandemHadoopUtilities.sumDatabaseSizes(m_DatabaseSizes);
-            context.getCounter("Performance", "TotalDatabaseFragments").increment(totalDatabaseFragments);
-        }
+//        // Only do this once
+//        if (XTandemHadoopUtilities.isFirstMapTask(context)) {
+//            long maxOnePeptide = XTandemHadoopUtilities.maxDatabaseSizes(m_DatabaseSizes);
+//            incrementCounter("Performance", "MaxFragmentsAtMass", maxOnePeptide);
+//            long totalDatabaseFragments = XTandemHadoopUtilities.sumDatabaseSizes(m_DatabaseSizes);
+//            incrementCounter("Performance", "TotalDatabaseFragments", totalDatabaseFragments);
+//        }
 
-        // Special code for logjam
-        if (ScoringReducer.USING_LOGJAM) {
-            m_LogJamScan = new PrintWriter(new FileWriter("LogJamScans.tsv"));
-        }
-        m_Condition = new SpectrumCondition();
+           m_Condition = new SpectrumCondition();
         m_Condition.configure(app);
         getElapsed().reset(); // start a clock
     }
@@ -130,14 +130,21 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
     }
 
 
+    /**
+     * this is what a Mapper does
+     *
+     * @param keyin
+     * @param valuein
+     * @return iterator over mapped key values
+     */
+    @Nonnull
     @Override
-    protected void map(final Writable key, final Text value, final Context context) throws IOException, InterruptedException {
+    public Iterable<KeyValueObject<String, IMeasuredSpectrum>> mapValues(@Nonnull final String fileName, @Nonnull IMeasuredSpectrum ascan) {
+        List<KeyValueObject<String, IMeasuredSpectrum>> ret = new ArrayList<KeyValueObject<String, IMeasuredSpectrum>>();
         long startTime = System.currentTimeMillis();
-        String textv = value.toString().trim();
         // ignore level 1 scans
-        if (textv.contains("msLevel=\"1\""))
-            return;
-        String fileName = key.toString();
+       // if (textv.get("msLevel=\"1\""))
+       //     return ret;
         String extension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
         // handle gz files
         if (".gz".equals(extension)) {
@@ -146,27 +153,7 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
             extension = realName.substring(fileName.lastIndexOf("."));
         }
 
-        RawPeptideScan scan = null;
-//        if (".mzml".equalsIgnoreCase(extension)) {
-//            //   RawPeptideScan scan2 = MzMLReader.scanFromFragment(text);
-//            scan = XTandemHadoopUtilities.readSpectrum(textv);
-//            //      if (!scan2.equivalent(scan))
-//            //         throw new IllegalStateException("problem"); // ToDo change
-//        }
-        if (".mgf".equalsIgnoreCase(extension)) {
-            //   RawPeptideScan scan2 = MzMLReader.scanFromFragment(text);
-            scan = XTandemHadoopUtilities.readMGFText(textv);
-            //      if (!scan2.equivalent(scan))
-            //         throw new IllegalStateException("problem"); // ToDo change
-        }
-        else {
-            scan = XTandemHadoopUtilities.readScan(textv,fileName);
-            if(!textv.contains("url=\"") && fileName != null)
-                textv = textv.replace("msLevel=\"", " url=\"" + fileName  + "\" " +    "msLevel=\"");
-        }
-        if (scan == null)
-            return; // todo or is an exception proper
-
+        RawPeptideScan scan = (RawPeptideScan)ascan;
 
         String id = scan.getId();
 
@@ -174,35 +161,34 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
 //        if(XTandemHadoopUtilities.isNotScored(scan))
 //            XTandemUtilities.breakHere();
 
- //       if("8840".equals(id))
+        //       if("8840".equals(id))
 //            XTandemUtilities.breakHere();
         // top level nested scans lack this
         if (scan.getPrecursorMz() == null)
-            return;
+            return ret;
 
         scan.setUrl(fileName);
-   //     textv = scan.toMzMLFragment();
-         IScanPrecursorMZ mz = scan.getPrecursorMz();
-         int charge = scan.getPrecursorCharge();
-        if(charge == 0)   {
-           int guess =  XTandemUtilities.guessCharge(scan,mz.getMassChargeRatio());
-            mz  = new ScanPrecursorMz(mz,guess);
-           scan.setPrecursorMz(mz);
-           charge = mz.getPrecursorCharge();
+        //     textv = scan.toMzMLFragment();
+        IScanPrecursorMZ mz = scan.getPrecursorMz();
+        int charge = scan.getPrecursorCharge();
+        if (charge == 0) {
+            int guess = XTandemUtilities.guessCharge(scan, mz.getMassChargeRatio());
+            mz = new ScanPrecursorMz(mz, guess);
+            scan.setPrecursorMz(mz);
+            charge = mz.getPrecursorCharge();
         }
 
         // cost of parsing
         m_ParsingTime += System.currentTimeMillis() - startTime;
 
-        final Counter totalScans = context.getCounter("Performance", "TotalScoredScans");
-        totalScans.increment(1);
+        incrementCounter("Performance", "TotalScoredScans");
 
 //        if ("42".equals(id))
 //            XTandemUtilities.breakHere();
 
         // throw out ridiculous values
         if (charge > XTandemUtilities.MAX_CHARGE)
-            return;
+            return ret;
 
         // Special code for logjam
         if (ScoringReducer.USING_LOGJAM) {
@@ -213,12 +199,12 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
         if (charge == 0) {
             for (int i = 1; i <= 3; i++) {
                 double mass = scan.getPrecursorMass(i);
-                writeScansToMassAtCharge( textv, context, id, mass, i,fileName);
+                writeScansToMassAtCharge(scan, ret, id, mass, i, fileName);
             }
         }
         else {
             double mass = scan.getPrecursorMass(charge);
-            writeScansToMass(textv, context, id, mass );
+            writeScansToMass(scan, ret, id, mass);
         }
 
         // give performance statistics
@@ -230,13 +216,14 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
         }
 
         getApplication().clearRetainedData();
+        return ret;
     }
 
     private String buildUrlNameValue(final String fileName) {
         StringBuilder sb = new StringBuilder();
         sb.append("   ");
-        sb.append("<nameValue name=\"url\" " );
-        sb.append("value=\"" + fileName + "\" " );
+        sb.append("<nameValue name=\"url\" ");
+        sb.append("value=\"" + fileName + "\" ");
         sb.append("/>");
         return sb.toString();
     }
@@ -252,9 +239,6 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
 
         // how much timeis in my code
 
-        long freemem = setMinimalFree();
-        XMLUtilities.outputLine("Free Memory " + String.format("%7.2fmb", freemem / 1000000.0) +
-                " minimum " + String.format("%7.2fmb", getMinimumFreeMemory() / 1000000.0));
         elapsed.reset();
 
         m_CohortProcessingTime = 0;
@@ -264,7 +248,8 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
         elapsed.reset();
     }
 
-    protected void writeScansToMassAtCharge(final String value, final Context context, final String pId, double mass, int charge,String filename) throws IOException, InterruptedException {
+    protected void writeScansToMassAtCharge(final IMeasuredSpectrum value, final List<KeyValueObject<String, IMeasuredSpectrum>> holder,
+                                            final String pId, double mass, int charge, String filename) {
         if (!isMassScored(mass))
             return;
         IScoringAlgorithm scorer = getApplication().getScorer();
@@ -272,57 +257,51 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
         int[] limits = scorer.allSearchedMasses(mass);
         for (int j = 0; j < limits.length; j++) {
             int limit = limits[j];
-            writeScanToMassAtCharge(limit, pId, value, charge,filename, context);
+            writeScanToMassAtCharge(limit, pId, value, charge, filename, holder);
         }
     }
 
     public static final String CHARGE_0_STRING = "precursorCharge=\"0\"";
     public static final String PRECURSOR_MZ_TAG_STRING = "<precursorMz ";
 
-    protected void writeScanToMassAtCharge(int mass, String id, String value, int charge,String filename, Context context)
-            throws IOException, InterruptedException {
+    protected void writeScanToMassAtCharge(int mass, String id, IMeasuredSpectrum value, int charge, String filename,
+                                           List<KeyValueObject<String, IMeasuredSpectrum>> holder) {
 
-       // Special code to store scans at mass for timing studies
+        // Special code to store scans at mass for timing studies
 //        if(ScoringReducer.STORING_SCANS ) {
 //            if(!TestScoringTiming.SAVED_MASS_SET.contains(mass))
 //                return;
 //        }
 
-        HadoopTandemMain application = getApplication();
+        XTandemMain application = getApplication();
         SpectrumCondition sp = application.getSpectrumParameters();
         // if mass is too low or too high forget it
         if (sp != null && !sp.isMassScored(mass)) {
-            Counter performance = context.getCounter("Performance", "Not Scored Mass");
-            performance.increment(1);
+            incrementCounter("Performance", "Not Scored Mass");
             return;
         }
         long startTime = System.currentTimeMillis();
         String keyStr = String.format("%06d", mass);
-        String valueStr = value.toString();
+    //    String valueStr = value.toString();
         int numberEntries = getDatabaseSize(mass);
         int maxScored = getMaxScoredPeptides();
 
-        // patch the charge to a known state matching the masses
-        String chargeString = "precursorCharge=\"" + charge + "\" ";
-        if (valueStr.contains(CHARGE_0_STRING)) {
-            valueStr = valueStr.replace(CHARGE_0_STRING, chargeString);
-        }
-        else {
-            valueStr = valueStr.replace(PRECURSOR_MZ_TAG_STRING, PRECURSOR_MZ_TAG_STRING + chargeString);
-        }
+//        // patch the charge to a known state matching the masses
+//        String chargeString = "precursorCharge=\"" + charge + "\" ";
+//        if (valueStr.contains(CHARGE_0_STRING)) {
+//            valueStr = valueStr.replace(CHARGE_0_STRING, chargeString);
+//        }
+//        else {
+//            valueStr = valueStr.replace(PRECURSOR_MZ_TAG_STRING, PRECURSOR_MZ_TAG_STRING + chargeString);
+//        }
+//
 
-        //   System.err.println("Sending mass " + mass + " for id " + id );
-        final Text onlyKey = getOnlyKey();
-        final Text onlyValue = getOnlyValue();
-        onlyValue.set(valueStr);
-
-        int numberSeparateReducers =  1 + (numberEntries / maxScored);
+        int numberSeparateReducers = 1 + (numberEntries / maxScored);
 
         if (numberSeparateReducers == 1) {
 
             //   System.err.println("Sending mass " + mass + " for id " + id );
-            onlyKey.set(keyStr);
-            context.write(onlyKey, onlyValue);
+            holder.add(new KeyValueObject<String, IMeasuredSpectrum>(keyStr, value));
             m_KeyWriteCount++;
         }
         else {
@@ -330,35 +309,34 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
 
             // too big split into multiple tasks
             int start = maxScored * chosen;
-            int end = (maxScored + 1)  * chosen;
-           // while (numberEntries > 0) {
-                String key = keyStr + ":" + start + ":" + end;
-                start += maxScored;
-                numberEntries -= maxScored;
-                onlyKey.set(key);
-                context.write(onlyKey, onlyValue);
-                m_KeyWriteCount++;
-          //  }
+            int end = (maxScored + 1) * chosen;
+            // while (numberEntries > 0) {
+            String key = keyStr + ":" + start + ":" + end;
+            start += maxScored;
+            numberEntries -= maxScored;
+            holder.add(new KeyValueObject<String, IMeasuredSpectrum>(keyStr, value));
+            m_KeyWriteCount++;
+            //  }
         }
         long elapsedProcessingTime = System.currentTimeMillis() - startTime;
         m_KeyWriteTime += elapsedProcessingTime;
     }
 
-    protected void writeScansToMass(final String value, final Context context, final String pId, double mass ) throws IOException, InterruptedException {
+    protected void writeScansToMass(final IMeasuredSpectrum value, final List<KeyValueObject<String, IMeasuredSpectrum>> holder, final String pId, double mass) {
         IScoringAlgorithm scorer = getApplication().getScorer();
         int[] limits = scorer.allSearchedMasses(mass);
         for (int j = 0; j < limits.length; j++) {
             int limit = limits[j];
 
-            if(isMassInteresting(limit))
-                 XTandemUtilities.breakHere();
+            if (isMassInteresting(limit))
+                XTandemUtilities.breakHere();
 
-            writeScanToMass(limit, pId, value, context);
+            writeScanToMass(limit, pId, value, holder);
         }
     }
 
     private void saveMeasuredSpectrum(final RawPeptideScan scan) {
-        final HadoopTandemMain app = getApplication();
+        final XTandemMain app = getApplication();
         final Scorer scorer = app.getScoreRunner();
         SpectrumCondition sc = scorer.getSpectrumCondition();
         final IScoringAlgorithm sa = scorer.getAlgorithm();
@@ -370,31 +348,25 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
         if (peaks == null || peaks.length < 4)
             return;
         String id = scan.getId();
-        m_LogJamScan.print(id);
-        m_LogJamScan.print("\t");
-        ScoringReducer.showPeaks(scn, m_LogJamScan);
     }
 
 
-    protected void writeScanToMass(int mass, String id, String value, Context context )
-            throws IOException, InterruptedException {
+    protected void writeScanToMass(int mass, String id, IMeasuredSpectrum value, List<KeyValueObject<String, IMeasuredSpectrum>> holder) {
 
         int numberEntries = getDatabaseSize(mass);
 
-        if (numberEntries == 0)
+        int maxScored = getMaxScoredPeptides();
+        numberEntries =  maxScored - 1; // todo remove this forces one key
+        // todo app back - we need to pick up this later
+        if (false && numberEntries == 0)
             return; // we will find no peptides to score
 
         String keyStr = String.format("%06d", mass);
-        int maxScored = getMaxScoredPeptides();
-        final Text onlyKey = getOnlyKey();
-        final Text onlyValue = getOnlyValue();
-         long startTime = System.currentTimeMillis();
+          long startTime = System.currentTimeMillis();
         if (numberEntries < maxScored) {    // few entries score in one task
 
             //   System.err.println("Sending mass " + mass + " for id " + id );
-            onlyKey.set(  keyStr);
-            onlyValue.set(  value);
-                context.write(onlyKey, onlyValue);
+            holder.add(new KeyValueObject<String, IMeasuredSpectrum>(keyStr, value));
             m_KeyWriteCount++;
         }
         else {
@@ -404,9 +376,7 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
                 String key = keyStr + ":" + start + ":" + (start + maxScored);
                 start += maxScored;
                 numberEntries -= maxScored;
-                onlyKey.set(  key);
-                onlyValue.set(  value);
-                  context.write(onlyKey, onlyValue);
+                holder.add(new KeyValueObject<String, IMeasuredSpectrum>(key, value));
                 m_KeyWriteCount++;
             }
         }
@@ -417,13 +387,7 @@ public class ScanTagMapper extends AbstractTandemMapper<Writable> {
     }
 
     @Override
-    protected void cleanup
-            (
-                    final Context context) throws IOException, InterruptedException {
-        // Special code for logjam
-        if (ScoringReducer.USING_LOGJAM) {
-            m_LogJamScan.close();
-        }
+    public void cleanup(JavaSparkContext context) {
         super.cleanup(context);    //To change body of overridden methods use File | Settings | File Templates.
     }
 }

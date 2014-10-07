@@ -8,12 +8,12 @@ import java.io.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public interface IReducerFunction<K extends Serializable,V   extends Serializable > extends Serializable {
+public interface IReducerFunction<K extends Serializable,V   extends Serializable,KOUT extends Serializable,VOUT   extends Serializable > extends Serializable {
     /**
       * this is what a reducer does
       * @param value  input value
       * @return iterator over mapped key values
       */
-     public @Nonnull  void handleValues(@Nonnull K key,@Nonnull Iterable<V> values,IKeyValueConsumer<K,V>... consumer);
+     public @Nonnull  void handleValues( @Nonnull K key,@Nonnull Iterable<V> values,IKeyValueConsumer<KOUT,VOUT>... consumer);
 
 }

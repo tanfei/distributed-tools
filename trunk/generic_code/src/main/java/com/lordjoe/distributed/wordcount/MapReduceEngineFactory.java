@@ -23,9 +23,9 @@ public interface MapReduceEngineFactory {
      * @param <V>   type of output value
      * @return return a constructed instance
      */
-    public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable>
-      IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
-                                                            @Nonnull IReducerFunction<K, V> pRetucer);
+    public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable,KOUT extends Serializable,VOUT extends Serializable>
+      IMapReduce<KEYIN, VALUEIN, KOUT, VOUT> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+                                                            @Nonnull IReducerFunction< K, V,KOUT ,VOUT  > pRetucer);
 
     /**
      * build an engine having been passed a
@@ -39,9 +39,9 @@ public interface MapReduceEngineFactory {
      * @return return a constructed instance
      */
     @SuppressWarnings("UnusedDeclaration")
-    public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable>
-      IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
-                                                            @Nonnull IReducerFunction<K, V> pRetucer,
+    public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable,KOUT extends Serializable,VOUT extends Serializable>
+      IMapReduce<KEYIN, VALUEIN, KOUT, VOUT> buildMapReduceEngine(@Nonnull String name, @Nonnull IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+                                                            @Nonnull IReducerFunction<K, V,KOUT ,VOUT> pRetucer,
                                                             IPartitionFunction<K> pPartitioner);
 
 }

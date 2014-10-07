@@ -1,12 +1,10 @@
 package org.systemsbiology.xtandem.hadoop;
 
 import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapreduce.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.peptide.*;
 import org.systemsbiology.xtandem.scoring.*;
 
-import java.io.*;
 import java.util.*;
 
 /**
@@ -59,7 +57,7 @@ public class FastaHadoopLoader {
 
 
     private final IPeptideDigester m_Digester;
-    private final HadoopTandemMain m_Application;
+    private final XTandemMain m_Application;
     private int m_ProteinIndex;
     private long m_FragmentIndex;
     private PeptideModification[] m_Modifications = PeptideModification.EMPTY_ARRAY;
@@ -68,7 +66,7 @@ public class FastaHadoopLoader {
     private boolean m_GenerateDecoysForModifiedPeptides;
 
 
-    public FastaHadoopLoader(HadoopTandemMain app) {
+    public FastaHadoopLoader(XTandemMain app) {
         m_Application = app;
         m_Digester = m_Application.getDigester();
 
@@ -142,8 +140,8 @@ public class FastaHadoopLoader {
         return m_FragmentIndex++;
     }
 
-    public void handleProtein(String annotation, final String sequence, TaskInputOutputContext<? extends Writable, Text, Text, Text> context)
-            throws IOException, InterruptedException {
+    public void handleProtein(String annotation, final String sequence )
+            {
 
         // no duplicates
 
@@ -172,7 +170,7 @@ public class FastaHadoopLoader {
                 continue;
 
             // hadoop write intermediate seq finder
-            writePeptide(pp, context);
+            writePeptide(pp);
 
             //   if(isDecoy)
             //       continue; // skip the rest of the loop
@@ -183,7 +181,7 @@ public class FastaHadoopLoader {
                 IModifiedPeptide[] modifications = ModifiedPolypeptide.buildModifications(pp, modifications1);
                 for (int m = 0; m < modifications.length; m++) {
                     IModifiedPeptide modification = modifications[m];
-                    writePeptide(modification, context);
+                    writePeptide(modification );
 
                 }
             }
@@ -197,11 +195,11 @@ public class FastaHadoopLoader {
                 IPolypeptide semipp = semipps[j];
                 if (!semipp.isValid())
                     continue;
-                writePeptide(semipp, context);
+                writePeptide(semipp );
                 IModifiedPeptide[] modifications = ModifiedPolypeptide.buildModifications(semipp, modifications1);
                 for (int k = 0; k < modifications.length; k++) {
                     IModifiedPeptide modification = modifications[k];
-                    writePeptide(modification, context);
+                    writePeptide(modification );
 
                 }
             }
@@ -211,8 +209,7 @@ public class FastaHadoopLoader {
     }
 
 
-    protected void writePeptide(final IPolypeptide pp, TaskInputOutputContext<? extends Writable, Text, Text, Text> context)
-            throws IOException, InterruptedException
+    protected void writePeptide(final IPolypeptide pp )
 
     {
         long numberFragments = getAndIncrementFragmentIndex();
@@ -232,8 +229,8 @@ public class FastaHadoopLoader {
 
 
         m_OnlyValue.set(proteinPositions[0].asPeptidePosition()); // I guess we can pass in the protein
-        if (context != null)
-            context.write(m_OnlyKey, m_OnlyValue);
+        throw new UnsupportedOperationException("Fix This"); // ToDo
+      //       context.write(m_OnlyKey, m_OnlyValue);
     }
 
 
