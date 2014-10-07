@@ -146,8 +146,10 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
         String dir = application.getDatabaseName();
         if (dir != null) {
-            HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism(), conf);
-            m_Taxonomy = ftax;
+            if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+        //    HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism(), conf);
+            HadoopFileTaxonomy ftax = null;
+              m_Taxonomy = ftax;
         }
         else {
             // make sure the latest table is present

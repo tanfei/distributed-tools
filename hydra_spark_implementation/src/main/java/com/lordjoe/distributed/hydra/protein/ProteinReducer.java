@@ -1,4 +1,4 @@
-package com.lordjoe.distributed.protein;
+package com.lordjoe.distributed.hydra.protein;
 
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.tandem.*;
@@ -13,7 +13,7 @@ import javax.annotation.*;
  * User: Steve
  * Date: 9/24/2014
  */
-public class ProteinReducer extends AbstractTandemFunction implements IReducerFunction<String, String,String, String > {
+public class ProteinReducer extends AbstractTandemFunction implements IReducerFunction<String, String, String, String> {
 
     public ProteinReducer(final XTandemMain pMain) {
         super(pMain);
@@ -22,11 +22,12 @@ public class ProteinReducer extends AbstractTandemFunction implements IReducerFu
     /**
      * this is what a reducer does
      *
-     * @param key
+     * @param sequence
      * @param values
      * @param consumer @return iterator over mapped key values
      */
-    @Nonnull
+
+    @SuppressWarnings("NullableProblems")
     @Override
     public void handleValues(@Nonnull final String sequence, @Nonnull final Iterable<String> values, final IKeyValueConsumer<String, String>... consumer) {
         IPolypeptide pp = Polypeptide.fromString(sequence);
@@ -35,12 +36,14 @@ public class ProteinReducer extends AbstractTandemFunction implements IReducerFu
         // should work even if we use a combiner
 
         int numberNonDecoy = 0;
+        //noinspection UnusedDeclaration
         int numberDecoy = 0;
 
         for (String val : values) {
             if (sb.length() > 0)
                 sb.append(";");
 
+            //noinspection RedundantStringToString
             String str = val.toString();
             if (str.startsWith("DECOY"))
                 numberDecoy++;
@@ -50,13 +53,12 @@ public class ProteinReducer extends AbstractTandemFunction implements IReducerFu
             sb.append(str);
         }
 
-        if (numberDecoy > 0) {
-            // same peptide is in decoy and non-decoy
-            if (numberNonDecoy > 0) {
-                // todo handle mixed decoy/non-decoy peptide
-            }
-
+        // same peptide is in decoy and non-decoy
+        //noinspection StatementWithEmptyBody
+        if (numberNonDecoy > 0) {
+            // todo handle mixed decoy/non-decoy peptide
         }
+
 
         String proteins = sb.toString();
 
@@ -82,9 +84,9 @@ public class ProteinReducer extends AbstractTandemFunction implements IReducerFu
                 return;
         }
 
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < consumer.length; i++) {
-              consumer[i].consume(new KeyValueObject<String, String>(keytr, peptideString));
-
+            consumer[i].consume(new KeyValueObject<String, String>(keytr, peptideString));
         }
 
 

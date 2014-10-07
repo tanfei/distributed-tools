@@ -94,7 +94,7 @@ public class FastaInputTest  extends  ConfiguredJobRunner implements IJobRunner 
                 incrementNumberDecoysProteins();
             incrementNumberMappedProteins();
             FastaHadoopLoader loader = getLoader();
-            loader.handleProtein(  label, sequence,  context);
+            loader.handleProtein(  label, sequence );
           //  context.write(key, value);
 
         }

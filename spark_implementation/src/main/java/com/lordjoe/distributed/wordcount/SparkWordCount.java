@@ -25,6 +25,7 @@ public class SparkWordCount {
    //     SparkMapReduce handler = new SparkMapReduce(new WordCountMapper(),new WordCountReducer(),IPartitionFunction.HASH_PARTITION,consumer);
          JavaSparkContext ctx = handler.getCtx();
 
+
         JavaRDD<KeyValueObject<String,String>> lines;
         if(args.length == 0) {
             final InputStream is = SparkWordCount.class.getResourceAsStream(MY_BOOK);

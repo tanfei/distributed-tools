@@ -1,8 +1,8 @@
 package com.lordjoe.distributed.tandem;
 
 import com.lordjoe.distributed.*;
-import com.lordjoe.distributed.protein.*;
 import org.systemsbiology.xtandem.*;
+import com.lordjoe.distributed.hydra.protein.*;
 
 import java.io.*;
 import java.util.*;

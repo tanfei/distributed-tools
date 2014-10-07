@@ -1,6 +1,5 @@
 package org.systemsbiology.xtandem.taxonomy;
 
-import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -22,18 +21,16 @@ public class HadoopFileTaxonomy implements ITaxonomy {
     public static Class THIS_CLASS = HadoopFileTaxonomy.class;
 
     private final String m_Organism;
-    private final Configuration m_Conf;
-    private IPeptideDigester m_Digester;
+     private IPeptideDigester m_Digester;
     //    private final List<IProtein> m_Proteins = new ArrayList<IProtein>();
     private Map<String, IProtein> m_IdToProtein = new HashMap<String, IProtein>();
 
     private final IMainData m_Tandem;
 
-    public HadoopFileTaxonomy(IMainData tandem, String pOrganism, Configuration conf) {
+    public HadoopFileTaxonomy(IMainData tandem, String pOrganism ) {
         m_Tandem = tandem;
         m_Organism = pOrganism;
-        m_Conf = conf;
-        TaxonHandler taxonHandler = new TaxonHandler(null, "peptide", pOrganism);
+         TaxonHandler taxonHandler = new TaxonHandler(null, "peptide", pOrganism);
         // might be null in test code
 //        if (m_DescriptiveFile != null) {
 //            InputStream is = tandem.open(m_DescriptiveFile);
@@ -145,9 +142,6 @@ public class HadoopFileTaxonomy implements ITaxonomy {
     }
 
 
-    public Configuration getConf() {
-        return m_Conf;
-    }
 
     /**
      * retrieve all peptides matching a specific mass
@@ -160,7 +154,9 @@ public class HadoopFileTaxonomy implements ITaxonomy {
     public IPolypeptide[] getPeptidesOfExactMass(final int scanmass, final boolean isSemi) {
 
         Path path = XTandemHadoopUtilities.buildPathFromMass(scanmass, getTandem());
-        String[] items = XTandemHadoopUtilities.readTextLines(path, getConf());
+        if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+        //String[] items = XTandemHadoopUtilities.readTextLines(path, getConf());
+        String[] items = null;
         if (items.length == 0)
             return IPolypeptide.EMPTY_ARRAY;
 
@@ -213,8 +209,10 @@ public class HadoopFileTaxonomy implements ITaxonomy {
         Path path = XTandemHadoopUtilities.buildPathFromMass(scanmass, getTandem());
         LineNumberReader reader = null;
         try {
-            reader = XTandemHadoopUtilities.openTextLines(path, getConf());
-            if (reader == null)
+            if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+        //    reader = XTandemHadoopUtilities.openTextLines(path, getConf());
+           reader = null;
+              if (reader == null)
                 return IPolypeptide.EMPTY_ARRAY;
             IPolypeptide[] peptidesOfExactMass = buildReadPeptides(reader, interval, isSemi);
 

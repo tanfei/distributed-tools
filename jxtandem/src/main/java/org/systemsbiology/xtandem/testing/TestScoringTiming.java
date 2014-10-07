@@ -1,16 +1,5 @@
 package org.systemsbiology.xtandem.testing;
 
-import com.lordjoe.utilities.*;
-import org.apache.hadoop.conf.*;
-import org.apache.hadoop.io.*;
-import org.systemsbiology.xtandem.*;
-import org.systemsbiology.xtandem.hadoop.*;
-import org.systemsbiology.xtandem.ionization.*;
-import org.systemsbiology.xtandem.peptide.*;
-import org.systemsbiology.xtandem.scoring.*;
-import org.systemsbiology.xtandem.taxonomy.*;
-
-import java.io.*;
 import java.util.*;
 
 /**
@@ -71,76 +60,76 @@ public class TestScoringTiming {
 // 34.0 0.11
 //Finished mass 1291 numberPeptides 30356 scored 85 not scored 11 scans pre msec   0.97 at 08:38 in 46.887 min
 //171.0 0.38
-    private static void testMassRead(JXTandemLauncher main, Configuration configuration) {
-        IPolypeptide pp = Polypeptide.fromString("AVLEFTPETPSPLIGILENK[8.014]");
-        double matchingMass = pp.getMatchingMass();
-        testMassRead(main, configuration,(int)matchingMass);
-        for (int i = 0; i < SAVED_MASSES.length; i++) {
-            testMassRead(main, configuration, SAVED_MASSES[i]);
-
-        }
-    }
-
-    private static void testMassRead(JXTandemLauncher main, Configuration configuration, final int mass) {
-        ElapsedTimer elapsed = new ElapsedTimer();
-        SequenceFile.Reader rdr = XTandemHadoopUtilities.buildScanStoreReader(configuration, mass);
-        try {
-            HadoopTandemMain application = main.getApplication();
-            String dir = application.getDatabaseName();
-            HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, "foo", configuration);
-            main.loadTaxonomy();
-            application.loadScoring();
-
-            IPolypeptide[] st = ftax.getPeptidesOfExactMass(mass, application.isSemiTryptic());
-            elapsed.showElapsed("Read " + st.length + " peptides");
-
-            String scan = XTandemHadoopUtilities.readNextScan(rdr);
-            final Scorer scorer = application.getScoreRunner();
-
-
-            ElapsedTimer specTine = new ElapsedTimer();
-                scorer.clearSpectra();
-             scorer.clearPeptides();
-
-             scorer.generateTheoreticalSpectra(st);
-            specTine.showElapsed("Generated  " + st.length + " spectra");
-             while (scan != null) {
-                 ElapsedTimer scanTine = new ElapsedTimer();
-                RawPeptideScan rscan = XTandemHadoopUtilities.readScan(scan,null);
-                 IScoredScan iScoredScan = handleScan(rscan, scorer);
-                 scan = XTandemHadoopUtilities.readNextScan(rdr);
-                scanTine.showElapsed("Handled scan " + rscan.getId());
-            }
-
-            elapsed.showElapsed("Handled mass " + mass);
-        }
-        finally {
-            try {
-                rdr.close();
-            }
-            catch (IOException e) {
-                throw new RuntimeException(e);
-
-            }
-        }
-    }
-
-    private static IScoredScan handleScan(RawPeptideScan scan, Scorer scorer) {
-         IScoredScan scoring = new OriginatingScoredScan(scan);
-        IonUseCounter counter = new IonUseCounter();
-        final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
-        int numberDotProducts = scorer.scoreScan(counter, tss, scoring);
-        return scoring;
-    }
-
-    public static void main(String[] args) {
-        Configuration configuration = new Configuration();
-        String paramsFile = args[0];
-        InputStream is = XTandemUtilities.getDescribedStream(paramsFile);
-        JXTandemLauncher main = new JXTandemLauncher(is, paramsFile, configuration);
-   //     Scorer.USE_CLASSIC_SCORING = false; // use experimental versions of the code
-        testMassRead(main, configuration);
-    }
-
+//    private static void testMassRead(JXTandemLauncher main, Configuration configuration) {
+//        IPolypeptide pp = Polypeptide.fromString("AVLEFTPETPSPLIGILENK[8.014]");
+//        double matchingMass = pp.getMatchingMass();
+//        testMassRead(main, configuration,(int)matchingMass);
+//        for (int i = 0; i < SAVED_MASSES.length; i++) {
+//            testMassRead(main, configuration, SAVED_MASSES[i]);
+//
+//        }
+//    }
+//
+//    private static void testMassRead(JXTandemLauncher main, Configuration configuration, final int mass) {
+//        ElapsedTimer elapsed = new ElapsedTimer();
+//        SequenceFile.Reader rdr = XTandemHadoopUtilities.buildScanStoreReader(configuration, mass);
+//        try {
+//            HadoopTandemMain application = main.getApplication();
+//            String dir = application.getDatabaseName();
+//            HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, "foo", configuration);
+//            main.loadTaxonomy();
+//            application.loadScoring();
+//
+//            IPolypeptide[] st = ftax.getPeptidesOfExactMass(mass, application.isSemiTryptic());
+//            elapsed.showElapsed("Read " + st.length + " peptides");
+//
+//            String scan = XTandemHadoopUtilities.readNextScan(rdr);
+//            final Scorer scorer = application.getScoreRunner();
+//
+//
+//            ElapsedTimer specTine = new ElapsedTimer();
+//                scorer.clearSpectra();
+//             scorer.clearPeptides();
+//
+//             scorer.generateTheoreticalSpectra(st);
+//            specTine.showElapsed("Generated  " + st.length + " spectra");
+//             while (scan != null) {
+//                 ElapsedTimer scanTine = new ElapsedTimer();
+//                RawPeptideScan rscan = XTandemHadoopUtilities.readScan(scan,null);
+//                 IScoredScan iScoredScan = handleScan(rscan, scorer);
+//                 scan = XTandemHadoopUtilities.readNextScan(rdr);
+//                scanTine.showElapsed("Handled scan " + rscan.getId());
+//            }
+//
+//            elapsed.showElapsed("Handled mass " + mass);
+//        }
+//        finally {
+//            try {
+//                rdr.close();
+//            }
+//            catch (IOException e) {
+//                throw new RuntimeException(e);
+//
+//            }
+//        }
+//    }
+//
+//    private static IScoredScan handleScan(RawPeptideScan scan, Scorer scorer) {
+//         IScoredScan scoring = new OriginatingScoredScan(scan);
+//        IonUseCounter counter = new IonUseCounter();
+//        final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
+//        int numberDotProducts = scorer.scoreScan(counter, tss, scoring);
+//        return scoring;
+//    }
+//
+//    public static void main(String[] args) {
+//        Configuration configuration = new Configuration();
+//        String paramsFile = args[0];
+//        InputStream is = XTandemUtilities.getDescribedStream(paramsFile);
+//        JXTandemLauncher main = new JXTandemLauncher(is, paramsFile, configuration);
+//   //     Scorer.USE_CLASSIC_SCORING = false; // use experimental versions of the code
+//        testMassRead(main, configuration);
+//    }
+//
 
 }

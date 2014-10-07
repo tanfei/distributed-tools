@@ -1249,7 +1249,7 @@ public class JXTandemLauncher implements IStreamOpener { //extends AbstractParam
         } else {
             buildDatabase = true;
         }
-        Map<Integer, Integer> sizeMap = XTandemHadoopUtilities.guaranteeDatabaseSizes(application);
+        Map<Integer, Integer> sizeMap = XTandemHadoopUtilities.guaranteeDatabaseSizes(application,application.getContext());
         if (sizeMap == null) {
             buildDatabase = true;
         }

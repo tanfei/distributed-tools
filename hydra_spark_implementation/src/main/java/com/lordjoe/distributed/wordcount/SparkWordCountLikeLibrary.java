@@ -1,8 +1,8 @@
 package com.lordjoe.distributed.wordcount;
 
 import com.lordjoe.distributed.*;
-import com.lordjoe.distributed.protein.*;
 import com.lordjoe.distributed.spectrum.*;
+import com.lordjoe.distributed.hydra.protein.*;
 import com.lordjoe.distributed.tandem.*;
 import com.lordjoe.distributed.util.*;
 import org.apache.spark.api.java.*;

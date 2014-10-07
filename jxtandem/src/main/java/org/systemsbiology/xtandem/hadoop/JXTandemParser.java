@@ -146,7 +146,8 @@ public class JXTandemParser extends ConfiguredJobRunner implements IJobRunner {
 
             incrementNumberAminoAcids(context, sequence);
             incrementNumberMappedProteins(context);
-            loader.handleProtein(label, sequence, context);
+            if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+          //  loader.handleProtein(label, sequence, context);
 
             // make a decoy
             if (isGenerateDecoys() && !isDecoy) {
@@ -154,7 +155,8 @@ public class JXTandemParser extends ConfiguredJobRunner implements IJobRunner {
                 String reverseSequence = new StringBuffer(sequence).reverse().toString();
                 incrementNumberAminoAcids(context, reverseSequence);
                 incrementNumberMappedProteins(context);
-                loader.handleProtein("DECOY_" + label, reverseSequence, context);
+                if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
+            //    loader.handleProtein("DECOY_" + label, reverseSequence, context);
             }
 
 

@@ -8,7 +8,7 @@ import javax.annotation.*;
  * User: Steve
  * Date: 9/24/2014
  */
-public class NullStringReducer implements IReducerFunction<String, String> {
+public class NullStringReducer implements IReducerFunction<String, String,String, String> {
 
     public NullStringReducer() {
        }

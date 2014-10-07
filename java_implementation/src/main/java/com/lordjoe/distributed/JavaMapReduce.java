@@ -13,7 +13,7 @@ import java.util.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializable, K extends Serializable, V extends Serializable> extends AbstractMapReduceEngine<KEYIN,VALUEIN, K, V> {
+public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> extends AbstractMapReduceEngine<KEYIN,VALUEIN,K,V, KOUT, VOUT> {
 
     public static final MapReduceEngineFactory FACTORY = new MapReduceEngineFactory() {
         /**
@@ -23,7 +23,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
          * @param pRetucer reduce function
          * @return
          */
-        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer) {
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> IMapReduce<  KEYIN, VALUEIN,   KOUT,VOUT> buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V,KOUT,VOUT> pRetucer) {
             return new JavaMapReduce(pMapper,pRetucer);
         }
 
@@ -35,27 +35,31 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
          * @param pPartitioner partition function default is HashPartition
          * @return
          */
-        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable> IMapReduce<KEYIN, VALUEIN, K, V> buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V> pRetucer, final IPartitionFunction<K> pPartitioner) {
+        @Override public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable>
+           IMapReduce<KEYIN, VALUEIN, KOUT,VOUT>
+             buildMapReduceEngine(String name,@Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
+                                            @Nonnull final IReducerFunction<K, V,KOUT,VOUT> pRetucer,
+                                            final IPartitionFunction<K> pPartitioner) {
             return new JavaMapReduce(pMapper,pRetucer,pPartitioner);
         }
     };
 
     private final ListKeyValueConsumer results = new ListKeyValueConsumer<K, V>();
 
-    public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> mapper, final IReducerFunction<K, V> reducer) {
+    public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> mapper, final IReducerFunction<K, V,KOUT,VOUT> reducer) {
         //noinspection unchecked
-        this(mapper, reducer, IPartitionFunction.HASH_PARTITION,new ListKeyValueConsumer<K, V>());
+        this(mapper, reducer, IPartitionFunction.HASH_PARTITION,new ListKeyValueConsumer<KOUT,VOUT>());
     }
 
     public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> pMapper,
-                         final IReducerFunction<K, V> pRetucer,
+                         final IReducerFunction<K, V,KOUT,VOUT> pRetucer,
                          IPartitionFunction<K> pPartitioner,
-                         IKeyValueConsumer<K, V>... consumer) {
+                         IKeyValueConsumer<KOUT, VOUT>... consumer) {
         setMap(pMapper);
         setReduce(pRetucer);
         setPartitioner(pPartitioner);
         for (int i = 0; i < consumer.length; i++) {
-            IKeyValueConsumer<K, V> cnsmr = consumer[i];
+            IKeyValueConsumer<KOUT, VOUT> cnsmr = consumer[i];
             addConsumer(cnsmr);
          }
         addConsumer(results);
@@ -73,11 +77,11 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
 
     protected void reportValues() {
         // todo move out and replace
-        List<IKeyValueConsumer<K, V>> consumers = getConsumers();
-        ListKeyValueConsumer<K, V> cnsmr = (ListKeyValueConsumer<K, V>) consumers.get(0);
-        List<KeyValueObject<K, V>> output = cnsmr.getList();
+        List<IKeyValueConsumer<KOUT,VOUT>> consumers = getConsumers();
+        ListKeyValueConsumer<KOUT,VOUT> cnsmr = (ListKeyValueConsumer<KOUT,VOUT>) consumers.get(0);
+        List<KeyValueObject<KOUT,VOUT>> output = cnsmr.getList();
         Collections.sort(output, KeyValueObject.KEY_COMPARATOR);
-        for (KeyValueObject<K, V> kv : output) {
+        for (KeyValueObject<KOUT,VOUT> kv : output) {
             System.out.println(kv.key + ":" + kv.value);
         }
     }
@@ -92,7 +96,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
 
     protected void handlePartition(Iterable<KeyValueObject<K, V>> partition) {
         IReducerFunction reduce = getReduce();
-        List<IKeyValueConsumer<K, V>> consumersList = getConsumers();
+        List<IKeyValueConsumer<KOUT,VOUT>> consumersList = getConsumers();
         @SuppressWarnings("unchecked")
         IKeyValueConsumer<K, V>[] consumers = consumersList.toArray(new IKeyValueConsumer[consumersList.size()]);
         K key = null;
@@ -174,14 +178,10 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
      * @param source    some source of data - might be a hadoop directory or a Spark RDD - this will be cast internally
      * @param otherData
      */
-    @Override public void mapReduceSource(final Object source, final Object... otherData) {
-         if(source instanceof Iterable)  {
-             performMapReduce((Iterable)source);
-             return;
-         }
-
+    @Override
+    public void mapReduceSource(@Nonnull final Object source, final Object... otherData) {
+          throw new UnsupportedOperationException("Fix This"); // ToDo
     }
-
 
 
     /**
@@ -189,7 +189,8 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
      *
      * @param source some other engine - usually this will be cast to a specific type
      */
-    @Override public void chain(final IMapReduce<?,?,KEYIN, VALUEIN> source) {
+    //@Override
+    public void chain(final IMapReduce source) {
         Iterable<KeyValueObject<KEYIN, VALUEIN>> sourceResults = source.collect();
         mapReduceSource(sourceResults);
     }
@@ -199,7 +200,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
      *
      * @return
      */
-    @Override public Iterable<KeyValueObject<K, V>> collect() {
+    @Override public Iterable<KeyValueObject<KOUT,VOUT>> collect() {
         //noinspection unchecked
         return getResults().getList();
     }

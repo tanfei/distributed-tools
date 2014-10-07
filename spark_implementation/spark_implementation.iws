@@ -23,51 +23,51 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="LibraryBuilder.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/LibraryBuilder.java">
+      <file leaf-file-name="ScanTagMapperFunction.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScanTagMapperFunction.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="712" max-vertical-offset="1445">
-              <caret line="58" column="69" selection-start-line="58" selection-start-column="69" selection-end-line="58" selection-end-column="69" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="6613" max-vertical-offset="6783">
+              <caret line="389" column="10" selection-start-line="389" selection-start-column="10" selection-end-line="389" selection-end-column="10" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SimpleLibraryBuilder.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/SimpleLibraryBuilder.java">
+      <file leaf-file-name="ProteinFragmentReducer.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ProteinFragmentReducer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="860" max-vertical-offset="1411">
-              <caret line="61" column="16" selection-start-line="61" selection-start-column="16" selection-end-line="61" selection-end-column="16" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="2941" max-vertical-offset="3213">
+              <caret line="173" column="13" selection-start-line="173" selection-start-column="13" selection-end-line="173" selection-end-column="13" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SparkWordCountLikeLibrary.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCountLikeLibrary.java">
+      <file leaf-file-name="ScoreCombiningReducer.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoreCombiningReducer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="605" max-vertical-offset="1054">
-              <caret line="49" column="76" selection-start-line="49" selection-start-column="76" selection-end-line="49" selection-end-column="76" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1802" max-vertical-offset="2006">
+              <caret line="106" column="10" selection-start-line="106" selection-start-column="10" selection-end-line="106" selection-end-column="10" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
+      <file leaf-file-name="XTandemConcatenatingWritingReducer.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/XTandemConcatenatingWritingReducer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="550" max-vertical-offset="2839">
-              <caret line="47" column="40" selection-start-line="47" selection-start-column="40" selection-end-line="47" selection-end-column="40" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="7157" max-vertical-offset="8007">
+              <caret line="421" column="16" selection-start-line="421" selection-start-column="16" selection-end-line="421" selection-end-column="16" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ProteinMapper.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinMapper.java">
+      <file leaf-file-name="ScoringReducer.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoringReducer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2822">
-              <caret line="14" column="0" selection-start-line="13" selection-start-column="1" selection-end-line="14" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="924" max-vertical-offset="7956">
+              <caret line="85" column="100" selection-start-line="85" selection-start-column="9" selection-end-line="85" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -76,8 +76,48 @@
       <file leaf-file-name="ProteinReducer.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinReducer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.36956522" vertical-offset="51" max-vertical-offset="1666">
-              <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.280083" vertical-offset="324" max-vertical-offset="1666">
+              <caret line="29" column="4" selection-start-line="29" selection-start-column="4" selection-end-line="29" selection-end-column="4" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ObjectOutputStream.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.7.0/src.zip!/java/io/ObjectOutputStream.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="25432" max-vertical-offset="41820">
+              <caret line="1496" column="124" selection-start-line="1496" selection-start-column="0" selection-end-line="1496" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TaxonomyTranch.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/TaxonomyTranch.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="34" max-vertical-offset="1003">
+              <caret line="9" column="51" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="51" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="XTandemMain.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemMain.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="4454" max-vertical-offset="17901">
+              <caret line="262" column="0" selection-start-line="262" selection-start-column="0" selection-end-line="262" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="JXTandemLauncher.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/JXTandemLauncher.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="21267" max-vertical-offset="37400">
+              <caret line="1251" column="122" selection-start-line="1251" selection-start-column="97" selection-end-line="1251" selection-end-column="122" />
               <folding />
             </state>
           </provider>
@@ -93,56 +133,56 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/MassSpecInstrument.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/MassSpecSoftware.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/taxonomy/ITaxonomy.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/TaxonomyProcessor.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/scoring/ScoringModifications.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/IScoringAlgorithm.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/SequenceUtilities.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/ionization/IonTypeScorer.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/scoring/SpectrumGenerationListener.java" />
-        <option value="E:/concurrent-tools/src/main/java/org/systemsbiology/common/INoticationListener.java" />
-        <option value="E:/concurrent-tools/src/main/java/com/lordjoe/utilities/ElapsedTimer.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/AbstractTandemFunctionX.java" />
-        <option value="E:/concurrent-tools/src/main/java/org/systemsbiology/sax/IXMLAppender.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/spark/SparkJob.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/util/ListKeyValueConsumer.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/peptide/PeptideModification.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/MassCalculator.java" />
-        <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/input/spark/SparkTandemUtilitiesTests.java" />
-        <option value="E:/concurrent-tools/pom.xml" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/pom.xml" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/chapter_and_verse/ChapterKeyClass.java" />
-        <option value="$PROJECT_DIR$/../generic_code/pom.xml" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/test/java/com/lordjoe/distributed/input/ScanReaderTest.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkUtilities.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/MapFunctionAdaptor.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemMain.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/testing/DebuggingXtandemMain.java" />
-        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/scoring/Scorer.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/test/JavaBigDataWordCount.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/test/JavaBigDataWordCount.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/NullStringMapper.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/NullStringMapper.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/NullStringReducer.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemMapper.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemReducer.java" />
-        <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/JavaBigDataWordCountTests.java" />
-        <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/BigDataIteratorTest.java" />
-        <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/JavaHighMemoryWordCount.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/JavaLibraryBuilder.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkMapReduce.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/test/WordCountOperator.java" />
-        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/MapReduceEngineFactory.java" />
-        <option value="$PROJECT_DIR$/../java_implementation/src/main/java/com/lordjoe/distributed/JavaMapReduce.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCount.java" />
         <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/SparkChapterAndVerse.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/LibraryBuilder.java" />
-        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCountLikeLibrary.java" />
         <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/SimpleLibraryBuilder.java" />
         <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinMapper.java" />
+        <option value="E:/concurrent-tools/src/main/java/org/systemsbiology/hadoopgenerated/AbstractNShotInputFormat.java" />
+        <option value="$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/GenerateAndSort.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/input/MGFInputFormat.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/FastaHadoopLoader.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCount.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/ISingleOutputReducerFunction.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/ISingleValueMapperFunction.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/testing/TestScoringTiming.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/JXTandemParser.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/taxonomy/HadoopFileTaxonomy.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/JXTandemParserPart1.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/ScoringReducer.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/IReducerFunction.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/scoring/IMultiScorer.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/chapter_and_verse/LineSimilarityReducer.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/WordCountReducer.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/NullStringReducer.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/test/WordCountOperator.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/MapReduceEngineFactory.java" />
+        <option value="$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/AbstractMapReduceEngine.java" />
+        <option value="$PROJECT_DIR$/../java_implementation/src/main/java/com/lordjoe/distributed/JavaMapReduce.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/CombineByKeyAdaptor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/ReduceFunctionAdaptor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/ReduceFunctionAdaptorTupleIterator.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/test/java/org/systemsbiology/hadoop/FastaInputTest.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemReducer.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/protein/ProteinReducer.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCountLikeLibrary.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/JavaLibraryBuilder.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/test/java/com/lordjoe/distributed/input/hydra/ScanScoreTest.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/testing/MZXMLReader.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/spectrum/SparkSpectrumUtilities.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/LibraryBuilder.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/test/java/com/lordjoe/distributed/hydra/ScanScoreTest.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemMain.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/XTandemHadoopUtilities.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkMapReduce.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/AbstractTandemFunction.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/SparkMapReduceScoringHandler.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/ScanTagMapper.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/JXTandemLauncher.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScanTagMapperFunction.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ProteinFragmentReducer.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoreCombiningReducer.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/XTandemConcatenatingWritingReducer.java" />
+        <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoringReducer.java" />
+        <option value="$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/TaxonomyTranch.java" />
         <option value="$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinReducer.java" />
       </list>
     </option>
@@ -165,10 +205,10 @@
     </treeState>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="36" />
-    <option name="y" value="238" />
+    <option name="x" value="61" />
+    <option name="y" value="113" />
     <option name="width" value="1717" />
-    <option name="height" value="906" />
+    <option name="height" value="920" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -183,7 +223,7 @@
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
   <component name="ProjectReloadState">
-    <option name="STATE" value="2" />
+    <option name="STATE" value="0" />
   </component>
   <component name="ProjectStructureProblems">
     <ignored-problems>
@@ -203,8 +243,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -213,188 +251,10 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="distributed" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="distributed" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tandem" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="distributed" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spectrum" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="spark_implementation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hydra_spark_implementation" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="distributed" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="protein" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -406,7 +266,7 @@
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="recentsLimit" value="5" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../java_implementation" />
+    <property name="last_opened_file_path" value="E:/" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
@@ -424,21 +284,21 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.lordjoe.distributed" />
+      <recent name="com.lordjoe.distributed.hydra.scoring" />
       <recent name="com.lordjoe.distributed.test" />
       <recent name="com.lordjoe.distributed.tandem" />
       <recent name="com.lordjoe.distributed.wordcount" />
-      <recent name="com.lordjoe.distributed" />
-      <recent name="com.lordjoe.distributed.input" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.lordjoe.distributed" />
+      <recent name="com.lordjoe.distributed.hydra" />
       <recent name="com.lordjoe.distributed.test" />
       <recent name="org.systemsbiology.xtandem.protein" />
       <recent name="com.lordjoe.distributed.spectrum" />
-      <recent name="com.lordjoe.distributed.input" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.JavaHighMemoryWordCount">
+  <component name="RunManager" selected="Application.ScanScoreTest">
     <configuration default="false" name="SparkWordCount" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
         <pattern>
@@ -519,30 +379,24 @@
       <ConfigurationWrapper RunnerId="Debug" />
       <method />
     </configuration>
-    <configuration default="false" name="JavaBigDataWordCountTests.testVariants" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="GenerateAndSort" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
         <pattern>
           <option name="PATTERN" value="com.lordjoe.distributed.test.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <module name="spark_implementation" />
+      <option name="MAIN_CLASS_NAME" value="com.lordjoe.distributed.test.GenerateAndSort" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" value="com.lordjoe.distributed.test" />
-      <option name="MAIN_CLASS_NAME" value="com.lordjoe.distributed.test.JavaBigDataWordCountTests" />
-      <option name="METHOD_NAME" value="testVariants" />
-      <option name="TEST_OBJECT" value="method" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
+      <module name="spark_implementation" />
       <envs />
-      <patterns />
       <RunnerSettings RunnerId="Debug">
         <option name="DEBUG_PORT" value="" />
         <option name="TRANSPORT" value="0" />
@@ -551,30 +405,24 @@
       <ConfigurationWrapper RunnerId="Debug" />
       <method />
     </configuration>
-    <configuration default="false" name="JavaBigDataWordCountTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="ScanScoreTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
         <pattern>
-          <option name="PATTERN" value="com.lordjoe.distributed.test.*" />
+          <option name="PATTERN" value="com.lordjoe.distributed.hydra.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <module name="spark_implementation" />
+      <option name="MAIN_CLASS_NAME" value="com.lordjoe.distributed.hydra.ScanScoreTest" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="tandem.xml spectra/spectrum1.mzxml" />
+      <option name="WORKING_DIRECTORY" value="file://E:/ForSteven/Sample2" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <option name="PACKAGE_NAME" value="com.lordjoe.distributed.test" />
-      <option name="MAIN_CLASS_NAME" value="com.lordjoe.distributed.test.JavaBigDataWordCountTests" />
-      <option name="METHOD_NAME" value="" />
-      <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" value="-Xmx8g" />
-      <option name="PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="moduleWithDependencies" />
-      </option>
+      <module name="hydra_spark_implementation" />
       <envs />
-      <patterns />
       <RunnerSettings RunnerId="Debug">
         <option name="DEBUG_PORT" value="" />
         <option name="TRANSPORT" value="0" />
@@ -1004,16 +852,16 @@
       <item index="5" class="java.lang.String" itemvalue="Application.SparkWordCount" />
       <item index="6" class="java.lang.String" itemvalue="Application.BigDataIteratorTest" />
       <item index="7" class="java.lang.String" itemvalue="Application.JavaHighMemoryWordCount" />
-      <item index="8" class="java.lang.String" itemvalue="JUnit.JavaBigDataWordCountTests.testVariants" />
-      <item index="9" class="java.lang.String" itemvalue="JUnit.JavaBigDataWordCountTests" />
+      <item index="8" class="java.lang.String" itemvalue="Application.GenerateAndSort" />
+      <item index="9" class="java.lang.String" itemvalue="Application.ScanScoreTest" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Application.JavaHighMemoryWordCount" />
-        <item index="1" class="java.lang.String" itemvalue="Application.BigDataIteratorTest" />
-        <item index="2" class="java.lang.String" itemvalue="Application.SparkWordCount" />
-        <item index="3" class="java.lang.String" itemvalue="JUnit.JavaBigDataWordCountTests" />
-        <item index="4" class="java.lang.String" itemvalue="JUnit.JavaBigDataWordCountTests.testVariants" />
+        <item index="0" class="java.lang.String" itemvalue="Application.ScanScoreTest" />
+        <item index="1" class="java.lang.String" itemvalue="Application.GenerateAndSort" />
+        <item index="2" class="java.lang.String" itemvalue="Application.JavaHighMemoryWordCount" />
+        <item index="3" class="java.lang.String" itemvalue="Application.BigDataIteratorTest" />
+        <item index="4" class="java.lang.String" itemvalue="Application.SparkWordCount" />
       </list>
     </recent_temporary>
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
@@ -1060,43 +908,45 @@
       <workItem from="1412092725590" duration="407000" />
       <workItem from="1412102110355" duration="19372000" />
       <workItem from="1412206045409" duration="65000" />
-      <workItem from="1412206116773" duration="19798000" />
+      <workItem from="1412206116773" duration="20400000" />
+      <workItem from="1412617138546" duration="33395000" />
+      <workItem from="1412720146944" duration="153000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="143115000" />
+    <option name="totallyTimeSpent" value="177265000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="36" y="238" width="1717" height="906" extended-state="0" />
+    <frame x="61" y="113" width="1717" height="920" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32920793" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3282353" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Java Enterprise" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.3995272" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="1948" y="215" width="1188" height="825" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" weight="0.3995272" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="1947" y="215" width="1188" height="880" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.42947105" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4220297" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24985303" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14109348" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24103469" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24397413" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3282353" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32673267" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -1139,15 +989,9 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/spectrum/SparkSpectrumUtilities.java</url>
-          <line>54</line>
+          <line>59</line>
           <properties />
           <option name="timeStamp" value="92" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkMapReduce.java</url>
-          <line>108</line>
-          <properties />
-          <option name="timeStamp" value="167" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/SimpleLibraryBuilder.java</url>
@@ -1155,8 +999,20 @@
           <properties />
           <option name="timeStamp" value="178" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemMapper.java</url>
+          <line>15</line>
+          <properties />
+          <option name="timeStamp" value="188" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkUtilities.java</url>
+          <line>157</line>
+          <properties />
+          <option name="timeStamp" value="208" />
+        </line-breakpoint>
       </breakpoints>
-      <option name="time" value="187" />
+      <option name="time" value="216" />
     </breakpoint-manager>
   </component>
   <component name="antWorkspaceConfiguration">
@@ -1164,53 +1020,243 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/ISinkFunction.java">
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/WordCountReducer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="714">
-          <caret line="11" column="7" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="52" max-vertical-offset="714">
+          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/WordCountMapper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="149" max-vertical-offset="1258">
+          <caret line="13" column="86" selection-start-line="13" selection-start-column="79" selection-end-line="13" selection-end-column="86" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/test/WordCountOperator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="642" max-vertical-offset="1173">
+          <caret line="44" column="57" selection-start-line="44" selection-start-column="37" selection-end-line="44" selection-end-column="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.7.0/src.zip!/java/io/Serializable.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2572" max-vertical-offset="2992">
+          <caret line="168" column="17" selection-start-line="168" selection-start-column="17" selection-end-line="168" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/pom.xml">
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/IMapReduce.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="917" max-vertical-offset="2091">
-          <caret line="70" column="45" selection-start-line="70" selection-start-column="45" selection-end-line="70" selection-end-column="45" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="30" max-vertical-offset="714">
+          <caret line="10" column="17" selection-start-line="10" selection-start-column="17" selection-end-line="10" selection-end-column="17" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/chapter_and_verse/ChapterKeyClass.java">
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/MapReduceEngineFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="561">
-          <caret line="26" column="9" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="425" max-vertical-offset="901">
+          <caret line="42" column="43" selection-start-line="42" selection-start-column="43" selection-end-line="42" selection-end-column="43" />
         </state>
       </provider>
     </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/api/java/JavaRDDLike.scala">
+    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/AbstractMapReduceEngine.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="1481" max-vertical-offset="9826">
-          <caret line="102" column="6" selection-start-line="102" selection-start-column="6" selection-end-line="102" selection-end-column="6" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="1275">
+          <caret line="10" column="22" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../java_implementation/src/main/java/com/lordjoe/distributed/JavaMapReduce.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-10.56" vertical-offset="161" max-vertical-offset="3587">
+          <caret line="25" column="185" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="185" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/CombineByKeyAdaptor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="132" max-vertical-offset="1394">
+          <caret line="19" column="68" selection-start-line="19" selection-start-column="68" selection-end-line="19" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/ReduceFunctionAdaptor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="396" max-vertical-offset="952">
+          <caret line="29" column="45" selection-start-line="29" selection-start-column="35" selection-end-line="29" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/ReduceFunctionAdaptorTupleIterator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1058" max-vertical-offset="1819">
+          <caret line="67" column="87" selection-start-line="67" selection-start-column="87" selection-end-line="67" selection-end-column="87" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/FastaHadoopLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2036" max-vertical-offset="4862">
+          <caret line="142" column="16" selection-start-line="142" selection-start-column="16" selection-end-line="142" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/test/java/org/systemsbiology/hadoop/FastaInputTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1254" max-vertical-offset="3655">
+          <caret line="96" column="51" selection-start-line="96" selection-start-column="51" selection-end-line="96" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemReducer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="226" max-vertical-offset="646">
+          <caret line="12" column="120" selection-start-line="12" selection-start-column="120" selection-end-line="12" selection-end-column="120" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/protein/ProteinReducer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="783" max-vertical-offset="1700">
+          <caret line="57" column="8" selection-start-line="57" selection-start-column="8" selection-end-line="57" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/JavaLibraryBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="408" max-vertical-offset="1683">
+          <caret line="46" column="36" selection-start-line="46" selection-start-column="36" selection-end-line="46" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://E:/concurrent-tools/src/main/java/org/systemsbiology/hadoop/XMLTagInputFormat.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2572" max-vertical-offset="6919">
+          <caret line="20" column="40" selection-start-line="20" selection-start-column="40" selection-end-line="20" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://E:/concurrent-tools/src/main/java/org/systemsbiology/sax/TagLimitingParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="736" max-vertical-offset="2108">
+          <caret line="61" column="16" selection-start-line="61" selection-start-column="16" selection-end-line="61" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/input/MGFInputFormat.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="243" max-vertical-offset="3553">
+          <caret line="24" column="27" selection-start-line="24" selection-start-column="13" selection-end-line="24" selection-end-column="27" />
         </state>
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.7.0/src.zip!/java/lang/String.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="17094" max-vertical-offset="51289">
-          <caret line="1031" column="0" selection-start-line="1031" selection-start-column="0" selection-end-line="1031" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1718" max-vertical-offset="51289">
+          <caret line="109" column="19" selection-start-line="109" selection-start-column="19" selection-end-line="109" selection-end-column="19" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/TaxonomyProcessor.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/input/XMLTagInputFormat.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="312" max-vertical-offset="1785">
-          <caret line="32" column="36" selection-start-line="32" selection-start-column="22" selection-end-line="32" selection-end-column="36" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="141" max-vertical-offset="5525">
+          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/testing/DebuggingXtandemMain.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/testing/MZXMLReader.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="405" max-vertical-offset="799">
-          <caret line="39" column="7" selection-start-line="39" selection-start-column="7" selection-end-line="39" selection-end-column="7" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1696" max-vertical-offset="2465">
+          <caret line="19" column="0" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/GenerateAndSort.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1186" max-vertical-offset="1853">
+          <caret line="104" column="4" selection-start-line="96" selection-start-column="3" selection-end-line="104" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/api/java/JavaPairRDD.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1345" max-vertical-offset="13005">
+          <caret line="94" column="6" selection-start-line="94" selection-start-column="6" selection-end-line="94" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemUtilities.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="22548" max-vertical-offset="42415">
+          <caret line="1383" column="33" selection-start-line="1383" selection-start-column="33" selection-end-line="1383" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/spectrum/MGFStringTupleToSpectrumTuple.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
+          <caret line="13" column="13" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCountLikeLibrary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="306" max-vertical-offset="1054">
+          <caret line="29" column="0" selection-start-line="25" selection-start-column="4" selection-end-line="29" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/LibraryBuilder.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="651" max-vertical-offset="1547">
+          <caret line="51" column="0" selection-start-line="44" selection-start-column="3" selection-end-line="51" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/spectrum/SparkSpectrumUtilities.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-5.08" vertical-offset="842" max-vertical-offset="3077">
+          <caret line="59" column="0" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
+          <folding>
+            <element signature="e#2478#2654#0" expanded="true" />
+            <element signature="e#2642#2643#0" expanded="true" />
+            <element signature="e#2789#3185#0" expanded="true" />
+            <element signature="e#3174#3175#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/api/java/JavaSparkContext.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2342" max-vertical-offset="10999">
+          <caret line="146" column="0" selection-start-line="146" selection-start-column="0" selection-end-line="146" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/test/java/com/lordjoe/distributed/hydra/ScanScoreTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="481" max-vertical-offset="901">
+          <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkUtilities.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2267" max-vertical-offset="4488">
+          <caret line="156" column="0" selection-start-line="156" selection-start-column="0" selection-end-line="156" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1221,371 +1267,142 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/apache/spark/examples/JavaLargeWordCount.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="778" max-vertical-offset="1836">
-          <caret line="30" column="19" selection-start-line="30" selection-start-column="19" selection-end-line="30" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.7.0/jre/lib/rt.jar!/sun/misc/Unsafe.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="4946" max-vertical-offset="5576">
-          <caret line="299" column="23" selection-start-line="299" selection-start-column="23" selection-end-line="299" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/Partitioner.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="325" max-vertical-offset="2788">
-          <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/AbstractMapReduceEngine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="460" max-vertical-offset="1258">
-          <caret line="50" column="0" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
-          <folding>
-            <element signature="e#603#633#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/Logging.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="393" max-vertical-offset="2652">
-          <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/SparkConf.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="495" max-vertical-offset="5100">
-          <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/IMapReduce.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="714">
-          <caret line="33" column="59" selection-start-line="33" selection-start-column="59" selection-end-line="33" selection-end-column="59" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/context/SparkContext.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="544">
-          <caret line="26" column="0" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/spectrum/SparkSpectrumUtilities.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="121" max-vertical-offset="2669">
-          <caret line="24" column="49" selection-start-line="24" selection-start-column="33" selection-end-line="24" selection-end-column="49" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/input/FastaInputFormat.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="2912" max-vertical-offset="5304">
-          <caret line="19" column="13" selection-start-line="19" selection-start-column="13" selection-end-line="19" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemMain.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="1038" max-vertical-offset="16949">
-          <caret line="76" column="18" selection-start-line="76" selection-start-column="12" selection-end-line="76" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/scoring/Scorer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="4233" max-vertical-offset="21165">
-          <caret line="19" column="13" selection-start-line="19" selection-start-column="13" selection-end-line="19" selection-end-column="13" />
-          <folding>
-            <element signature="e#4852#4853#0" expanded="true" />
-            <element signature="e#4883#4884#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/WordCountReducer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="68" max-vertical-offset="714">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/MapFunctionAdaptor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="544">
-          <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="69" max-vertical-offset="544">
+          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/WordCountMapper.java">
+    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-core_2.10/1.0.2/spark-core_2.10-1.0.2-sources.jar!/org/apache/spark/api/java/JavaRDDLike.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="81" max-vertical-offset="1258">
-          <caret line="13" column="13" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1679" max-vertical-offset="9826">
+          <caret line="107" column="0" selection-start-line="107" selection-start-column="0" selection-end-line="107" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/AbstractTandemFunction.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/XTandemHadoopUtilities.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="47" max-vertical-offset="527">
-          <caret line="11" column="44" selection-start-line="11" selection-start-column="22" selection-end-line="11" selection-end-column="44" />
-          <folding>
-            <element signature="e#372#373#0" expanded="false" />
-            <element signature="e#407#408#0" expanded="false" />
-            <element signature="e#450#451#0" expanded="false" />
-            <element signature="e#484#485#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="6665" max-vertical-offset="28084">
+          <caret line="555" column="12" selection-start-line="555" selection-start-column="12" selection-end-line="555" selection-end-column="12" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/IMapperFunction.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="476">
-          <caret line="16" column="67" selection-start-line="16" selection-start-column="58" selection-end-line="16" selection-end-column="67" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/NullStringMapper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="209" max-vertical-offset="629">
-          <caret line="28" column="0" selection-start-line="25" selection-start-column="2" selection-end-line="28" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemMapper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="107" max-vertical-offset="629">
-          <caret line="13" column="29" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/NullStringReducer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="222" max-vertical-offset="748">
-          <caret line="34" column="20" selection-start-line="15" selection-start-column="1" selection-end-line="34" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/NullTandemReducer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="103" max-vertical-offset="646">
-          <caret line="13" column="28" selection-start-line="13" selection-start-column="11" selection-end-line="13" selection-end-column="28" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/CombineByKeyAdaptor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="812" max-vertical-offset="1360">
-          <caret line="66" column="24" selection-start-line="66" selection-start-column="24" selection-end-line="66" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/JavaBigDataWordCountTests.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="952" max-vertical-offset="1683">
-          <caret line="73" column="3" selection-start-line="71" selection-start-column="4" selection-end-line="73" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.7.0/src.zip!/java/math/BigInteger.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="5912" max-vertical-offset="53822">
-          <caret line="283" column="21" selection-start-line="283" selection-start-column="21" selection-end-line="283" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/BigDataIteratorTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2074">
-          <caret line="108" column="22" selection-start-line="108" selection-start-column="22" selection-end-line="108" selection-end-column="22" />
-          <folding>
-            <element signature="e#571#572#0" expanded="true" />
-            <element signature="e#636#637#0" expanded="true" />
-            <element signature="e#886#887#0" expanded="true" />
-            <element signature="e#963#964#0" expanded="true" />
-            <element signature="e#1041#1042#0" expanded="true" />
-            <element signature="e#1139#1140#0" expanded="true" />
-            <element signature="e#1213#1214#0" expanded="true" />
-            <element signature="e#1313#1314#0" expanded="true" />
-            <element signature="e#1943#2173#0" expanded="true" />
-            <element signature="e#2162#2163#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkUtilities.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="324" max-vertical-offset="4488">
-          <caret line="27" column="23" selection-start-line="27" selection-start-column="23" selection-end-line="27" selection-end-column="23" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/apache/spark/examples/WordsMapFunction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="884">
-          <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/test/JavaHighMemoryWordCount.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6562889" vertical-offset="102" max-vertical-offset="1955">
-          <caret line="37" column="74" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
-          <folding>
-            <element signature="e#1978#1979#0" expanded="false" />
-            <element signature="e#2016#2017#0" expanded="false" />
-            <element signature="e#3034#3443#0" expanded="false" />
-            <element signature="e#3432#3433#0" expanded="false" />
-            <element signature="e#3517#3758#0" expanded="false" />
-            <element signature="e#3747#3748#0" expanded="false" />
-            <element signature="e#3835#4078#0" expanded="false" />
-            <element signature="e#4067#4068#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/org/apache/spark/examples/JavaWordCount.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="259" max-vertical-offset="1377">
-          <caret line="32" column="19" selection-start-line="32" selection-start-column="19" selection-end-line="32" selection-end-column="19" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/test/JavaBigDataWordCount.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.593095" vertical-offset="136" max-vertical-offset="3026">
-          <caret line="86" column="24" selection-start-line="86" selection-start-column="24" selection-end-line="86" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/JavaLibraryBuilder.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="825" max-vertical-offset="1683">
-          <caret line="79" column="49" selection-start-line="79" selection-start-column="36" selection-end-line="79" selection-end-column="49" />
-          <folding />
+          <caret line="10" column="17" selection-start-line="10" selection-start-column="17" selection-end-line="10" selection-end-column="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/SparkMapReduce.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5270">
-          <caret line="19" column="83" selection-start-line="19" selection-start-column="61" selection-end-line="19" selection-end-column="83" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="2126" max-vertical-offset="5440">
+          <caret line="143" column="0" selection-start-line="143" selection-start-column="0" selection-end-line="143" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/AbstractTandemFunction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="183" max-vertical-offset="986">
+          <caret line="13" column="22" selection-start-line="13" selection-start-column="22" selection-end-line="13" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/test/WordCountOperator.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/ScanTagMapper.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="574" max-vertical-offset="1139">
-          <caret line="42" column="57" selection-start-line="42" selection-start-column="37" selection-end-line="42" selection-end-column="57" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="987" max-vertical-offset="7225">
+          <caret line="70" column="87" selection-start-line="70" selection-start-column="70" selection-end-line="70" selection-end-column="87" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../generic_code/src/main/java/com/lordjoe/distributed/wordcount/MapReduceEngineFactory.java">
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/SparkMapReduceScoringHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="183" max-vertical-offset="901">
-          <caret line="26" column="59" selection-start-line="26" selection-start-column="39" selection-end-line="26" selection-end-column="59" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="225" max-vertical-offset="986">
+          <caret line="53" column="77" selection-start-line="53" selection-start-column="77" selection-end-line="53" selection-end-column="77" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/java/com/lordjoe/distributed/SparkChapterAndVerse.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/hadoop/JXTandemLauncher.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="3.7115903" vertical-offset="51" max-vertical-offset="1666">
-          <caret line="84" column="83" selection-start-line="84" selection-start-column="83" selection-end-line="84" selection-end-column="83" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="19772" max-vertical-offset="35802">
+          <caret line="1251" column="122" selection-start-line="1251" selection-start-column="97" selection-end-line="1251" selection-end-column="122" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCount.java">
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScanTagMapperFunction.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.1715039" vertical-offset="219" max-vertical-offset="918">
-          <caret line="42" column="10" selection-start-line="42" selection-start-column="10" selection-end-line="42" selection-end-column="10" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="6613" max-vertical-offset="6783">
+          <caret line="389" column="10" selection-start-line="389" selection-start-column="10" selection-end-line="389" selection-end-column="10" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../java_implementation/src/main/java/com/lordjoe/distributed/JavaMapReduce.java">
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ProteinFragmentReducer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.40369394" vertical-offset="476" max-vertical-offset="3570">
-          <caret line="37" column="198" selection-start-line="37" selection-start-column="198" selection-end-line="37" selection-end-column="198" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="2534" max-vertical-offset="2941">
+          <caret line="173" column="13" selection-start-line="173" selection-start-column="13" selection-end-line="173" selection-end-column="13" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoreCombiningReducer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="550" max-vertical-offset="2839">
-          <caret line="47" column="40" selection-start-line="47" selection-start-column="40" selection-end-line="47" selection-end-column="40" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1429" max-vertical-offset="1870">
+          <caret line="106" column="10" selection-start-line="106" selection-start-column="10" selection-end-line="106" selection-end-column="10" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/LibraryBuilder.java">
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/XTandemConcatenatingWritingReducer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="712" max-vertical-offset="1445">
-          <caret line="58" column="69" selection-start-line="58" selection-start-column="69" selection-end-line="58" selection-end-column="69" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="6410" max-vertical-offset="7395">
+          <caret line="421" column="16" selection-start-line="421" selection-start-column="16" selection-end-line="421" selection-end-column="16" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/wordcount/SparkWordCountLikeLibrary.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/XTandemMain.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="605" max-vertical-offset="1054">
-          <caret line="49" column="76" selection-start-line="49" selection-start-column="76" selection-end-line="49" selection-end-column="76" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="3661" max-vertical-offset="16881">
+          <caret line="262" column="0" selection-start-line="262" selection-start-column="0" selection-end-line="262" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/tandem/SimpleLibraryBuilder.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.7.0/src.zip!/java/io/ObjectOutputStream.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="860" max-vertical-offset="1411">
-          <caret line="61" column="16" selection-start-line="61" selection-start-column="16" selection-end-line="61" selection-end-column="16" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="24397" max-vertical-offset="40426">
+          <caret line="1496" column="124" selection-start-line="1496" selection-start-column="0" selection-end-line="1496" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinMapper.java">
+    <entry file="file://$PROJECT_DIR$/../jxtandem/src/main/java/org/systemsbiology/xtandem/TaxonomyTranch.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2822">
-          <caret line="14" column="0" selection-start-line="13" selection-start-column="1" selection-end-line="14" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="34" max-vertical-offset="1003">
+          <caret line="9" column="51" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/hydra/scoring/ScoringReducer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="924" max-vertical-offset="7956">
+          <caret line="85" column="100" selection-start-line="85" selection-start-column="9" selection-end-line="85" selection-end-column="9" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../hydra_spark_implementation/src/main/java/com/lordjoe/distributed/protein/ProteinReducer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.36956522" vertical-offset="51" max-vertical-offset="1666">
-          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.280083" vertical-offset="324" max-vertical-offset="1666">
+          <caret line="29" column="4" selection-start-line="29" selection-start-column="4" selection-end-line="29" selection-end-column="4" />
           <folding />
         </state>
       </provider>
