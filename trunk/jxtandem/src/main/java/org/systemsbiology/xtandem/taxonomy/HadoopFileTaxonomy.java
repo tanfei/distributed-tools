@@ -1,5 +1,6 @@
 package org.systemsbiology.xtandem.taxonomy;
 
+import com.lordjoe.distributed.util.*;
 import org.apache.hadoop.fs.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -153,11 +154,12 @@ public class HadoopFileTaxonomy implements ITaxonomy {
     @Override
     public IPolypeptide[] getPeptidesOfExactMass(final int scanmass, final boolean isSemi) {
 
+        IPathReader pathReader = PathUtilities.getReader();
         Path path = XTandemHadoopUtilities.buildPathFromMass(scanmass, getTandem());
-        if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
-        //String[] items = XTandemHadoopUtilities.readTextLines(path, getConf());
-        String[] items = null;
-        if (items.length == 0)
+        if(pathReader == null)
+            return IPolypeptide.EMPTY_ARRAY;
+         String[] items = pathReader.readTextLines(path.toString());
+           if (items == null || items.length == 0)
             return IPolypeptide.EMPTY_ARRAY;
 
         List<IPolypeptide> holder = new ArrayList<IPolypeptide>();

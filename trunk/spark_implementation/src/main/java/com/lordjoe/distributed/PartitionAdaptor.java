@@ -9,8 +9,14 @@ import org.apache.spark.*;
  */
 
 public class PartitionAdaptor<K>  extends Partitioner {
+
+    public static final int DEFAULT_PARTITION_COUNT = 20;
     private final IPartitionFunction<K> partitioner;
     private final int numberPartitions;
+
+    public PartitionAdaptor(final IPartitionFunction<K> pPartitioner ) {
+        this(pPartitioner,DEFAULT_PARTITION_COUNT);
+    }
 
     public PartitionAdaptor(final IPartitionFunction<K> pPartitioner,int pnumberPartitions) {
         partitioner = pPartitioner;
@@ -24,6 +30,10 @@ public class PartitionAdaptor<K>  extends Partitioner {
 
     @Override
     public int getPartition(final Object inp) {
-        return partitioner.getPartition((K)inp);
+        int partition = partitioner.getPartition((K) inp);
+        int ret = partition % numberPartitions;
+        if(ret < 0)
+            ret = -ret;
+        return ret;
     }
 }

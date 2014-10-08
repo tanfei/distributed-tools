@@ -2,8 +2,6 @@ package org.systemsbiology.xtandem.scoring;
 
 import org.junit.*;
 import org.systemsbiology.xtandem.*;
-import org.systemsbiology.xtandem.ionization.*;
-import org.systemsbiology.xtandem.peptide.*;
 
 import java.util.*;
 
@@ -76,7 +74,7 @@ public class MeasuredConditioningTest
     public static final int[] ADDED_MASSES = { 305,467, 663, 818 };
 
 
-    @Test
+   // @Test
     public void testConditioning()
     {
         XTandemMain main = new XTandemMain(

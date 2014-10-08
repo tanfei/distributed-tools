@@ -212,7 +212,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+  //  @Test
     public void oneSequenceBYTest() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();
@@ -254,7 +254,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+   // @Test
     public void oneSequenceCharge2BYTest() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();
@@ -294,7 +294,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+  //  @Test
     public void oneSequenceCharge3BYTest() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();
@@ -334,7 +334,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+   // @Test
     public void oneSequenceAXTest() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();
@@ -374,7 +374,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+  //  @Test
     public void oneSequenceCZTest() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();
@@ -416,7 +416,7 @@ public class PeptideSpectrumTest {
      * in this version we use a bitarray for logic
      * test the general [KR]|{P}  loic
      */
-    @Test
+   // @Test
     public void constructedIonizerTest() {
         IPeptideDigester digester = PeptideBondDigester.getDigester("[KR]|{P}");
         IProtein test = Protein.getProtein( ID, null, SEQUENCE1, null);
@@ -506,7 +506,7 @@ public class PeptideSpectrumTest {
 
     /**
      */
-    @Test
+   // @Test
     public void oneSequenceBYTest2() {
         XTandemMain main = new XTandemMain(XTandemUtilities.getResourceStream("input3.xml"),"input2.xml");
         main.loadScoringTest();

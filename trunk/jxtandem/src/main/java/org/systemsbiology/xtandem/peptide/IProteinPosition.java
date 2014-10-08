@@ -2,14 +2,15 @@ package org.systemsbiology.xtandem.peptide;
 
 import org.systemsbiology.sax.*;
 import org.systemsbiology.xtandem.*;
-import org.systemsbiology.xtandem.sax.*;
+
+import java.io.*;
 
 /**
  * org.systemsbiology.xtandem.peptide.IProteinPosition
  * User: steven
  * Date: 2/8/12
  */
-public interface IProteinPosition  {
+public interface IProteinPosition extends Serializable {
     public static final IProteinPosition[] EMPTY_ARRAY = {};
 
     /**

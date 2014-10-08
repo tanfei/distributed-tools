@@ -1,8 +1,9 @@
 package org.systemsbiology.xtandem.scoring;
 
-import   com.lordjoe.utilities.*;
- import org.systemsbiology.xtandem.hadoop.*;
+import com.lordjoe.utilities.*;
+import org.systemsbiology.xtandem.hadoop.*;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -10,12 +11,11 @@ import java.util.*;
  * User: steven
  * Date: 12/5/11
  */
-public class BoundedMatchSet extends BoundedTreeSet<ISpectralMatch> {
-    public static final BoundedMatchSet[] EMPTY_ARRAY = {};
-     public static final Comparator<ISpectralMatch> COOMPARER = new SpectralMatchComparator();
+public class BoundedMatchSet extends BoundedTreeSet<ISpectralMatch> implements Serializable {
+      public static final Comparator<ISpectralMatch> COOMPARER = new SpectralMatchComparator();
 
 
-     public static class SpectralMatchComparator implements Comparator<ISpectralMatch> {
+     public static class SpectralMatchComparator implements Comparator<ISpectralMatch>,Serializable {
          @Override
          public int compare(final ISpectralMatch o1, final ISpectralMatch o2) {
              if (o1 == o2)

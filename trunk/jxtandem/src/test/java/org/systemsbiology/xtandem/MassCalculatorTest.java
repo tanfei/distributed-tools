@@ -39,7 +39,7 @@ public class MassCalculatorTest {
 
     }
 
-    @Test
+   // @Test
     public void peptideTest() {
         MassCalculator mc = MassCalculator.getCalculator(MassType.average);
         double total = 0;

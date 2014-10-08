@@ -1,12 +1,14 @@
 package org.systemsbiology.xtandem.scoring;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.scoring.VariableStatistics
  * recombinable class holding data to calculate mean and standard deviation
  * User: steven
  * Date: 1/31/11
  */
-public class VariableStatistics {
+public class VariableStatistics implements Serializable {
     public static final VariableStatistics[] EMPTY_ARRAY = {};
 
     private int m_Count;

@@ -1,9 +1,7 @@
 package org.systemsbiology.xtandem.scoring;
 
 import org.systemsbiology.xtandem.*;
- import org.systemsbiology.xtandem.peptide.*;
-import org.systemsbiology.xtandem.testing.*;
-
+import org.systemsbiology.xtandem.peptide.*;
 
 import java.util.*;
 
@@ -16,7 +14,6 @@ import java.util.*;
  * @date Jan 11, 2011
  */
 public class ScoredScan extends OriginatingScoredScan   {
-    public static ScoredScan[] EMPTY_ARRAY = {};
 
     //    private ITheoreticalSpectrumSet m_Theory;
     private final Map<String, ISpectralMatch> m_PeptideToMatch = new HashMap<String, ISpectralMatch>();

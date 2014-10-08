@@ -47,7 +47,7 @@ public class AttilaModTest {
     /**
      * tests inserting >1 modifications into a peptide
      */
-    @Test
+   // @Test
     public void testAddMoreThanOneModifications() {
         IModifiedPeptide[] peps = ModifiedPolypeptide.buildModifications(new Polypeptide(TEST_PEPTIDE2, 2), ANSWER);
         // save work print the results

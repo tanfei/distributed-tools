@@ -1,6 +1,5 @@
 package org.systemsbiology.hadoop;
 
-import org.junit.*;
 import org.systemsbiology.remotecontrol.*;
 
 /**
@@ -23,7 +22,7 @@ public class HDFS1_0_ONLYTests {
     public static final String FILE_NAME = "little_lamb2.txt";
     public static final String FILE_NAME2 = "little_lamb_stays2.txt";
 
-    @Test
+  //  @Test
     public void setPermissionTest() {
         throw new UnsupportedOperationException("Fix This"); // ToDo
 //        // We can tell from the code - hard wired to use security over 0.2

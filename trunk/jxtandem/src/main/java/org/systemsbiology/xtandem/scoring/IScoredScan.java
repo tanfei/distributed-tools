@@ -3,7 +3,6 @@ package org.systemsbiology.xtandem.scoring;
 import org.systemsbiology.sax.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.ionization.*;
-import org.systemsbiology.xtandem.sax.*;
 
 /**
  * org.systemsbiology.xtandem.scoring.IScoredScan
@@ -12,7 +11,6 @@ import org.systemsbiology.xtandem.sax.*;
  */
 public interface IScoredScan extends IonTypeScorer , Comparable<IScoredScan>
 {
-    public static final IScoredScan[] EMPTY_ARRAY = {};
 
 
       /**

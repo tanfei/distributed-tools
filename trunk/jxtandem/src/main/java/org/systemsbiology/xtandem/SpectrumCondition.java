@@ -68,7 +68,7 @@ public class SpectrumCondition implements Serializable {
 
         m_tMaxPeaks = 50;
         m_fDynamicRange = 100.0F;
-        m_fMinMass = 500.0F;
+        m_fMinMass = 100.0F;  // todo was 500
         m_fMaxMass = 6000.0F;
         m_fLowestMass = 150.0F;
         m_fParentLower = 2.0F;

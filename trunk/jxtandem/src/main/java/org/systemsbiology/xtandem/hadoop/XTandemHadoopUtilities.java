@@ -1,7 +1,6 @@
 package org.systemsbiology.xtandem.hadoop;
 
 import com.lordjoe.utilities.*;
-import com.lordjoe.utilities.ElapsedTimer;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
@@ -34,8 +33,6 @@ import java.util.*;
  * @date Mar 8, 2011
  */
 public class XTandemHadoopUtilities {
-    public static XTandemHadoopUtilities[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = XTandemHadoopUtilities.class;
 
 
     public static final String[] EXTENSIONS_TO_CLEAN = {".scans", ".pep.xml", ".counters", ".hydra", ".crc"};

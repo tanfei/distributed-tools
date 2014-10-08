@@ -27,8 +27,22 @@ public class SparkUtilities implements Serializable {
      */
     public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
         Option<String> option = sparkConf.getOption("spark.master");
-        if (!option.isDefined())   // use local over nothing
-            sparkConf.setMaster("local");
+
+        if (!option.isDefined()) {   // use local over nothing   {
+            sparkConf.setMaster("local[4]");
+            /**
+             * liquanpei@gmail.com suggests to correct
+             * 14/10/08 09:36:35 ERROR broadcast.TorrentBroadcast: Reading broadcast variable 0 failed
+             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Reading broadcast variable 0 took 5.006378813 s
+             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Started reading broadcast variable 0
+             14/10/08 09:36:35 ERROR executor.Executor: Exception in task 0.0 in stage 0.0 (TID 0)
+             java.lang.NullPointerException
+             	at java.nio.ByteBuffer.wrap(ByteBuffer.java:392)
+             	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
+
+             */
+            sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+        }
 
     }
 
@@ -40,6 +54,7 @@ public class SparkUtilities implements Serializable {
      * @param sc the configuration
      * @return
      */
+    @SuppressWarnings("UnusedDeclaration")
     public static JavaRDD<String> fromInputStream(@Nonnull InputStream is, @Nonnull JavaSparkContext sc) {
         try {
             List<String> lst = new ArrayList<String>();
@@ -89,6 +104,7 @@ public class SparkUtilities implements Serializable {
         public Iterable<V> call(final KeyValueObject<K, V> pKVKeyValueObject, final K pK) throws Exception {
             return null;
         }
+
     }
 
     /**
@@ -138,7 +154,7 @@ public class SparkUtilities implements Serializable {
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static JavaRDD  realizeAndReturn(@Nonnull final JavaRDD  inp, @Nonnull JavaSparkContext jcx) {
+    public static JavaRDD realizeAndReturn(@Nonnull final JavaRDD inp, @Nonnull JavaSparkContext jcx) {
         List collect = inp.collect();    // break here and take a look
         return jcx.parallelize(collect);
     }
@@ -160,12 +176,15 @@ public class SparkUtilities implements Serializable {
 
     /**
      * make an RDD from an iterable
+     *
      * @param inp input iterator
-     * @param ctx  context
+     * @param ctx context
      * @param <T> type
-     * @return  rdd from inerator as a list
+     * @return rdd from inerator as a list
      */
-    public static  @Nonnull <T>   JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp,@Nonnull final  JavaSparkContext ctx) {
+    public static
+    @Nonnull
+    <T> JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp, @Nonnull final JavaSparkContext ctx) {
         List<T> holder = new ArrayList<T>();
         for (T k : inp) {
             holder.add(k);
@@ -180,8 +199,8 @@ public class SparkUtilities implements Serializable {
      * @param inp
      * @param <K>
      */
-    public static  void showRDD(JavaRDD  inp) {
-        List  collect = inp.collect();
+    public static void showRDD(JavaRDD inp) {
+        List collect = inp.collect();
         for (Object k : collect) {
             System.out.println(k.toString());
         }
@@ -195,14 +214,14 @@ public class SparkUtilities implements Serializable {
      * @param inp
      * @param <K>
      */
-    public static  void showPairRDD(JavaPairRDD  inp) {
+    public static void showPairRDD(JavaPairRDD inp) {
         inp.persist(StorageLevel.MEMORY_ONLY());
-        List<Tuple2 > collect = inp.collect();
-        for (Tuple2  kvTuple2 : collect) {
+        List<Tuple2> collect = inp.collect();
+        for (Tuple2 kvTuple2 : collect) {
             System.out.println(kvTuple2._1().toString() + " : " + kvTuple2._2().toString());
         }
         // now we must exit
-      //  throw new IllegalStateException("input RDD is consumed by show");
+        //  throw new IllegalStateException("input RDD is consumed by show");
     }
 
 

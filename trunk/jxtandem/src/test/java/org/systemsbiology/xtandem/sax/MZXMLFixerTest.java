@@ -70,7 +70,7 @@ public class MZXMLFixerTest {
                     " </msRun>\n" +
                     "</mzXML>";
 
-    @Test
+ //   @Test
     public void testFix() throws Exception {
 
         // the bad stuff should not work

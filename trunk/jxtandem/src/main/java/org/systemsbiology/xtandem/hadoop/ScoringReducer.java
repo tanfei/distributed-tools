@@ -39,9 +39,9 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
     public static boolean isInterestingSequence(IPolypeptide peptide) {
 
-        if(peptide.isModified() ) {
+        if (peptide.isModified()) {
             String s = peptide.toString();
-            if(s.contains("[7"))
+            if (s.contains("[7"))
                 return true;
         }
         // debugging code  to see why some sequewnces are not scored
@@ -60,7 +60,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
     // Special output for Josh Patterson LogJam
     public static final boolean USING_LOGJAM = false;
     // Special output for timing  on windows (in single mode)
- //   public static final boolean STORING_SCANS = HadoopUtilities.isWindows() && false;
+    //   public static final boolean STORING_SCANS = HadoopUtilities.isWindows() && false;
     // special debug code
     public static final boolean LOG_DOT_PRODUCT = false;
 
@@ -111,13 +111,13 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
         HadoopTandemMain application = getApplication();
         m_Taxonomy = application.getTaxonomy();
 
-        boolean makeDecoys = application.getBooleanParameter(XTandemUtilities.CREATE_DECOY_PEPTIDES_PROPERTY,false);
+        boolean makeDecoys = application.getBooleanParameter(XTandemUtilities.CREATE_DECOY_PEPTIDES_PROPERTY, false);
         //setCreateDecoyPeptides(makeDecoys);
 
-        boolean doHardCoded = application.getBooleanParameter(JXTandemLauncher.HARDCODED_MODIFICATIONS_PROPERTY,true);
+        boolean doHardCoded = application.getBooleanParameter(JXTandemLauncher.HARDCODED_MODIFICATIONS_PROPERTY, true);
         PeptideModification.setHardCodeModifications(doHardCoded);
 
-        int NMatches = application.getIntParameter(JXTandemLauncher.NUMBER_REMEMBERED_MATCHES,XTandemHadoopUtilities.DEFAULT_CARRIED_MATCHES);
+        int NMatches = application.getIntParameter(JXTandemLauncher.NUMBER_REMEMBERED_MATCHES, XTandemHadoopUtilities.DEFAULT_CARRIED_MATCHES);
         XTandemHadoopUtilities.setNumberCarriedMatches(NMatches);
 
 
@@ -146,10 +146,10 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
         String dir = application.getDatabaseName();
         if (dir != null) {
-            if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
-        //    HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism(), conf);
+            if (true) throw new UnsupportedOperationException("Fix This"); // ToDo
+            //    HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism(), conf);
             HadoopFileTaxonomy ftax = null;
-              m_Taxonomy = ftax;
+            m_Taxonomy = ftax;
         }
         else {
             // make sure the latest table is present
@@ -201,7 +201,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
         MassPeptideInterval interval = new MassPeptideInterval(keyStr);
         int mass = interval.getMass();
-        if(!interval.isUnlimited())
+        if (!interval.isUnlimited())
             System.err.println(interval.toString());
 
         // Special code to store scans at mass for timing studeies
@@ -234,8 +234,8 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 //        // Debug stuff
         //    if (mass > 2187 && mass < 2192)
         //        XTandemUtilities.breakHere();
-       // if (mass == 1392)
-      //      XTandemUtilities.breakHere();
+        // if (mass == 1392)
+        //      XTandemUtilities.breakHere();
         //       if (  mass > 3203  )
         //          XTandemUtilities.breakHere();
 
@@ -248,9 +248,9 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
             pps = filterPeptides(pps); // drop non-complient peptides
 
-            System.err.println("Number peptides = " + pps.length );
+            System.err.println("Number peptides = " + pps.length);
 
-            if(isCreateDecoyPeptides())   {
+            if (isCreateDecoyPeptides()) {
                 pps = addDecoyPeptides(pps);
             }
 
@@ -279,8 +279,6 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
             scorer.clearPeptides();
 
             ITandemScoringAlgorithm[] alternateScoring = application.getAlgorithms();
-
-
 
 
             scorer.generateTheoreticalSpectra(pps);
@@ -314,8 +312,8 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 //                }
 
                 // Find out who the user really is
-               // String userName = System.getProperty("user.name");
-              //  context.getCounter("Performance","UserIs." + userName).increment(1);
+                // String userName = System.getProperty("user.name");
+                //  context.getCounter("Performance","UserIs." + userName).increment(1);
                 // counter will tell name of user
 
 
@@ -327,8 +325,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
                 // run any other algorithms
                 for (int i = 0; i < alternateScoring.length; i++) {
                     ITandemScoringAlgorithm algorithm = alternateScoring[i];
-                    Context context1 = this.getContext();
-                    scoredScan = algorithm.handleScan(scorer,  scan, pps,context1);
+                    scoredScan = algorithm.handleScan(scorer, scan, pps);
                     ms.addAlgorithm(scoredScan);
                 }
 
@@ -340,7 +337,8 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
                     ms.serializeAsString(appender);
                     //     scoredScan.serializeAsString(appender);
 
-                    @SuppressWarnings("ConstantConditions") String outKey = ((OriginatingScoredScan) scoredScan).getKey();
+                    @SuppressWarnings("ConstantConditions")
+                    String outKey = ((OriginatingScoredScan) scoredScan).getKey();
                     while (outKey.length() < 8)
                         outKey = "0" + outKey; // this causes order to be numeric
                     String value = sb.toString();
@@ -363,11 +361,11 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
             double millisecPerScan = elapsedMillisec / (double) (numberScans * numberScoredPeptides);
             String rateStr = String.format(" scans pre msec %6.2f", millisecPerScan);
             et.showElapsed("Finished mass " + mass +
-                    " numberPeptides " + numberScoredPeptides +
-                    " scored " + numberScored +
-                    " not scored " + numberNotScored +
-                    rateStr +
-                    " at " + XTandemUtilities.nowTimeString()
+                            " numberPeptides " + numberScoredPeptides +
+                            " scored " + numberScored +
+                            " not scored " + numberNotScored +
+                            rateStr +
+                            " at " + XTandemUtilities.nowTimeString()
             );
 
             XMLUtilities.outputLine(XMLUtilities.freeMemoryString());
@@ -394,15 +392,16 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
     /**
      * add decoy peptides
+     *
      * @param pps
      * @return
      */
     protected IPolypeptide[] addDecoyPeptides(IPolypeptide[] pps) {
-      IPolypeptide[] ret = new IPolypeptide[pps.length * 2];
+        IPolypeptide[] ret = new IPolypeptide[pps.length * 2];
         for (int i = 0; i < pps.length; i++) {
             IPolypeptide pp = pps[i];
-            ret[ 2 * i]  = pp;
-            ret[ 2 * i + 1] = pp.asDecoy();
+            ret[2 * i] = pp;
+            ret[2 * i + 1] = pp.asDecoy();
 
         }
         return ret;
@@ -410,6 +409,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
     /**
      * this method removes any peptides that do not meet the current search criteria
+     *
      * @param pPps
      * @return
      */
@@ -436,6 +436,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
 
     /**
      * test if a peptide matches the current search criteria
+     *
      * @param pApplication
      * @param digester
      * @param pp
@@ -585,7 +586,7 @@ public class ScoringReducer extends AbstractTandemReducer implements SpectrumGen
     protected void cleanup(final Context context) throws IOException, InterruptedException {
         if (m_Logger != null) {
             appendLine("</JXTandem>");
-              m_Logger.close();
+            m_Logger.close();
         }
         //   context.getCounter("Performance", "TotalPeptide").increment(m_TotalPeptidesScored);
 

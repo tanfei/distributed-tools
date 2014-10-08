@@ -20,9 +20,7 @@ import java.util.*;
  * Class responsible for writing a report -
  * similar responsibilities to mreport in the C++ version
  */
-public class BiomlReporter {
-    public static BiomlReporter[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = BiomlReporter.class;
+public class BiomlReporter implements Serializable {
 
     public static final String[] PERFORMANCE_PARAMETER_KEYS =
             {

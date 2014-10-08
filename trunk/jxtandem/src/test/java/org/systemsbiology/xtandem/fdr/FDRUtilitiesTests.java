@@ -180,8 +180,8 @@ public class FDRUtilitiesTests {
 
         dh.addTrueDiscovery(score2);
 
-        Assert.assertEquals(Math.min(score1,score2),dh.getFirstScore(),0.5);
-        Assert.assertEquals(Math.max(score1,score2),dh.getLastScore(),0.5);
+        Assert.assertEquals(Math.min(score1,score2),dh.getFirstScore(),0.9);
+        Assert.assertEquals(Math.max(score1,score2),dh.getLastScore(),0.9);
 
 
     }

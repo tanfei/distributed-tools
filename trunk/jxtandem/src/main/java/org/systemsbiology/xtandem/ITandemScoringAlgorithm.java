@@ -1,6 +1,5 @@
 package org.systemsbiology.xtandem;
 
-import org.apache.hadoop.mapreduce.*;
 import org.systemsbiology.hadoop.*;
 import org.systemsbiology.xtandem.ionization.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -84,6 +83,6 @@ public interface ITandemScoringAlgorithm extends IScoringAlgorithm {
      * @param pPps  !null set of peptides ot score
      * @return !null score
      */
-    public IScoredScan handleScan(final Scorer scorer,  final RawPeptideScan scan, final IPolypeptide[] pPps,TaskInputOutputContext context);
+    public IScoredScan handleScan(final Scorer scorer,  final RawPeptideScan scan, final IPolypeptide[] pPps );
 
 }

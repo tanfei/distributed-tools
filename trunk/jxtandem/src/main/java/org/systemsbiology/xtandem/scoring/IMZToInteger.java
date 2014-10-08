@@ -1,5 +1,7 @@
 package org.systemsbiology.xtandem.scoring;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.scoring.IMZToInteger
  * peaks are represented as doubles but in many scoring algorithms it is easier to
@@ -9,7 +11,7 @@ package org.systemsbiology.xtandem.scoring;
  * User: Steve
  * Date: 9/4/11
  */
-public interface IMZToInteger {
+public interface IMZToInteger extends Serializable {
     public static final IMZToInteger[] EMPTY_ARRAY = {};
 
 

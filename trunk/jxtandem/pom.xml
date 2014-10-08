@@ -19,25 +19,30 @@
 
     <dependencies>
         <dependency>
-        	<groupId>org.slf4j</groupId>
-        	<artifactId>slf4j-log4j12</artifactId>
-        	<version>1.7.5</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
         </dependency>
 
 
         <dependency>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-          <version>1.2.9</version>
-      </dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.9</version>
+        </dependency>
 
-      <!-- needed for annotations SLewis -->
-      <dependency>
-           <groupId>com.google.code.findbugs</groupId>
-           <artifactId>jsr305</artifactId>
-           <version>2.0.1</version>
-       </dependency>
+        <!-- needed for annotations SLewis -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.1</version>
+        </dependency>
 
+        <dependency>
+            <groupId>com.lordjoe.distributed</groupId>
+            <artifactId>generic_code</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
         <!--
         <dependency>
        	<groupId>org.apache.spark</groupId>
@@ -78,23 +83,23 @@
         </dependency>
 
         <dependency>
-			<groupId>uk.ac.ebi.pride.spectracluster</groupId>
-			<artifactId>concurrenttools</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+            <groupId>uk.ac.ebi.pride.spectracluster</groupId>
+            <artifactId>concurrenttools</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <exclusions>
-                  <exclusion>
-                      <groupId>org.slf4j</groupId>
-                      <artifactId>slf4j-nop</artifactId>
-                  </exclusion>
-                  <exclusion>
-                      <groupId>org.slf4j</groupId>
-                      <artifactId>slf4j-api</artifactId>
-                   </exclusion>
-                   <exclusion>
-                       <groupId>org.slf4j</groupId>
-                       <artifactId>jcl-over-slf4j</artifactId>
-                   </exclusion>
-              </exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-nop</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
