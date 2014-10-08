@@ -19,7 +19,7 @@ public class ScanReaderTest {
             System.out.println("usage <file holding mgfs>");
             return;
         }
-        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
+        SparkConf sparkConf = new SparkConf().setAppName("ScanReaderTest");
         SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);

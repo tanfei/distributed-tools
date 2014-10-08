@@ -1,7 +1,8 @@
 package org.systemsbiology.xtandem;
 
 import org.systemsbiology.sax.*;
-import org.systemsbiology.xtandem.sax.*;
+
+import java.io.*;
 
 /**
  * org.systemsbiology.xtandem.IMeasuredSpectrum
@@ -9,7 +10,7 @@ import org.systemsbiology.xtandem.sax.*;
  * run are in alother object
  * @author Steve Lewis
   */
-public interface IMeasuredSpectrum extends ISpectrum
+public interface IMeasuredSpectrum extends ISpectrum, Serializable /* TODO ISpectrum implements Serializable */
 {
     public static IMeasuredSpectrum[] EMPTY_ARRAY = {};
     public static Class THIS_CLASS = IMeasuredSpectrum.class;

@@ -1,8 +1,6 @@
 package org.systemsbiology.xtandem;
 
-import org.apache.hadoop.mapreduce.*;
 import org.systemsbiology.hadoop.*;
-import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.ionization.*;
 import org.systemsbiology.xtandem.peptide.*;
 import org.systemsbiology.xtandem.scoring.*;
@@ -445,7 +443,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
       * @param pPps  !null set of peptides ot score
       * @return !null score
       */
-     public IScoredScan handleScan(final Scorer scorer,  final RawPeptideScan scan, final IPolypeptide[] pPps,TaskInputOutputContext context)
+     public IScoredScan handleScan(final Scorer scorer,  final RawPeptideScan scan, final IPolypeptide[] pPps )
      {
          String id = scan.getId();
           OriginatingScoredScan scoring = new OriginatingScoredScan(scan);
@@ -454,8 +452,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
           final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
 
           int numberDotProducts = scoreScan(scorer,   counter, tss, scoring);
-         context.getCounter("Performance", "TotalDotProducts").increment(numberDotProducts);
-          return scoring;
+           return scoring;
 
      }
 

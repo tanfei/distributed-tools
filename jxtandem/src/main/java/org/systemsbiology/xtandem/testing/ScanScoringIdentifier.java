@@ -2,13 +2,15 @@ package org.systemsbiology.xtandem.testing;
 
 import org.systemsbiology.xtandem.ionization.*;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.testing.ScanScoringIdentifier
  * identifier having sequence string, charge and iontype
  * User: steven
  * Date: 7/27/11
  */
-public class ScanScoringIdentifier implements Comparable<ScanScoringIdentifier> {
+public class ScanScoringIdentifier implements Comparable<ScanScoringIdentifier>,Serializable {
     public static final ScanScoringIdentifier[] EMPTY_ARRAY = {};
 
     private final String m_Sequence;

@@ -14,7 +14,6 @@ import java.util.*;
 public class TheoreticalSpectrumSet  implements ITheoreticalSpectrumSet
 {
     public static TheoreticalSpectrumSet[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = TheoreticalSpectrumSet.class;
 
     private final int m_MaxCharge;
     private final double m_MassPlusH;

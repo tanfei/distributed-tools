@@ -761,7 +761,7 @@ public class ProbIdTests {
         return ret;
     }
 
-    @Test
+   // @Test
     public void testScoring() throws Exception {
         double[] scores = new double[4];
         ProbIdScoringAlgorithm psx = new ProbIdScoringAlgorithm();

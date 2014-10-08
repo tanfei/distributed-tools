@@ -6,7 +6,6 @@ import org.systemsbiology.remotecontrol.*;
 import org.systemsbiology.xtandem.*;
 
 import java.io.*;
-import java.lang.annotation.*;
 
 /**
  * org.systemsbiology.hadoop.HDFSTests
@@ -38,7 +37,7 @@ public class HDFSTests {
 
 
 
-    @Test
+    // @Test
      public void versionTest()
      {
          HadoopMajorVersion mv = HadoopMajorVersion.CURRENT_VERSION;
@@ -47,13 +46,19 @@ public class HDFSTests {
 
     public static boolean isHDFSAccessible() {
 
-         IHDFSFileSystem access = null;
-         final String host = RemoteUtilities.getHost();
-         final int port = RemoteUtilities.getPort();
-         final String user = RemoteUtilities.getUser();
+        try {
+            IHDFSFileSystem access = null;
+            final String host = RemoteUtilities.getHost();
+            final int port = RemoteUtilities.getPort();
+            final String user = RemoteUtilities.getUser();
 
-         access = HDFSAccessor.getFileSystem(host,port) ;
-         return true;
+            access = HDFSAccessor.getFileSystem(host,port) ;
+            return true;
+        }
+        catch (Exception e) {
+           return false;
+
+        }
     }
 //
 //     RemoteUtilities.getPassword()

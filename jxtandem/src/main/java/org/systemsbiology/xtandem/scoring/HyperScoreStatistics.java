@@ -3,8 +3,8 @@ package org.systemsbiology.xtandem.scoring;
 
 import org.systemsbiology.sax.*;
 import org.systemsbiology.xtandem.*;
-import org.systemsbiology.xtandem.sax.*;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -12,7 +12,7 @@ import java.util.*;
  * User: steven
  * Date: 1/31/11
  */
-public class HyperScoreStatistics {
+public class HyperScoreStatistics implements Serializable {
     public static final HyperScoreStatistics[] EMPTY_ARRAY = {};
     public static final double ALLOWED_ERROR = 0.0000001;
 

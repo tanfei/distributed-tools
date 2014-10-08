@@ -39,6 +39,17 @@ public class SparkMapReduceScoringHandler {
     }
 
 
+    public SparkMapReduce<String, IMeasuredSpectrum, String, IMeasuredSpectrum, String, IScoredScan> getHandler() {
+        return handler;
+    }
+
+
+    public JavaRDD<KeyValueObject<String, IScoredScan>> getOutput() {
+        JavaRDD<KeyValueObject<String, IScoredScan>> output = handler.getOutput();
+        return output;
+    }
+
+
     public XTandemMain getApplication() {
         return application;
     }
@@ -49,9 +60,23 @@ public class SparkMapReduceScoringHandler {
      *
      * @param pInputs
      */
+    public void performSingleReturnMapReduce(final JavaRDD<KeyValueObject<String, IMeasuredSpectrum>> pInputs) {
+        performSetup();
+        handler.performSingleReturnMapReduce(pInputs);
+    }
+
+    /**
+     * all the work is done here
+     *
+     * @param pInputs
+     */
     public void performSourceMapReduce(final JavaRDD<KeyValueObject<String, IMeasuredSpectrum>> pInputs) {
-        ((AbstractTandemFunction)handler.getMap()).setup(getJavaContext());
-        ((AbstractTandemFunction)handler.getReduce()).setup(getJavaContext());
-         handler.performSourceMapReduce(pInputs);
+        performSetup();
+        handler.performSourceMapReduce(pInputs);
+    }
+
+    protected void performSetup() {
+        ((AbstractTandemFunction) handler.getMap()).setup(getJavaContext());
+        ((AbstractTandemFunction) handler.getReduce()).setup(getJavaContext());
     }
 }

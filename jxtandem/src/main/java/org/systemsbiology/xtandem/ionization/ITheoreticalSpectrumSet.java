@@ -2,17 +2,17 @@ package org.systemsbiology.xtandem.ionization;
 
 import org.systemsbiology.xtandem.peptide.*;
 
+import java.io.*;
+
 /**
  * org.systemsbiology.xtandem.ionization.ITheoreticalSpectrumSet
  *  Collection of all spectra from the same peptide at different charge states
  * @author Steve Lewis
  * @date Feb 21, 2011
  */
-public interface ITheoreticalSpectrumSet
+public interface ITheoreticalSpectrumSet extends Serializable
 {
     public static ITheoreticalSpectrumSet[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = ITheoreticalSpectrumSet.class;
-
 
 
     /**

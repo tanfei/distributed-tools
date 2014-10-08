@@ -103,7 +103,7 @@ public class NLineInputFormat extends FileInputFormat<LongWritable, Text> {
          * Get the progress within the split
          */
         @Override
-        public float getProgress()throws java.io.IOException  {
+        public float getProgress()  {
             return super.getProgress();    //To change body of overridden methods use File | Settings | File Templates.
         }
 
@@ -146,7 +146,8 @@ public class NLineInputFormat extends FileInputFormat<LongWritable, Text> {
             int numLines = 0;
             long begin = 0;
             long length = 0;
-            int num = -1;
+            //noinspection UnusedAssignment
+             int num = -1;
             while ((num = lr.readLine(line)) > 0) {
                 numLines++;
                 length += num;
@@ -187,6 +188,7 @@ public class NLineInputFormat extends FileInputFormat<LongWritable, Text> {
      * @param job      the job to modify
      * @param numLines the number of lines per split
      */
+    @SuppressWarnings("UnusedDeclaration")
     public static void setNumLinesPerSplit(Job job, int numLines) {
         job.getConfiguration().setInt(LINES_PER_MAP, 10);
     }

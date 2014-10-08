@@ -113,7 +113,7 @@ public class MzMLReaderTests {
                     "          </binaryDataArrayList>\n" +
                     "        </spectrum>";
 
-      @Test
+   //   @Test
      public void testScanToMzML()
      {
          // test that to xml write and decode is idempotent
@@ -130,7 +130,7 @@ public class MzMLReaderTests {
          }
 
      }
-    @Test
+  //  @Test
      public void testScanToMzML2()
      {
          StringBuilder sb = new StringBuilder(SPECTRUM2_1);
@@ -156,7 +156,7 @@ public class MzMLReaderTests {
      * test that my sax parser can reda a spectrun - this is needed when we are parsing
      * ScanScores and including the raw data
      */
-    @Test
+  //  @Test
     public void testSpectrumReader()
     {
         // test that to xml write and decode is idempotent
@@ -168,7 +168,7 @@ public class MzMLReaderTests {
     }
 
     
-    @Test
+  //  @Test
     public void testScanToMzMLDoesNotLoseData()
     {
         // test that to xml write and decode is idempotent
@@ -180,7 +180,7 @@ public class MzMLReaderTests {
         Assert.assertTrue(pepScan.equivalent(pepScan2));
     }
 
-    @Test
+  //  @Test
     public void testScanRead()
     {
         // this should not throw exceptions
@@ -191,7 +191,7 @@ public class MzMLReaderTests {
     /**
      * Same as the test with Proteos except we are handling an XML Fragment
      */
-    @Test
+   // @Test
     public void testReadAsProteos() {
 
         SpectrumInterface testSpectrum1 = MzMLReader.spectrumFromFragment(SAMPLE_SPECTRUM_FRAGMENT);
@@ -220,7 +220,7 @@ public class MzMLReaderTests {
 
 
 
-    @Test
+  //  @Test
     public void testRead10spectra_32() {
         final Class<? extends MzMLReaderTests> aClass = getClass();
 
@@ -255,7 +255,7 @@ public class MzMLReaderTests {
     /**
      * read a whole file packed as a resource
      */
-    @Test
+  //  @Test
     public void testMzml_vs_mzxml() {
         Class cls = MzMLReaderTests.class;
         InputStream inp = cls.getResourceAsStream("10spectra_32x32.mzML");

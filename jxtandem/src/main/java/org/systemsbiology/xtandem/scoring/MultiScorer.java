@@ -1,7 +1,6 @@
 package org.systemsbiology.xtandem.scoring;
 
 import org.systemsbiology.sax.*;
-import org.systemsbiology.xtandem.sax.*;
 
 import java.util.*;
 
@@ -10,12 +9,15 @@ import java.util.*;
  * User: Steve
  * Date: 1/12/12
  */
-public class MultiScorer implements IMultiScorer {
+public class MultiScorer implements IMultiScorer  {
     public static final MultiScorer[] EMPTY_ARRAY = {};
 
     public static final String TAG = "MultiScorer";
 
     private final Map<String, IScoredScan> m_Scores = new HashMap<String, IScoredScan>();
+
+    public MultiScorer() {
+    }
 
     /**
        * return a list of all algorithm names
@@ -58,6 +60,7 @@ public class MultiScorer implements IMultiScorer {
         }
         return false;
     }
+
 
     /**
      * if present return a  IScoredScan for an algorithm

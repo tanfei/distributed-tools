@@ -97,7 +97,7 @@ public class PeptideModificationTests {
     /**
      * testsinserting modifications into a peptide
      */
-    @Test
+   // @Test
     public void testAddModifications() {
         IModifiedPeptide[] peps = ModifiedPolypeptide.buildModifications(new Polypeptide(TEST_PEPTIDE, 1), ANSWER);
         // save work print the results

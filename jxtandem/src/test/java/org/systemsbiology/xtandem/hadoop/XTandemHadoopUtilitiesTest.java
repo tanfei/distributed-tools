@@ -78,7 +78,7 @@ public class XTandemHadoopUtilitiesTest {
 
     }
 
-    @Test
+    //@Test
     public void testDatabaseStatistics()
     {
         Configuration conf = new Configuration();

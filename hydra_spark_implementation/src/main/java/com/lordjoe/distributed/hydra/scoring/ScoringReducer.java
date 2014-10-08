@@ -3,6 +3,7 @@ package com.lordjoe.distributed.hydra.scoring;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.tandem.*;
 import com.lordjoe.utilities.*;
+import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.*;
 import org.apache.spark.api.java.*;
 import org.systemsbiology.common.*;
@@ -24,8 +25,8 @@ import java.util.*;
  * User: Steve
  * Date: 10/6/2014
  */
-public class ScoringReducer extends AbstractTandemFunction implements ISingleOutputReducerFunction<String,IMeasuredSpectrum,String,IScoredScan>,
-        IReducerFunction<String,IMeasuredSpectrum,String,IScoredScan>,SpectrumGenerationListener, INoticationListener {
+public class ScoringReducer extends AbstractTandemFunction implements ISingleOutputReducerFunction<String, IMeasuredSpectrum, String, IScoredScan>,
+        IReducerFunction<String, IMeasuredSpectrum, String, IScoredScan>, SpectrumGenerationListener, INoticationListener {
     private ITaxonomy m_Taxonomy;
     private long m_MaxPeptides;
     private int m_Notifications;
@@ -46,7 +47,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
 
     @Override
-    public void setup(JavaSparkContext context)   {
+    public void setup(JavaSparkContext context) {
         // read configuration lines
 
 //        IAnalysisParameters ap = AnalysisParameters.getInstance();
@@ -75,9 +76,9 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
         String dir = application.getDatabaseName();
         if (dir != null) {
-         //     HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism(), conf);
-            HadoopFileTaxonomy ftax = null;
-             m_Taxonomy = ftax;
+            Configuration entries = context.hadoopConfiguration();
+            HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism() );
+            m_Taxonomy = ftax;
         }
         else {
             // make sure the latest table is present
@@ -102,7 +103,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
     @Override
     public void onSpectrumGeneration(final ITheoreticalSpectrumSet spec) {
         incrementCounter("Performance", "TotalSpectra");
-      }
+    }
 
     /**
      * notification of something
@@ -118,15 +119,143 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
      * implement this A reducer is quaranteed to return one Key Value pair for every Key
      *
      * @param key
-     * @param value
+     * @param scan
      * @return
      */
     @Nonnull
     @Override
-    public KeyValueObject<String, IScoredScan> handleValues(@Nonnull final String key, @Nonnull final IMeasuredSpectrum value) {
-        return null;
-    }
+    public KeyValueObject<String, IScoredScan> handleValue(@Nonnull final String keyStr, @Nonnull final IMeasuredSpectrum scan) {
 
+        MassPeptideInterval interval = new MassPeptideInterval(keyStr);
+        int mass = interval.getMass();
+        if (!interval.isUnlimited())
+            System.err.println(interval.toString());
+
+        // Special code to store scans at mass for timing studeies
+        //        if (STORING_SCANS) {
+        //            if (!TestScoringTiming.SAVED_MASS_SET.contains(mass))
+        //                return;
+        //        }
+
+        int numberScans = 0;
+        int numberScored = 0;
+        int numberNotScored = 0;
+
+        XTandemMain application = getApplication();
+
+        // if we do not score this mass continue
+        SpectrumCondition sp = application.getSpectrumParameters();
+      //  if (!sp.isMassScored(mass))
+     //      return new KeyValueObject(keyStr, new ScoredScan((RawPeptideScan) scan));
+
+
+        // Special code to store scans at mass for timing stueies
+        SequenceFile.Writer writer = null;
+
+        int numberScoredPeptides = 0;
+
+        ElapsedTimer et = new ElapsedTimer();
+        try {
+            IPolypeptide[] pps = getPeptidesOfExactMass(interval);
+
+
+            pps = filterPeptides(pps); // drop non-complient peptides
+
+            System.err.println("Number peptides = " + pps.length);
+
+            if (isCreateDecoyPeptides()) {
+                pps = addDecoyPeptides(pps);
+            }
+
+            //            pps = interval.filterPeptideList(pps);  // we may not use all peptides depending on the size
+            numberScoredPeptides = pps.length;
+
+            if (numberScoredPeptides == 0) {
+                //noinspection SimplifiableIfStatement,PointlessBooleanExpression,ConstantConditions,RedundantIfStatement
+                return new KeyValueObject(keyStr, new ScoredScan((RawPeptideScan) scan));
+            }
+
+            if (m_MaxPeptides < numberScoredPeptides) {
+                m_MaxPeptides = numberScoredPeptides;
+                System.err.println("Max peptides " + m_MaxPeptides + " for mass " + mass);
+            }
+
+            final XTandemMain app = application;
+            final Scorer scorer = app.getScoreRunner();
+
+
+            scorer.clearSpectra();
+            scorer.clearPeptides();
+
+            ITandemScoringAlgorithm[] alternateScoring = application.getAlgorithms();
+
+
+            scorer.generateTheoreticalSpectra(pps);
+
+
+            if (scan == null)
+                return new KeyValueObject(keyStr, new ScoredScan((RawPeptideScan) scan));
+            numberScans++;
+            String id = scan.getId();
+
+
+            incrementCounter("Performance", "TotalScans");
+
+            if(alternateScoring.length != 1)
+                throw new IllegalStateException("we can only handle one scoring Algorithm");
+
+
+            ITandemScoringAlgorithm algorithm = alternateScoring[0];
+            IScoredScan scoredScan =  algorithm.handleScan(scorer,(RawPeptideScan)scan, pps );
+
+//            MultiScorer ms = new MultiScorer();
+//            //              ms.addAlgorithm(scoredScan);
+//            // run any other algorithms
+//            for (int i = 0; i < alternateScoring.length; i++) {
+//                ITandemScoringAlgorithm algorithm = alternateScoring[i];
+//                scoredScan = algorithm.handleScan(scorer,(RawPeptideScan)scan, pps );
+//                ms.addAlgorithm(scoredScan);
+//            }
+
+//
+//            if (ms.isMatchPresent()) {
+//                StringBuilder sb = new StringBuilder();
+//                IXMLAppender appender = new XMLAppender(sb);
+//
+//                ms.serializeAsString(appender);
+//                //     scoredScan.serializeAsString(appender);
+//
+//                @SuppressWarnings("ConstantConditions")
+//                String outKey = ((OriginatingScoredScan) scoredScan).getKey();
+//                while (outKey.length() < 8)
+//                    outKey = "0" + outKey; // this causes order to be numeric
+//                String value = sb.toString();
+//                if (true)
+//                    throw new UnsupportedOperationException("Fix This"); // ToDo
+//                // writeKeyValue(outKey, scan, context);
+//                numberScored++;
+//            }
+//            else {
+//                // debug repeat
+//                //    scoredScan = handleScan(scorer, scan, pps);
+//                //   bestMatch = scoredScan.getBestMatch();
+//                numberNotScored++;
+//                // XTandemUtilities.outputLine("No score for " + id + " at mass " + mass);
+//            }
+
+            return new KeyValueObject(keyStr, scoredScan);
+
+        }
+        catch (RuntimeException e) {
+            // look at any issues
+            XTandemUtilities.breakHere();
+            String message = e.getMessage();
+            e.printStackTrace(System.err);
+            throw e;
+
+        }
+
+    }
 
     /**
      * this is what a reducer does
@@ -138,7 +267,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
     @Nonnull
     @Override
     public void handleValues(@Nonnull final String keyStr, @Nonnull final Iterable<IMeasuredSpectrum> values, final IKeyValueConsumer<String, IScoredScan>... consumer) {
-            int charge = 1;
+        int charge = 1;
 
         MassPeptideInterval interval = new MassPeptideInterval(keyStr);
         int mass = interval.getMass();
@@ -186,7 +315,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
             if (numberScoredPeptides == 0) {
                 //noinspection SimplifiableIfStatement,PointlessBooleanExpression,ConstantConditions,RedundantIfStatement
-                       return;  // nothing to score
+                return;  // nothing to score
             }
 
             if (m_MaxPeptides < numberScoredPeptides) {
@@ -212,7 +341,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
                 IMeasuredSpectrum scan = textIterator.next();
 
 
-                  if (scan == null)
+                if (scan == null)
                     return; // todo or is an exception proper
                 numberScans++;
                 String id = scan.getId();
@@ -226,9 +355,9 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
                 // run any other algorithms
                 for (int i = 0; i < alternateScoring.length; i++) {
                     ITandemScoringAlgorithm algorithm = alternateScoring[i];
-                    if(true)
-                            throw new UnsupportedOperationException("Fix This"); // ToDo
-              //       scoredScan = algorithm.handleScan(scorer, scan, pps, context1);
+                    if (true)
+                        throw new UnsupportedOperationException("Fix This"); // ToDo
+                    //       scoredScan = algorithm.handleScan(scorer, scan, pps, context1);
                     ms.addAlgorithm(scoredScan);
                 }
 
@@ -245,9 +374,9 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
                     while (outKey.length() < 8)
                         outKey = "0" + outKey; // this causes order to be numeric
                     String value = sb.toString();
-                    if(true)
+                    if (true)
                         throw new UnsupportedOperationException("Fix This"); // ToDo
-                   // writeKeyValue(outKey, value, context);
+                    // writeKeyValue(outKey, value, context);
                     numberScored++;
                 }
                 else {
@@ -437,7 +566,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
         final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
 
         int numberDotProducts = scorer.scoreScan(counter, tss, scoring);
-        incrementCounter("Performance", "TotalDotProducts",numberDotProducts);
+        incrementCounter("Performance", "TotalDotProducts", numberDotProducts);
 
         //        if (m_Logger != null) {
         //            for (int i = 0; i < tss.length; i++) {
@@ -450,7 +579,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
         return scoring;
     }
- 
+
 
     protected IPolypeptide[] getPeptidesOfExactMass(MassPeptideInterval interval) {
         final XTandemMain application = getApplication();
@@ -465,6 +594,6 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
         return st;
     }
 
-    protected void cleanup()   {
+    protected void cleanup() {
     }
 }

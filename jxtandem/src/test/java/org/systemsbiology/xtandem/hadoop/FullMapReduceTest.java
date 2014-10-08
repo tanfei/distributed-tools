@@ -104,7 +104,7 @@ public class FullMapReduceTest {
         return m_Handler;
     }
 
-    @Test
+  // @Test
     public void databaseLoadTest() {
 
         IPolypeptide[] fragments = m_Handler.getFragments();
