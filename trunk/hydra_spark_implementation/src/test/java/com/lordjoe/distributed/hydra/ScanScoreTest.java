@@ -23,7 +23,38 @@ import java.util.*;
  */
 public class ScanScoreTest {
 
+    public static class writeScoresMapper implements Function<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
+        final BiomlReporter reporter;
 
+        private writeScoresMapper(final BiomlReporter pReporter) {
+            reporter = pReporter;
+        }
+
+
+
+        @Override
+        public Tuple2<String, String> call(final Tuple2<String, IScoredScan> v1) throws Exception {
+            IScoredScan scan = v1._2();
+            StringWriter sw = new StringWriter();
+            PrintWriter out = new PrintWriter(sw);
+            reporter.writeScanScores(scan, out, 1);
+            return new Tuple2(v1._1(), sw.toString());
+        }
+    }
+
+    public static class ScanKeyMapper implements PairFlatMapFunction<Iterator<KeyValueObject<String, IScoredScan>>, String, IScoredScan> {
+        @Override
+        public Iterable<Tuple2<String, IScoredScan>> call(final Iterator<KeyValueObject<String, IScoredScan>> t) throws Exception {
+            List<Tuple2<String, IScoredScan>> mapped = new ArrayList<Tuple2<String, IScoredScan>>();
+            while (t.hasNext()) {
+                KeyValueObject<String, IScoredScan> kscan = t.next();
+                IScoredScan value = kscan.value;
+                String id = value.getId(); //  now we match scans
+                mapped.add(new Tuple2(id, value));
+            }
+            return mapped;
+        }
+    }
 
     public static class DropNoMatchScansFilter implements Function<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
         @Override
@@ -91,19 +122,7 @@ public class ScanScoreTest {
          */
         scores = scores.filter(new DropNoMatchScansFilter());
 
-        JavaPairRDD<String, IScoredScan> mappedByScanKey = scores.mapPartitionsToPair(new PairFlatMapFunction<Iterator<KeyValueObject<String, IScoredScan>>, String, IScoredScan>() {
-            @Override
-            public Iterable<Tuple2<String, IScoredScan>> call(final Iterator<KeyValueObject<String, IScoredScan>> t) throws Exception {
-                List<Tuple2<String, IScoredScan>> mapped = new ArrayList<Tuple2<String, IScoredScan>>();
-                while (t.hasNext()) {
-                    KeyValueObject<String, IScoredScan> kscan = t.next();
-                    IScoredScan value = kscan.value;
-                    String id = value.getId(); //  now we match scans
-                    mapped.add(new Tuple2(id, value));
-                }
-                return mapped;
-            }
-        });
+        JavaPairRDD<String, IScoredScan> mappedByScanKey = scores.mapPartitionsToPair(new ScanKeyMapper());
 
         JavaPairRDD<String, IScoredScan> bestScores = mappedByScanKey.reduceByKey(new chooseBestScanScore());
 
@@ -119,22 +138,5 @@ public class ScanScoreTest {
 
     }
 
-    private static class writeScoresMapper implements Function<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
-        final BiomlReporter reporter;
 
-        private writeScoresMapper(final BiomlReporter pReporter) {
-            reporter = pReporter;
-        }
-
-
-
-        @Override
-        public Tuple2<String, String> call(final Tuple2<String, IScoredScan> v1) throws Exception {
-            IScoredScan scan = v1._2();
-            StringWriter sw = new StringWriter();
-            PrintWriter out = new PrintWriter(sw);
-            reporter.writeScanScores(scan, out, 1);
-            return new Tuple2(v1._1(), sw.toString());
-        }
-    }
 }
