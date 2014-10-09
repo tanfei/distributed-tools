@@ -23,6 +23,7 @@ public class SparkMapReduceScoringHandler {
     public SparkMapReduceScoringHandler(File congiguration) {
         context = new SparkContext("LibraryBuilder");
         SparkUtilities.guaranteeSparkMaster(context.getSparkConf());    // use local if no master provided
+        // needed to fix norway bug
 
         application = new XTandemMain(congiguration);
         handler = new SparkMapReduce("Score Scans", new ScanTagMapperFunction(application), new ScoringReducer(application));

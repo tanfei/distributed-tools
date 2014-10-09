@@ -31,6 +31,21 @@ import java.util.regex.*;
 public final class JavaLargeWordCount {
     private static final Pattern SPACE = Pattern.compile(" ");
 
+    public static class PartitionByStart extends Partitioner {
+        @Override public int numPartitions() {
+            return 26;
+        }
+
+        @Override public int getPartition(final Object key) {
+            String s = (String)key;
+            if(s.length() == 0)
+                throw new IllegalStateException("problem"); // ToDo change
+            int ret = s.charAt(0) - 'A';
+            ret = Math.min(25,ret) ;
+            ret = Math.max(0,ret);
+            return 25 - ret;
+        }
+    }
     public static void main(String[] args) throws Exception {
 
         if (args.length < 1) {
@@ -40,9 +55,6 @@ public final class JavaLargeWordCount {
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
         SparkUtilities.guaranteeSparkMaster(sparkConf);
-         //  sparkConf.setExecutorEnv("spark.executor.extraClassPath","/SparkExamples/target/classes");
-        // String[] jars = { "/SparkExamples/target/word-count-examples_2.10-1.0.0.jar" };
-        //  sparkConf.setJars(jars);
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
         JavaRDD<String> lines = ctx.textFile(args[0], 1);
@@ -88,20 +100,5 @@ public final class JavaLargeWordCount {
         }
     }
 
-    public static class PartitionByStart extends Partitioner {
-        @Override public int numPartitions() {
-            return 26;
-        }
-
-        @Override public int getPartition(final Object key) {
-            String s = (String)key;
-            if(s.length() == 0)
-                throw new IllegalStateException("problem"); // ToDo change
-            int ret = s.charAt(0) - 'A';
-            ret = Math.min(25,ret) ;
-            ret = Math.max(0,ret);
-            return 25 - ret;
-        }
-    }
 }
 

@@ -2,15 +2,13 @@ package org.systemsbiology.xtandem;
 
 import org.systemsbiology.sax.*;
 
-import java.io.*;
-
 /**
  * org.systemsbiology.xtandem.IMeasuredSpectrum
  *   A spedctrum used for scoring - characteristics of the
  * run are in alother object
  * @author Steve Lewis
   */
-public interface IMeasuredSpectrum extends ISpectrum, Serializable /* TODO ISpectrum implements Serializable */
+public interface IMeasuredSpectrum extends ISpectrum
 {
     public static IMeasuredSpectrum[] EMPTY_ARRAY = {};
     public static Class THIS_CLASS = IMeasuredSpectrum.class;

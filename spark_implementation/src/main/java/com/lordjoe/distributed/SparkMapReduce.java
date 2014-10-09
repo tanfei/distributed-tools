@@ -207,7 +207,10 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         //
 
         IReducerFunction reduce = getReduce();
-        JavaPairRDD<K, KeyAndValues<K, V>> reducedSets = KeyAndValues.combineByKey(kkv);
+        // for some reason the compiler thnks K or V is not Serializable
+        JavaPairRDD<K, Tuple2<K, V>> kkv1 = kkv;
+       // JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>> kkv1 = (JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>>)kkv;
+        JavaPairRDD<K, KeyAndValues<K, V>> reducedSets = ( JavaPairRDD<K, KeyAndValues<K, V>>)KeyAndValues.combineByKey(kkv1);
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized

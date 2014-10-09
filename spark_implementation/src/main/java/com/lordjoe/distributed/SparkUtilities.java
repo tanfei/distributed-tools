@@ -41,7 +41,8 @@ public class SparkUtilities implements Serializable {
              	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
 
              */
-            sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+          //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+            sparkConf.set("spark.mesos.coarse","true");
         }
 
     }

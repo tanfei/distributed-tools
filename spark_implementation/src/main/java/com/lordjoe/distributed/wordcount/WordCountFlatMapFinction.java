@@ -2,6 +2,7 @@ package com.lordjoe.distributed.wordcount;
 
 import com.lordjoe.distributed.util.*;
 import org.apache.spark.api.java.function.*;
+import org.apache.spark.spillable.*;
 import scala.*;
 
 import java.util.*;
@@ -15,7 +16,7 @@ public class WordCountFlatMapFinction implements FlatMapFunction<Iterator<Tuple2
 
 
     private String word;
-    List ret = new ArrayList();
+    private SpillableList<WordNumber> ret = new SpillableList<WordNumber>(500);
 
     @Override public Iterable<WordNumber> call(final Iterator<Tuple2<String, Integer>> pTuple2Iterator) throws Exception {
         int sum = 0;
