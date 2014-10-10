@@ -42,8 +42,9 @@ public class SparkUtilities implements Serializable {
 
              */
           //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
-            sparkConf.set("spark.mesos.coarse","true");
-        }
+         }
+        // needed by the hwlogin cluster
+        sparkConf.set("spark.mesos.coarse","true");
 
     }
 
