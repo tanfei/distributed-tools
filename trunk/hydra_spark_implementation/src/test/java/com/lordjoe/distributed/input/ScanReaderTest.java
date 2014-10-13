@@ -6,6 +6,8 @@ import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.systemsbiology.xtandem.*;
 
+import java.util.*;
+
 /**
  * com.lordjoe.distributed.input.ScanReaderTest
  * User: Steve
@@ -20,7 +22,9 @@ public class ScanReaderTest {
             return;
         }
         SparkConf sparkConf = new SparkConf().setAppName("ScanReaderTest");
-        SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
+        Properties props = new Properties();
+        props.setProperty("spark.mesos.coarse", "true");
+        SparkUtilities.guaranteeSparkMaster(sparkConf, props);    // use local if no master provided
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
 

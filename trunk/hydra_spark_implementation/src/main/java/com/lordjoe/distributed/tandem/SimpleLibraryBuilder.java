@@ -15,20 +15,22 @@ import java.util.*;
  */
 public class SimpleLibraryBuilder {
 
-    private final SparkContext context;
+    private final SparkApplicationContext context;
 
     public SimpleLibraryBuilder(File congiguration) {
-        context = new SparkContext("LibraryBuilder");
-        SparkUtilities.guaranteeSparkMaster(context.getSparkConf());    // use local if no master provided
+        context = new SparkApplicationContext("LibraryBuilder");
+        Properties props = new Properties();
+        props.setProperty("spark.mesos.coarse", "true");
+        SparkUtilities.guaranteeSparkMaster(context.getSparkConf(), props);
 
      }
 
-    public SparkContext getContext() {
+    public SparkApplicationContext getContext() {
         return context;
     }
 
     public JavaSparkContext getJavaContext() {
-        SparkContext context1 = getContext();
+        SparkApplicationContext context1 = getContext();
         return context1.getCtx();
     }
 

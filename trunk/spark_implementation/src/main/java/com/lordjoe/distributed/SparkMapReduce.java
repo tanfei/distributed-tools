@@ -9,6 +9,7 @@ import scala.*;
 import javax.annotation.*;
 import java.io.Serializable;
 import java.nio.file.*;
+import java.util.*;
 
 /**
  * com.lordjoe.distributed.SparkMapReduce
@@ -17,6 +18,16 @@ import java.nio.file.*;
  */
 public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable>
         extends AbstractMapReduceEngine<KEYIN, VALUEIN, K, V, KOUT, VOUT> implements Serializable {
+
+    private static Properties sparkEngineProperties = new Properties();
+
+    public static Properties getSparkEngineProperties() {
+        return sparkEngineProperties;
+    }
+
+    public static void setSparkEngineProperties(final Properties pSparkEngineProperties) {
+        sparkEngineProperties = pSparkEngineProperties;
+    }
 
     public static final MapReduceEngineFactory FACTORY = new MapReduceEngineFactory() {
 
@@ -29,8 +40,9 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
          * @return return a constructed instance
          */
         @Override
-        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> IMapReduce<KEYIN, VALUEIN, KOUT, VOUT> buildMapReduceEngine(@Nonnull final String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V, KOUT, VOUT> pRetucer) {
-            return new SparkMapReduce(name, pMapper, pRetucer);
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> IMapReduce<KEYIN, VALUEIN, KOUT, VOUT>
+             buildMapReduceEngine( @Nonnull final String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V, KOUT, VOUT> pRetucer) {
+            return new SparkMapReduce( name, pMapper, pRetucer);
         }
 
         /**
@@ -43,8 +55,9 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
          * @return return a constructed instance
          */
         @Override
-        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> IMapReduce<KEYIN, VALUEIN, KOUT, VOUT> buildMapReduceEngine(@Nonnull final String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V, KOUT, VOUT> pRetucer, final IPartitionFunction<K> pPartitioner) {
-            return new SparkMapReduce(name, pMapper, pRetucer, pPartitioner);
+        public <KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable> IMapReduce<KEYIN, VALUEIN, KOUT, VOUT>
+        buildMapReduceEngine( @Nonnull final String name, @Nonnull final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper, @Nonnull final IReducerFunction<K, V, KOUT, VOUT> pRetucer, final IPartitionFunction<K> pPartitioner) {
+            return new SparkMapReduce( name, pMapper, pRetucer, pPartitioner);
         }
     };
     // NOTE these are not serializable so they must be transient or an exception will be thrown on serialization
@@ -52,17 +65,17 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
     private transient JavaSparkContext ctx;
     private JavaRDD<KeyValueObject<KOUT, VOUT>> output;
 
-    public SparkMapReduce(final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper, final IReducerFunction<K, V, KOUT, VOUT> reducer) {
+    public SparkMapReduce( final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper, final IReducerFunction<K, V, KOUT, VOUT> reducer) {
         //noinspection unchecked
-        this(name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
+        this( name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
     }
 
-    public SparkMapReduce(final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
+    public SparkMapReduce( final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
                           final IReducerFunction<K, V, KOUT, VOUT> reducer,
                           IPartitionFunction<K> pPartitioner,
                           IKeyValueConsumer<KOUT, VOUT>... pConsumer) {
 
-        this(new SparkConf(), name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
+        this(new SparkConf(),  name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
     }
 
     public SparkMapReduce(final SparkConf conf, final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> pMapper,
@@ -78,8 +91,9 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
             addConsumer(cns);
 
         }
-        sparkConf = conf.setAppName(name);
-        SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
+        conf.setAppName(name);
+        sparkConf = conf;
+        SparkUtilities.guaranteeSparkMaster(sparkConf,getSparkEngineProperties() );    // use local if no master provided
 
         ctx = new JavaSparkContext(sparkConf);
     }
@@ -94,11 +108,11 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
      * @param pPartitioner
      * @param pConsumer
      */
-    public SparkMapReduce(final SparkMapReduce prev, final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
+    public SparkMapReduce( final SparkMapReduce prev, final String name, final IMapperFunction<KEYIN, VALUEIN, K, V> mapper,
                           final IReducerFunction<K, V, KOUT, VOUT> reducer,
                           IPartitionFunction<K> pPartitioner,
                           IKeyValueConsumer<KOUT, VOUT>... pConsumer) {
-        this(prev.getSparkConf(), name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
+        this(prev.getSparkConf(),  name, mapper, reducer, IPartitionFunction.HASH_PARTITION);
 
     }
 

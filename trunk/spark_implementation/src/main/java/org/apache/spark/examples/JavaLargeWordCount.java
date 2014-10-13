@@ -46,18 +46,26 @@ public final class JavaLargeWordCount {
             return 25 - ret;
         }
     }
+
+    public static final int SPARK_CONFIG_INDEX = 0;
+      public static final int INPUT_FILE_INDEX = 1;
+
+
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 1) {
-            System.err.println("Usage: JavaWordCount <file>");
+        if (args.length < INPUT_FILE_INDEX + 1) {
+            System.err.println("Usage: SparkProperties JavaWordCount <file>");
             return;
         }
+        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        SparkUtilities.guaranteeSparkMaster(sparkConf);
+        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
-        JavaRDD<String> lines = ctx.textFile(args[0], 1);
+
+        String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX], sparkProperties);
+        JavaRDD<String> lines = ctx.textFile(inputPath, 1);
 
         // use my function not theirs
         JavaRDD<String> words = lines.flatMap(new WordsMapFunction());

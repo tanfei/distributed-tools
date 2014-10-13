@@ -20,12 +20,32 @@ import java.util.*;
 public class SparkUtilities implements Serializable {
 
 
+
+    /**
+     * read a file with a list of desired properties
+     * @param fileName
+     * @return
+     */
+    public static Properties readSparkProperties(String fileName) {
+        try {
+            Properties sparkProperties = new Properties();
+            File f = new File(fileName);
+            String path = f.getAbsolutePath();
+            sparkProperties.load(new FileReader(f));  // read spark properties
+            return sparkProperties;
+        }
+        catch (IOException e) {
+            throw new RuntimeException(" bad spark properties file " + fileName);
+
+        }
+    }
+
     /**
      * if no spark master is  defined then use "local
      *
      * @param sparkConf the configuration
      */
-    public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
+    public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf, Properties props) {
         Option<String> option = sparkConf.getOption("spark.master");
 
         if (!option.isDefined()) {   // use local over nothing   {
@@ -37,14 +57,19 @@ public class SparkUtilities implements Serializable {
              14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Started reading broadcast variable 0
              14/10/08 09:36:35 ERROR executor.Executor: Exception in task 0.0 in stage 0.0 (TID 0)
              java.lang.NullPointerException
-             	at java.nio.ByteBuffer.wrap(ByteBuffer.java:392)
-             	at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
+             at java.nio.ByteBuffer.wrap(ByteBuffer.java:392)
+             at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
 
              */
-          //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
-         }
-        // needed by the hwlogin cluster
-        sparkConf.set("spark.mesos.coarse","true");
+            //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+        }
+        // ste all properties in the SparkProperties file
+        for (String property : props.stringPropertyNames()) {
+            if (!property.startsWith("spark."))
+                continue;
+            sparkConf.set(property, props.getProperty(property));
+
+        }
 
     }
 
@@ -100,11 +125,28 @@ public class SparkUtilities implements Serializable {
         }
     }
 
+    public static final String PATH_PREPEND_PROPERTY = "com.lordjoe.distributed.PathPrepend";
+    /**
+     *
+     * @param pathName given path - we may need to predend hdfs access
+     * @param props
+     * @return
+     */
+    public static String buildPath(final String pathName, Properties props) {
+        if(pathName.startsWith("hdfs://"))
+            return pathName;
+        String prepend = props.getProperty(PATH_PREPEND_PROPERTY);
+        if(prepend == null)
+            return pathName;
+        return prepend + pathName;
+    }
+
 
     public static class KeyValueObjectToTuple2<K extends Serializable, V extends Serializable> implements FlatMapFunction2<KeyValueObject<K, V>, K, V> {
         @Override
-        public Iterable<V> call(final KeyValueObject<K, V> pKVKeyValueObject, final K pK) throws Exception {
-            return null;
+        public Iterable<V> call(final KeyValueObject<K, V> ppk, final K pK) throws Exception {
+            Object[] items =  { ppk.value };
+            return  Arrays.asList((V[])items);
         }
 
     }

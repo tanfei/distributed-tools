@@ -9,8 +9,9 @@
 	<note type="input" label="spectrum, path">or20080317_s_silac-lh_1-1_01short.mzxml</note>
 	<note type="input" label="spectrum, path">SmallSample/one_spectrum.mzxml</note> 
 	<note type="input" label="output, path">yeast_orfs_all_REV01_short.xml</note> 
- -->
 	<note type="input" label="protein, taxon">yeast_orfs_all_REV.20060126.short.fasta</note>
+ -->
+	<note type="input" label="protein, taxon">yeast_orfs_pruned.fasta</note>
 	<note type="input" label="spectrum, path">spectra</note>
 	<note type="input" label="output, path">full_tandem_output_path</note>
 	<note type="input" label="output, sequence path">full_tandem_output_sequence_path</note>

@@ -5,6 +5,8 @@ import com.lordjoe.distributed.input.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 
+import java.util.*;
+
 /**
  * org.systemsbiology.xtandem.spark.SparkTandemUtilitiesTests
  * User: Steve
@@ -109,8 +111,10 @@ public class SparkTandemUtilitiesTests {
             System.out.println("usage <file holding mgfs>");
             return;
         }
-        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        SparkUtilities.guaranteeSparkMaster(sparkConf);    // use local if no master provided
+        SparkConf sparkConf = new SparkConf().setAppName("MGF Parser");
+        Properties props = new Properties();
+          props.setProperty("spark.mesos.coarse", "true");
+          SparkUtilities.guaranteeSparkMaster(sparkConf, props);
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
 

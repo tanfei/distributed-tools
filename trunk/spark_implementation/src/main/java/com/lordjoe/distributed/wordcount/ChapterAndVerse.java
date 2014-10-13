@@ -75,15 +75,20 @@ public  class ChapterAndVerse {
     public void reduceFunction(ChapterKeyClass key,Iterator<LineAndLocation> values)  {
        }
 
-    public static void main(String[] args) {
-        if (args.length < 1) {
-          System.err.println("Usage: ChapterAndVerse <file>");
-          return;
-        }
+    public static final int SPARK_CONFIG_INDEX = 0;
+      public static final int INPUT_FILE_INDEX = 1;
 
-        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        sparkConf.set("spark.mesos.coarse","true");
-        SparkUtilities.guaranteeSparkMaster(sparkConf);
+
+    public static void main(String[] args) throws Exception {
+
+        if (args.length < INPUT_FILE_INDEX + 1) {
+            System.err.println("Usage: ChapterAndVerse SparkProperties   <file>");
+            return;
+        }
+        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+
+        SparkConf sparkConf = new SparkConf().setAppName("ChapterAndVerse");
+        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
         JavaPairRDD<String,String> lines = ctx.wholeTextFiles(args[0]);

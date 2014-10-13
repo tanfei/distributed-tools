@@ -68,8 +68,7 @@ public class BiomlReporter implements Serializable {
         if (name != null)
             name = name.replace(".tandem.xml", ".hydra.xml");
         if ("full_tandem_output_path".equals(name)) {
-            System.err.println("output matches input file");
-            return name;
+            return "xtandem_" + getDateHash() + ".xml"; // todo do better
         }
 
       //  System.err.println("No File name forced building file name");
