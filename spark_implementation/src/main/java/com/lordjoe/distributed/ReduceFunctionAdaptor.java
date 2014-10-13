@@ -15,21 +15,18 @@ import java.util.*;
  */
 public class ReduceFunctionAdaptor<K extends Serializable, V extends Serializable,KOUT extends Serializable, VOUT extends Serializable>
         implements FlatMapFunction<Tuple2<K,KeyAndValues<K, V>>, KeyValueObject<KOUT, VOUT>>, Serializable {
-    private final JavaSparkContext context;
-    private final IReducerFunction<K, V,KOUT,VOUT> reducer;
+      private final IReducerFunction<K, V,KOUT,VOUT> reducer;
 
     public ReduceFunctionAdaptor(JavaSparkContext pContext,final IReducerFunction<K, V,KOUT,VOUT> pReducer) {
         reducer = pReducer;
-        context = pContext;
-     }
+      }
     
     
 
     @Override
     public Iterable<KeyValueObject<KOUT, VOUT>> call(Tuple2<K,KeyAndValues<K, V>> inp) throws Exception {
         final KeyAndValues<K, V> itr =  inp._2();
-         context.hadoopConfiguration();
-        final List<KeyValueObject<KOUT, VOUT>> holder = new ArrayList<KeyValueObject<KOUT, VOUT>>();
+          final List<KeyValueObject<KOUT, VOUT>> holder = new ArrayList<KeyValueObject<KOUT, VOUT>>();
 
         Iterable<V> iterable = itr.getIterable();
         K key = itr.key;

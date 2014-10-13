@@ -31,7 +31,6 @@ public class ScanScoreTest {
         }
 
 
-
         @Override
         public Tuple2<String, String> call(final Tuple2<String, IScoredScan> v1) throws Exception {
             IScoredScan scan = v1._2();
@@ -90,7 +89,9 @@ public class ScanScoreTest {
         File config = new File(args[0]);
         String spectra = args[1];
 
-        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(config);
+        Properties props = new Properties();
+        props.setProperty("spark.mesos.coarse", "true");
+        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(props, config);
         JavaSparkContext ctx = handler.getJavaContext();
 
 
@@ -133,7 +134,6 @@ public class ScanScoreTest {
         TandemXMLWriter writer = new TandemXMLWriter(handler.getApplication());
 
         writer.buildReport(scoredScans);
-        
 
 
     }

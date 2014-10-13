@@ -8,12 +8,12 @@ import org.apache.spark.api.java.*;
  * User: Steve
  * Date: 9/24/2014
  */
-public class SparkContext {
+public class SparkApplicationContext {
 
     private final SparkConf sparkConf;
     private  JavaSparkContext ctx;
 
-    public SparkContext(String name) {
+    public SparkApplicationContext(String name) {
         sparkConf = new SparkConf().setAppName(name);
     }
 

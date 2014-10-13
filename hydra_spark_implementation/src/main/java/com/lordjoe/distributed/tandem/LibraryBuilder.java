@@ -3,11 +3,12 @@ package com.lordjoe.distributed.tandem;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.context.*;
 import com.lordjoe.distributed.hydra.protein.*;
+import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
+import org.apache.hadoop.fs.*;
 import org.apache.spark.api.java.*;
 import org.systemsbiology.xtandem.*;
-
-import java.io.*;
+import org.systemsbiology.xtandem.hadoop.*;
 
 /**
  * com.lordjoe.distributed.tandem.LibraryBuilder
@@ -16,23 +17,22 @@ import java.io.*;
  */
 public class LibraryBuilder {
 
-    private final SparkContext context;
+    private final SparkApplicationContext context;
     private final XTandemMain application;
+    private final SparkMapReduceScoringHandler handler;
 
-    public LibraryBuilder(File congiguration) {
-        context = new SparkContext("LibraryBuilder");
-        SparkUtilities.guaranteeSparkMaster(context.getSparkConf());    // use local if no master provided
-
-        application = new XTandemMain(congiguration);
+    public LibraryBuilder(SparkMapReduceScoringHandler handler) {
+        this.handler = handler;
+        context = handler.getContext();
+        application = handler.getApplication();
     }
 
-    public SparkContext getContext() {
+    public SparkApplicationContext getContext() {
         return context;
     }
 
-    @SuppressWarnings("UnusedDeclaration")
-    public JavaSparkContext getJavaContext() {
-        SparkContext context1 = getContext();
+     public JavaSparkContext getJavaContext() {
+        SparkApplicationContext context1 = getContext();
         return context1.getCtx();
     }
 
@@ -41,36 +41,32 @@ public class LibraryBuilder {
         return application;
     }
 
-    public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("usage configFile fastaFile");
-            return;
-        }
-        File config = new File(args[0]);
-        String fasta = args[1];
-        LibraryBuilder lb = new LibraryBuilder(config);
-
+    public void buildLibrary() {
         // if not commented out this line forces proteins to be realized
         //    proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
 
-        ProteinMapper pm = new ProteinMapper(lb.getApplication());
-        ProteinReducer pr = new ProteinReducer(lb.getApplication());
+        XTandemMain app = getApplication();
+        ProteinMapper pm = new ProteinMapper(app);
+        ProteinReducer pr = new ProteinReducer(app);
 
         //       ListKeyValueConsumer<String,String> consumer = new ListKeyValueConsumer();
         //noinspection unchecked
-        SparkMapReduce handler = new SparkMapReduce("LibraryBuilder",pm, pr, IPartitionFunction.HASH_PARTITION);
+        SparkMapReduce handler = new SparkMapReduce(getContext().getSparkConf(),"LibraryBuilder", pm, pr, IPartitionFunction.HASH_PARTITION);
         JavaSparkContext ctx = handler.getCtx();
+
+        String fasta = app.getDatabaseName();
+        Path defaultPath = XTandemHadoopUtilities.getDefaultPath();
+        fasta = defaultPath.toString() + "/" + fasta + ".fasta";
 
         JavaPairRDD<String, String> parsed = SparkSpectrumUtilities.parseFastaFile(fasta, ctx);
 
         // if not commented out this line forces proteins to be realized
         //   parsed = SparkUtilities.realizeAndReturn(parsed, ctx);
-
-        JavaRDD<KeyValueObject<String, String>> proteins = SparkUtilities.fromTuples(parsed);
+         JavaRDD<KeyValueObject<String, String>> proteins = SparkUtilities.fromTuples(parsed);
 
 
         //  proteins = proteins.persist(StorageLevel.MEMORY_ONLY());
-        //   proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
+           proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
 
         //noinspection unchecked
         handler.performSourceMapReduce(proteins);
@@ -83,7 +79,19 @@ public class LibraryBuilder {
         }
 
 
-
-
     }
+
+//    public static void main(String[] args) {
+//        if (args.length == 0) {
+//            System.out.println("usage configFile fastaFile");
+//            return;
+//        }
+//        File config = new File(args[0]);
+//        String fasta = args[1];
+//
+//
+//        LibraryBuilder lb = new LibraryBuilder(config);
+//
+//        lb.buildLibrary();
+//    }
 }

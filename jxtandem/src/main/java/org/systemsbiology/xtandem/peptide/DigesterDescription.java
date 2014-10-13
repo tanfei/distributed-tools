@@ -20,7 +20,7 @@ public class DigesterDescription implements IEquivalent<DigesterDescription> {
 
     public static final String CURRENT_DIGESTER_VERSION = "1";
 
-    public static DigesterDescription fromApplication(HadoopTandemMain app)
+    public static DigesterDescription fromApplication(XTandemMain app)
     {
        return  new FastaHadoopLoader(app).getDescription();
     }

@@ -8,6 +8,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
+import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.reporting.*;
 import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
@@ -17,7 +18,7 @@ import java.util.*;
 
 
 /**
- * com.lordjoe.distributed.input.hydra.ScanScorer
+ * com.lordjoe.distributed.hydra.ScanScorer
  * User: Steve
  * Date: 10/7/2014
  */
@@ -76,22 +77,35 @@ public class ScanScorer {
         }
     }
 
+    public static final int SPARK_CONFIG_INDEX = 0;
+    public static final int TANDEM_CONFIG_INDEX = 1;
+    public static final int SPECTRA_INDEX = 2;
+
     /**
      * call with args like or20080320_s_silac-lh_1-1_11short.mzxml in Sample2
      *
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
-        if (args.length == 0) {
-            System.out.println("usage configFile fastaFile");
+        if (args.length < TANDEM_CONFIG_INDEX + 1) {
+            System.out.println("usage sparkconfig configFile fastaFile");
             return;
         }
-        File config = new File(args[0]);
-        String spectra = args[1];
+        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
-        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(config);
+        String pathPrepend = sparkProperties.getProperty("com.lordjoe.distributed.PathPrepend") ;
+        if(pathPrepend != null)
+            XTandemHadoopUtilities.setDefaultPath(pathPrepend);
+
+        File config = new File(args[TANDEM_CONFIG_INDEX]);
+
+        String spectra = SparkUtilities.buildPath(args[SPECTRA_INDEX],sparkProperties);
+
+        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(sparkProperties,config);
         JavaSparkContext ctx = handler.getJavaContext();
+
+        handler.buildLibraryIfNeeded();
 
 
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra, ctx);
@@ -122,10 +136,19 @@ public class ScanScorer {
          */
         scores = scores.filter(new DropNoMatchScansFilter());
 
+        /**
+         * make into tuples
+         */
         JavaPairRDD<String, IScoredScan> mappedByScanKey = scores.mapPartitionsToPair(new ScanKeyMapper());
 
+        /**
+            *  find the best score
+            */
         JavaPairRDD<String, IScoredScan> bestScores = mappedByScanKey.reduceByKey(new chooseBestScanScore());
 
+        /**
+         * collect and write
+         */
         bestScores = bestScores.sortByKey();
 
         List<Tuple2<String, IScoredScan>> scoredScans = bestScores.collect();

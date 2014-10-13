@@ -33,16 +33,20 @@ import java.util.regex.*;
 public final class JavaWordCount {
     private static final Pattern SPACE = Pattern.compile(" ");
 
+    public static final int SPARK_CONFIG_INDEX = 0;
+      public static final int INPUT_FILE_INDEX = 1;
+
+
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 1) {
-            System.err.println("Usage: JavaWordCount <file>");
+        if (args.length < INPUT_FILE_INDEX + 1) {
+            System.err.println("Usage: SparkProperties JavaWordCount <file>");
             return;
         }
+        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
         SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        sparkConf.set("spark.mesos.coarse", "true");
-        SparkUtilities.guaranteeSparkMaster(sparkConf);
+        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
 
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);

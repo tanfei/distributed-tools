@@ -1,6 +1,8 @@
 package com.lordjoe.distributed.hydra;
 
+import org.apache.hadoop.fs.*;
 import org.systemsbiology.xtandem.*;
+import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.reporting.*;
 import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
@@ -22,10 +24,12 @@ public class TandemXMLWriter {
 
     public void buildReport(List<Tuple2<String, IScoredScan>> scorings) {
 
-        String outputPath = application.getOutputPath();
+        String outputPath = BiomlReporter.buildDefaultFileName(application);
+        Path prepent = XTandemHadoopUtilities.getRelativePath(outputPath);
         FileOutputStream os = null;
         try {
-            os = new FileOutputStream(outputPath);
+            String pathAsString = prepent.toString();
+            os = new FileOutputStream(pathAsString);
             List<IScoredScan> holder = new ArrayList<IScoredScan>();
             for (Tuple2<String, IScoredScan> tp : scorings) {
                 holder.add(tp._2());

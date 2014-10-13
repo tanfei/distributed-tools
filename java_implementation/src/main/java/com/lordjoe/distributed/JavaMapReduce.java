@@ -46,9 +46,9 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
 
     private final ListKeyValueConsumer results = new ListKeyValueConsumer<K, V>();
 
-    public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> mapper, final IReducerFunction<K, V,KOUT,VOUT> reducer) {
+    public JavaMapReduce(  final IMapperFunction<KEYIN,VALUEIN, K, V> mapper, final IReducerFunction<K, V,KOUT,VOUT> reducer) {
         //noinspection unchecked
-        this(mapper, reducer, IPartitionFunction.HASH_PARTITION,new ListKeyValueConsumer<KOUT,VOUT>());
+        this( mapper, reducer, IPartitionFunction.HASH_PARTITION,new ListKeyValueConsumer<KOUT,VOUT>());
     }
 
     public JavaMapReduce(final IMapperFunction<KEYIN,VALUEIN, K, V> pMapper,
