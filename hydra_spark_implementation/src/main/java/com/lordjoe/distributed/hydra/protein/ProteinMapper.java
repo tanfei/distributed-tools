@@ -168,7 +168,16 @@ public class ProteinMapper extends AbstractTandemFunction  implements  IMapperFu
         long numberFragments = getAndIncrementFragmentIndex();
 
         String str = pp.toString();
-        holder.add(new KeyValueObject<String, String>(str, pp.toString()));
+        IProteinPosition[] proteinPositions = pp.getProteinPositions();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < proteinPositions.length; i++) {
+            IProteinPosition ppx = proteinPositions[i];
+            if(i > 0)
+                sb.append(",");
+            sb.append(pp.getId());
+        }
+
+        holder.add(new KeyValueObject<String, String>(str, sb.toString()));
     }
 
 }
