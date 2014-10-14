@@ -228,18 +228,18 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized
-        reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx2);
+        // reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx2);
 
         PartitionAdaptor<K> prt = new PartitionAdaptor<K>(getPartitioner());
         reducedSets = reducedSets.partitionBy(prt);
         reducedSets = reducedSets.sortByKey();
 
 
-        reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx2);
+        // reducedSets = SparkUtilities.realizeAndReturn(reducedSets, ctx2);
 
         ReduceFunctionAdaptor f = new ReduceFunctionAdaptor(ctx2, reduce);
 
-        JavaRDD<KeyValueObject<K, V>> reduced = reducedSets.flatMap(f);
+        JavaRDD<KeyValueObject<KOUT, VOUT>>  reducedOutput = reducedSets.flatMap(f);
 
 
         //  JavaPairRDD<K, V> kvJavaPairRDD = asTuples.partitionBy(sparkPartitioner);
@@ -249,7 +249,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
 
         // if not commented out this line forces kvJavaPairRDD to be realized
-        JavaRDD<KeyValueObject<KOUT, VOUT>> reducedOutput = SparkUtilities.realizeAndReturn(reduced, ctx2);
+       //  reducedOutput = SparkUtilities.realizeAndReturn(reducedOutput, ctx2);
 
         output = reducedOutput;
     }

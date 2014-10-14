@@ -26,6 +26,27 @@ public class Protein extends Polypeptide implements IProtein {
 
 //    private static Map<Integer,Protein> gKnownProteins = new HashMap<Integer,Protein>();
 
+    /**
+     * find an id in an annotation
+     * sp|Q6GZW6|009L_FRG3G Putative helicase 009L OS=Frog virus 3 (isolate Goorha) GN=FV3-009L PE=4 SV=1
+     *
+     * @param pAnnotation
+     * @return
+     */
+    public static String idFromAnnotation( String pAnnotation) {
+        if(pAnnotation.startsWith(">"))
+            pAnnotation = pAnnotation.substring(1);
+        //  sp|Q6GZW6|009L_FRG3G Putative helicase 009L OS=Frog virus 3 (isolate Goorha) GN=FV3-009L PE=4 SV=1
+        if (pAnnotation.startsWith("sp|")) {
+            String ss = pAnnotation.substring("sp|".length());
+            int index = ss.indexOf("|");
+            if (index > -1)
+                return ss.substring(0, index);
+        }
+        return annotationToId(pAnnotation);
+     }
+
+
     public static Protein getProtein(String uuid) {
         throw new UnsupportedOperationException("Fix This"); // ToDo
 //        synchronized (gKnownProteins)   {
@@ -41,15 +62,15 @@ public class Protein extends Polypeptide implements IProtein {
 
     /**
      * turn a list of proteins into a map with id as the key
-     * @param prots  !null protein list
-     * @return  !null populated map;
+     *
+     * @param prots !null protein list
+     * @return !null populated map;
      */
-    public static Map<String,IProtein> asIdMap(IProtein[] prots)
-    {
-        Map<String,IProtein> ret = new HashMap<String, IProtein>() ;
+    public static Map<String, IProtein> asIdMap(IProtein[] prots) {
+        Map<String, IProtein> ret = new HashMap<String, IProtein>();
         for (int i = 0; i < prots.length; i++) {
             IProtein prot = prots[i];
-            ret.put(prot.getId(),prot);
+            ret.put(prot.getId(), prot);
         }
         return ret;
     }
@@ -67,23 +88,24 @@ public class Protein extends Polypeptide implements IProtein {
     /**
      * return a list of contained proteins
      * whixch is just this starting at 0
+     *
      * @return !null array
      */
     @Override
     public IProteinPosition[] getProteinPositions() {
-        IProteinPosition[] ret = { new ProteinPosition(this)};
+        IProteinPosition[] ret = {new ProteinPosition(this)};
         return ret;
     }
 
 
     /**
-      * !null validity may be unknown
-      * @return
-      */
-     public PeptideValidity getValidity()
-     {
-        return  PeptideValidity.fromString(getId()) ;
-      }
+     * !null validity may be unknown
+     *
+     * @return
+     */
+    public PeptideValidity getValidity() {
+        return PeptideValidity.fromString(getId());
+    }
 
 
     //    /**
@@ -98,8 +120,8 @@ public class Protein extends Polypeptide implements IProtein {
 //     }
 //
 //
-    public static Protein getProtein(String id,String pAnnotation, String pSequence, String url) {
-        return buildProtein(id,pAnnotation, pSequence, url);
+    public static Protein getProtein(String id, String pAnnotation, String pSequence, String url) {
+        return buildProtein(id, pAnnotation, pSequence, url);
 //        synchronized (gKnownProteins)   {
 //            Protein ret = gKnownProteins.get(uuid);
 //            if(ret == null)     {
@@ -117,8 +139,7 @@ public class Protein extends Polypeptide implements IProtein {
 
     private static int gLastResortProteinIdx = 1;
 
-    private static synchronized String getNextId()
-    {
+    private static synchronized String getNextId() {
         return "Prot" + gLastResortProteinIdx++;
     }
 
@@ -131,22 +152,21 @@ public class Protein extends Polypeptide implements IProtein {
      * @param url
      * @return
      */
-    public static Protein buildProtein(String id,String pAnnotation, String pSequence, String url) {
-        if(pAnnotation == null)
+    public static Protein buildProtein(String id, String pAnnotation, String pSequence, String url) {
+        if (pAnnotation == null)
             pAnnotation = "";
-        if(pAnnotation.startsWith(">"))
+        if (pAnnotation.startsWith(">"))
             pAnnotation = pAnnotation.substring(1); // from a fasta file
 
-        if(id.contains(" "))   {
-            id = annotationToId(id) ;
+        if (id.contains(" ")) {
+            id = annotationToId(id);
         }
-
 
 
         if (id == null || id.length() == 0)
             id = getNextId();
         //     synchronized (gKnownProteins)   {
-        Protein ret = new Protein(id,pAnnotation);
+        Protein ret = new Protein(id, pAnnotation);
         ret.setSequence(pSequence);
         //       ret.setAnnotation(pAnnotation);
         ret.setURL(url);
@@ -156,38 +176,38 @@ public class Protein extends Polypeptide implements IProtein {
 
     }
 
-    public static String annotationToId(  String id) {
+    public static String annotationToId(String id) {
         id = id.trim();
-        if(id.length() == 0)
+        if (id.length() == 0)
             return getNextId();
-        if(id.startsWith(">"))
+        if (id.startsWith(">"))
             id = id.substring(1);
         int spIndex = id.indexOf(" ");   // better ne > 0
-        if(spIndex > -1) {
-            id = id.substring(0,spIndex);
+        if (spIndex > -1) {
+            id = id.substring(0, spIndex);
         }
 
-           StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         char startPunct = 0;
-        for(int i = 0; i < id.length(); i++)   {
+        for (int i = 0; i < id.length(); i++) {
             char c = id.charAt(i);
-            if(Character.isLetterOrDigit(c)) {
-                sb.append((char)Character.toUpperCase(c)) ;
+            if (Character.isLetterOrDigit(c)) {
+                sb.append((char) Character.toUpperCase(c));
                 continue;
             }
-            if(Character.isDigit(c)) {
-                sb.append(c) ;
+            if (Character.isDigit(c)) {
+                sb.append(c);
                 continue;
             }
-            if(sb.length() == 0 ) {
-                 continue;
+            if (sb.length() == 0) {
+                continue;
             }
-            sb.append("_") ;  // anything else becomes _
+            sb.append("_");  // anything else becomes _
 
         }
 
-        if(sb.length() == 0)   {
-              return getNextId();
+        if (sb.length() == 0) {
+            return getNextId();
         }
         return sb.toString();
     }
@@ -204,7 +224,7 @@ public class Protein extends Polypeptide implements IProtein {
 //
 //    }
 
-    private Protein(String uuid,String annotation) {
+    private Protein(String uuid, String annotation) {
         super();
         m_Id = uuid;
         m_AnnotationX = annotation;
@@ -241,9 +261,9 @@ public class Protein extends Polypeptide implements IProtein {
     }
 
     @Override
-      public IPolypeptide asDecoy() {
-          throw new UnsupportedOperationException("Fix This"); // ToDo
-      }
+    public IPolypeptide asDecoy() {
+        throw new UnsupportedOperationException("Fix This"); // ToDo
+    }
 
 
     /**
@@ -320,4 +340,5 @@ public class Protein extends Polypeptide implements IProtein {
     public void setExpectationFactor(final double pExpectationFactor) {
         m_ExpectationFactor = pExpectationFactor;
     }
+
 }
