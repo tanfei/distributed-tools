@@ -14,7 +14,7 @@ import java.util.*;
  * User: Steve
  * Date: 1/26/12
  */
-public class PepXMLWriter {
+public class PepXMLWriter implements Serializable {
     public static final PepXMLWriter[] EMPTY_ARRAY = {};
 
     private static   int gMatchesToPrint = OriginatingScoredScan.MAX_SERIALIZED_MATCHED;
@@ -79,8 +79,14 @@ public class PepXMLWriter {
 
     }
 
-    public void writePepXML(IScoredScan scan, PrintWriter out) {
-        writeSummaries(scan, out);
+    public void writePepXML(IScoredScan scan, Appendable out) {
+        try {
+            writeSummaries(scan, out);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
 
     }
 
@@ -112,31 +118,43 @@ public class PepXMLWriter {
     public static final String SEARCH_SUMMARY_TEXT =
             "<search_summary base_name=\"%FULL_FILE_PATH%\" search_engine=\"Hydra(%ALGO%)\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">";
 
-    public void writePepXMLHeader(String path,String algo, PrintWriter out) {
-        String now = XTandemUtilities.xTandemNow();
-        String header = PEPXML_HEADER.replace("%PATH%", path);
-        header = header.replace("%DATE%", now);
-        out.println(header);
 
-        header = ANALYSIS_HEADER.replace("%PATH%", path);
-        header = header.replace("%DATE%", now);
-        header = header.replace("%ALGO%", algo);
-          out.println(header);
+    public void writePepXMLHeader(String path,String algo, Appendable out)    {
+        try {
+            String now = XTandemUtilities.xTandemNow();
+            String header = PEPXML_HEADER.replace("%PATH%", path);
+            header = header.replace("%DATE%", now);
+            out.append(header);
+            out.append("\n");
 
-        out.println(TTRYPSIN_XML);  // tod stop hard coding
+            header = ANALYSIS_HEADER.replace("%PATH%", path);
+            header = header.replace("%DATE%", now);
+            header = header.replace("%ALGO%", algo);
+            out.append(header);
+            out.append("\n");
 
-        String ss = SEARCH_SUMMARY_TEXT.replace("%FULL_FILE_PATH%",path);
-        ss = ss.replace("%ALGO%", algo);
-        out.println(ss);  // tod stop hard coding
+            out.append(TTRYPSIN_XML);  // tod stop hard coding
+            out.append("\n");
 
-        showDatabase(out);
-        showEnzyme(out);
-        showModifications(out);
-        showParameters(out);
-         out.println("      </search_summary>");
+            String ss = SEARCH_SUMMARY_TEXT.replace("%FULL_FILE_PATH%",path);
+            ss = ss.replace("%ALGO%", algo);
+            out.append(ss);  // tod stop hard coding
+            out.append("\n");
+
+            showDatabase(out);
+            showEnzyme(out);
+            showModifications(out);
+            showParameters(out);
+            out.append("      </search_summary>");
+            out.append("\n");
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
     }
 
-    protected void showModifications(PrintWriter out) {
+    protected void showModifications(Appendable out)  throws IOException  {
         IMainData application = getApplication();
         ScoringModifications scoringMods = application.getScoringMods();
         PeptideModification[] modifications = scoringMods.getModifications();
@@ -161,69 +179,81 @@ public class PepXMLWriter {
          <aminoacid_modification aminoacid="R" massdiff="10.0083" mass="166.1094" variable="Y" />
 
      */
-    protected void showModification(PeptideModification pm, PrintWriter out) {
+    protected void showModification(PeptideModification pm, Appendable out)  throws IOException  {
         double massChange = pm.getMassChange();
         double pepideMass = pm.getPepideMass();
         String variable = "Y";
         if(pm.isFixed())
             variable = "N";
 
-        out.print(" <aminoacid_modification");
-        out.print(" aminoacid=\"" +  pm.getAminoAcid() + "\"");
-        out.print(" massdiff=\"" + String.format("%10.4f",massChange).trim() + "\"");
-        out.print(" mass=\"" + String.format("%10.4f",pepideMass).trim() + "\"");
-        out.print("variable=\"" + variable + "\"");
-         out.print(" />");
+        out.append(" <aminoacid_modification");
+        out.append(" aminoacid=\"" +  pm.getAminoAcid() + "\"");
+        out.append(" massdiff=\"" + String.format("%10.4f",massChange).trim() + "\"");
+        out.append(" mass=\"" + String.format("%10.4f",pepideMass).trim() + "\"");
+        out.append("variable=\"" + variable + "\"");
+         out.append(" />");
         if(pm.getRestriction() == PeptideModificationRestriction.CTerminal)
-              out.print("<!--X! Tandem c-terminal AA variable modification-->");
+              out.append("<!--X! Tandem c-terminal AA variable modification-->");
         if(pm.getRestriction() == PeptideModificationRestriction.NTerminal)
-              out.print("<!--X! Tandem n-terminal AA variable modification-->");
+              out.append("<!--X! Tandem n-terminal AA variable modification-->");
 
-        out.println();
+          out.append("\n");
     }
 
 
-    protected void showEnzyme(PrintWriter out) {
+    protected void showEnzyme(Appendable out)  throws IOException  {
         IMainData application = getApplication();
 
-        out.println("        <enzymatic_search_constraint enzyme=\"trypsin\" max_num_internal_cleavages=\"" +
-                application.getDigester().getNumberMissedCleavages() +
-                "\" />"
+        out.append("        <enzymatic_search_constraint enzyme=\"trypsin\" max_num_internal_cleavages=\"" +
+                        application.getDigester().getNumberMissedCleavages() +
+                        "\" />"
         );
+        out.append("\n");
     }
 
-    protected void showDatabase(PrintWriter out) {
+    protected void showDatabase(Appendable out)  throws IOException  {
         IMainData application = getApplication();
         String[] parameterKeys = application.getParameterKeys();
-        out.println("         <search_database local_path=\"" +
-                application.getDatabaseName() +
-                "\" type=\"AA\"" +
-                 " />"
+        out.append("         <search_database local_path=\"" +
+                        application.getDatabaseName() +
+                        "\" type=\"AA\"" +
+                        " />"
         );
+        out.append("\n");
     }
 
-    protected void showParameters(PrintWriter out) {
+    protected void showParameters(Appendable out)  throws IOException  {
         IMainData application = getApplication();
         String[] parameterKeys = application.getParameterKeys();
-        out.println("        <!-- Input parameters -->");
-        for (int i = 0; i < parameterKeys.length; i++) {
+        out.append("        <!-- Input parameters -->");
+        out.append("\n");
+         for (int i = 0; i < parameterKeys.length; i++) {
             String parameterKey = parameterKeys[i];
             String value = application.getParameter(parameterKey);
-            out.println("        <parameter name=\"" +
-                    parameterKey + "\"" +
-                    " value=\"" +
-                    value +
-                    "\" />"
+            out.append("        <parameter name=\"" +
+                            parameterKey + "\"" +
+                            " value=\"" +
+                            value +
+                            "\" />"
             );
+            out.append("\n");
         }
     }
 
-    public void writePepXMLFooter(PrintWriter out) {
-        out.println("     </msms_run_summary>");
-        out.println("</msms_pipeline_analysis>");
+    public void writePepXMLFooter(Appendable out)   {
+        try {
+            out.append("     </msms_run_summary>");
+            out.append("\n");
+            out.append("</msms_pipeline_analysis>");
+            out.append("\n");
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
     }
 
-    protected void writeSummaries(IScoredScan scan, PrintWriter out) {
+    protected void writeSummaries(IScoredScan scan, Appendable out) throws IOException {
 
         String algorithm = scan.getAlgorithm();
         ISpectralMatch[] spectralMatches = scan.getSpectralMatches();
@@ -243,11 +273,13 @@ public class PepXMLWriter {
             default:
                 printLimitedMatches(scan, out, spectralMatches, getMatchesToPrint() );
         }
-        out.println("      </spectrum_query>");
+        out.append("      </spectrum_query>");
+        out.append("\n");
     }
 
-    private void printLimitedMatches(final IScoredScan scan, final PrintWriter out, final ISpectralMatch[] pSpectralMatches, int matchesToPrint) {
-        out.println("         <search_result>");
+    private void printLimitedMatches(final IScoredScan scan, final Appendable out, final ISpectralMatch[] pSpectralMatches, int matchesToPrint) throws IOException {
+        out.append("         <search_result>");
+        out.append("\n");
         for (int i = 0; i < Math.min(matchesToPrint, pSpectralMatches.length); i++) {
             ISpectralMatch match = pSpectralMatches[i];
             int rank = i + 1;
@@ -256,44 +288,48 @@ public class PepXMLWriter {
                 next = pSpectralMatches[i + 1];
             internalPrintMatch(scan, match, next, rank, out);
         }
-          out.println("         </search_result>");
+          out.append("         </search_result>");
+        out.append("\n");
     }
 
-    protected void writeScanHeader(IScoredScan scan, PrintWriter out) {
+    protected void writeScanHeader(IScoredScan scan, Appendable out) throws IOException {
         String id = scan.getId();
         String idString = XTandemUtilities.asAlphabeticalId(id);   // will be safew for parsing as int
         int charge = scan.getCharge();
 
-        out.print("      <spectrum_query ");
+        out.append("      <spectrum_query ");
         double precursorMass = scan.getRaw().getPrecursorMass() - XTandemUtilities.getProtonMass();
         String path = getPath().replace("\\","/");
         int dirIndex = path.lastIndexOf("/");
         if(dirIndex > -1)
             path = path.substring(dirIndex + 1);
-         out.print(" spectrum=\"" + path +  "." + idString +"." + idString + "." + charge + "\"");
-        out.print(" start_scan=\""   + id + "\" end_scan=\""   + id + "\" ");
-        out.print(" precursor_neutral_mass=\"" + String.format("%10.4f", precursorMass).trim() + "\"");
+         out.append(" spectrum=\"" + path +  "." + idString +"." + idString + "." + charge + "\"");
+        out.append(" start_scan=\""   + id + "\" end_scan=\""   + id + "\" ");
+        out.append(" precursor_neutral_mass=\"" + String.format("%10.4f", precursorMass).trim() + "\"");
         double rt = scan.getRetentionTime();
         if(rt != 0)
-            out.print(" retention_time_sec=\"" + String.format("%10.3f",rt).trim() + "\"");
-        out.print(" assumed_charge=\"" + scan.getCharge() + "\"");
-        out.println(" >");
+            out.append(" retention_time_sec=\"" + String.format("%10.3f",rt).trim() + "\"");
+        out.append(" assumed_charge=\"" + scan.getCharge() + "\"");
+        out.append(" >");
+        out.append("\n");
     }
 
 
-    protected void printMatch(IScoredScan scan, ISpectralMatch match, ISpectralMatch nextmatch,  PrintWriter out) {
-        out.println("         <search_result>");
+    protected void printMatch(IScoredScan scan, ISpectralMatch match, ISpectralMatch nextmatch,  Appendable out) throws IOException {
+        out.append("         <search_result>");
+        out.append("\n");
         internalPrintMatch(scan, match, nextmatch, 1, out);
-        out.println("         </search_result>");
+        out.append("         </search_result>");
+        out.append("\n");
      }
 
-    private void internalPrintMatch(IScoredScan scan, ISpectralMatch match, ISpectralMatch nextmatch, int hitNum, PrintWriter out) {
-        out.print("            <search_hit hit_rank=\"" +
+    private void internalPrintMatch(IScoredScan scan, ISpectralMatch match, ISpectralMatch nextmatch, int hitNum, Appendable out) throws IOException {
+        out.append("            <search_hit hit_rank=\"" +
                 hitNum +
                 "\" peptide=\"");
         IPolypeptide peptide = match.getPeptide();
-        out.print(peptide.getSequence());
-        out.print("\"");
+        out.append(peptide.getSequence());
+        out.append("\"");
         IMeasuredSpectrum conditionedScan = scan.getConditionedScan();
         int totalPeaks = conditionedScan.getPeaks().length;
         RawPeptideScan raw = scan.getRaw();
@@ -301,26 +337,27 @@ public class PepXMLWriter {
         double pepMass = peptide.getMatchingMass();
         double delMass = precursorMass - pepMass;
         int numberMatchedPeaks = match.getNumberMatchedPeaks();
-        //     out.print(" peptide_prev_aa=\"K\" ");
-        //     out.print("peptide_next_aa=\"I\" " );
+        //     out.append(" peptide_prev_aa=\"K\" ");
+        //     out.append("peptide_next_aa=\"I\" " );
         // Let Refresh parser analyze for now
         IProteinPosition[] proteinPositions = peptide.getProteinPositions();
         if (proteinPositions.length > 0) {
             IProteinPosition pp = proteinPositions[0];
             showProteinPosition( pp,out);
         }
-        out.print("");
-        out.print(" num_tot_proteins=\"" + proteinPositions.length + "\" ");
+        out.append("");
+        out.append(" num_tot_proteins=\"" + proteinPositions.length + "\" ");
 
-        out.print(" num_matched_ions=\"" + numberMatchedPeaks + "\"");
-        out.print(" tot_num_ions=\"" + totalPeaks + "\"");
-        out.print(" calc_neutral_pep_mass=\"" + totalPeaks + "\" ");
-        out.print(" massdiff=\"" + String.format("%10.4f", delMass).trim() + "\" ");
-        ////      out.print("num_tol_term=\"2\" ");
+        out.append(" num_matched_ions=\"" + numberMatchedPeaks + "\"");
+        out.append(" tot_num_ions=\"" + totalPeaks + "\"");
+        out.append(" calc_neutral_pep_mass=\"" + totalPeaks + "\" ");
+        out.append(" massdiff=\"" + String.format("%10.4f", delMass).trim() + "\" ");
+        ////      out.append("num_tol_term=\"2\" ");
         int missed_cleavages = peptide.getMissedCleavages();
-        out.print("num_missed_cleavages=\"" + missed_cleavages + "\" ");
-        //     out.print("is_rejected=\"0\">\n");
-        out.println(" >");
+        out.append("num_missed_cleavages=\"" + missed_cleavages + "\" ");
+        //     out.append("is_rejected=\"0\">\n");
+        out.append(" >");
+        out.append("\n");
 
         for (int i = 1; i < proteinPositions.length; i++) {
             showAlternateiveProtein(proteinPositions[i], out);
@@ -334,50 +371,59 @@ public class PepXMLWriter {
 
         double value = 0;
         value = match.getHyperScore();
-        out.println("             <search_score name=\"hyperscore\" value=\"" +
+        out.append("             <search_score name=\"hyperscore\" value=\"" +
                 String.format("%10.4f", value).trim() + "\"/>");
+        out.append("\n");
 
         if (nextmatch != null) {
             value = nextmatch.getHyperScore();
-            out.println("             <search_score name=\"nextscore\" value=\"" +
+            out.append("             <search_score name=\"nextscore\" value=\"" +
                     String.format("%10.4f", value).trim() + "\"/>");
+            out.append("\n");
         }
         double bvalue = match.getScore(IonType.B);
-        out.println("             <search_score name=\"bscore\" value=\"" +
+        out.append("             <search_score name=\"bscore\" value=\"" +
                 String.format("%10.4f", bvalue).trim() + "\"/>");
+        out.append("\n");
 
         double yvalue = match.getScore(IonType.Y);
-        out.println("             <search_score name=\"yscore\" value=\"" +
+        out.append("             <search_score name=\"yscore\" value=\"" +
                 String.format("%10.4f", yvalue).trim() + "\"/>");
+        out.append("\n");
 
         HyperScoreStatistics hyperScores = scan.getHyperScores();
         double expected = hyperScores.getExpectedValue(match.getScore());
-        out.println("             <search_score name=\"expect\" value=\"" +
+        out.append("             <search_score name=\"expect\" value=\"" +
                 String.format("%10.4f", expected).trim() + "\"/>");
-        out.println("              </search_hit>");
+        out.append("\n");
+        out.append("              </search_hit>");
+        out.append("\n");
     }
 
-    private void showProteinPosition( final IProteinPosition pPp,final PrintWriter out) {
-        out.println(" protein=\"" + getId(pPp.getProtein()) + "\"");
-        out.println("                       protein_descr=\"" + Util.xmlEscape(pPp.getProtein()) + "\"");
-        out.print("                        ");
+    private void showProteinPosition( final IProteinPosition pPp,final Appendable out)  throws IOException {
+        out.append(" protein=\"" + getId(pPp.getProtein()) + "\"");
+        out.append("\n");
+        out.append("                       protein_descr=\"" + Util.xmlEscape(pPp.getProtein()) + "\"");
+        out.append("\n");
+        out.append("                        ");
           FastaAminoAcid before = pPp.getBefore();
         if (before != null)
-            out.print(" peptide_prev_aa=\"" + before + "\"");
+            out.append(" peptide_prev_aa=\"" + before + "\"");
         else
-            out.print(" peptide_prev_aa=\"-\"");
+            out.append(" peptide_prev_aa=\"-\"");
         FastaAminoAcid after = pPp.getAfter();
         if (after != null)
-            out.print(" peptide_next_aa=\"" + after + "\"");
+            out.append(" peptide_next_aa=\"" + after + "\"");
         else
-             out.print(" peptide_next_aa=\"-\"");
-        out.println();
-        out.print("                                     ");
+             out.append(" peptide_next_aa=\"-\"");
+         out.append("\n");
+        out.append("                                     ");
     }
 
-    protected void showModificationInfo(final IModifiedPeptide peptide, final PrintWriter out) {
+    protected void showModificationInfo(final IModifiedPeptide peptide, final Appendable out)  throws IOException {
         String totalModifiedSequence = peptide.getModifiedSequence();
-        out.println("             <modification_info modified_peptide=\"" + totalModifiedSequence + "\" >");
+        out.append("             <modification_info modified_peptide=\"" + totalModifiedSequence + "\" >");
+        out.append("\n");
         PeptideModification[] modifications = peptide.getModifications();
         for (int i = 0; i < modifications.length; i++) {
             PeptideModification modification = modifications[i];
@@ -385,18 +431,21 @@ public class PepXMLWriter {
                 showModification(modification, i, out);
             }
         }
-        out.println("             </modification_info>");
+        out.append("             </modification_info>");
+        out.append("\n");
 
     }
 
-    protected void showModification(final PeptideModification pModification, final int index, final PrintWriter out) {
-        out.println("             <mod_aminoacid_mass position=\"" + (index + 1) + "\" mass=\"" + String.format("%10.3f", pModification.getPepideMass()).trim() + "\" />");
+    protected void showModification(final PeptideModification pModification, final int index, final Appendable out)  throws IOException {
+        out.append("             <mod_aminoacid_mass position=\"" + (index + 1) + "\" mass=\"" + String.format("%10.3f", pModification.getPepideMass()).trim() + "\" />");
+        out.append("\n");
     }
 
-    protected void showAlternateiveProtein(final IProteinPosition pp, final PrintWriter out) {
-        out.print("             <alternative_protein ");
+    protected void showAlternateiveProtein(final IProteinPosition pp, final Appendable out)   throws IOException  {
+        out.append("             <alternative_protein ");
         showProteinPosition(pp, out);
-        out.println(" />");
+        out.append(" />");
+        out.append("\n");
     }
 
     public static String getId(String descr)

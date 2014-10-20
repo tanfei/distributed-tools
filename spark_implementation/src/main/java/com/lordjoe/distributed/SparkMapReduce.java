@@ -19,15 +19,7 @@ import java.util.*;
 public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializable, K extends Serializable, V extends Serializable, KOUT extends Serializable, VOUT extends Serializable>
         extends AbstractMapReduceEngine<KEYIN, VALUEIN, K, V, KOUT, VOUT> implements Serializable {
 
-    private static Properties sparkEngineProperties = new Properties();
 
-    public static Properties getSparkEngineProperties() {
-        return sparkEngineProperties;
-    }
-
-    public static void setSparkEngineProperties(final Properties pSparkEngineProperties) {
-        sparkEngineProperties = pSparkEngineProperties;
-    }
 
     public static final MapReduceEngineFactory FACTORY = new MapReduceEngineFactory() {
 
@@ -92,11 +84,8 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
 
         }
         conf.setAppName(name);
-        sparkConf = conf;
-        SparkUtilities.guaranteeSparkMaster(sparkConf,getSparkEngineProperties() );    // use local if no master provided
-
-        ctx = new JavaSparkContext(sparkConf);
-    }
+        ctx = SparkUtilities.getCurrentContext();
+      }
 
     /**
      * constructor when chaining jobs
@@ -224,6 +213,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         // for some reason the compiler thnks K or V is not Serializable
         JavaPairRDD<K, Tuple2<K, V>> kkv1 = kkv;
        // JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>> kkv1 = (JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>>)kkv;
+        //noinspection unchecked
         JavaPairRDD<K, KeyAndValues<K, V>> reducedSets = ( JavaPairRDD<K, KeyAndValues<K, V>>)KeyAndValues.combineByKey(kkv1);
 
 

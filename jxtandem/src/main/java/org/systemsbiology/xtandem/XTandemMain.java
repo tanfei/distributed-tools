@@ -56,8 +56,7 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
 
     private MassType m_MassType = MassType.monoisotopic;
     private boolean m_SemiTryptic;
-    private String m_TaskFile;
-    private String m_DefaultParameters;
+      private String m_DefaultParameters;
     private String m_TaxonomyInfo;
     private String m_SpectrumPath;
     private String m_OutputPath;
@@ -91,8 +90,9 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
     }
 
 
+
     public XTandemMain(final File pTaskFile) {
-        m_TaskFile = pTaskFile.getAbsolutePath();
+        String m_TaskFile = pTaskFile.getAbsolutePath();
         //      Protein.resetNextId();
         initOpeners();
         Properties predefined = XTandemHadoopUtilities.getHadoopProperties();
@@ -110,17 +110,9 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
         //           throw new IllegalStateException("Only one XTandemMain allowed");
     }
 
-    private void setPredefinedParameter(String key, String value) {
-        setParameter(key, value);
-        if (key.equals("org.systemsbiology.algorithms")) {
-            addAlternateParameters(value);
-
-        }
-    }
 
     public XTandemMain(final InputStream is, String url) {
-        m_TaskFile = null;
-        //     Protein.resetNextId();
+          //     Protein.resetNextId();
         initOpeners();
         Properties predefined = XTandemHadoopUtilities.getHadoopProperties();
         for (String key : predefined.stringPropertyNames()) {
@@ -130,6 +122,16 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
         //     if (gInstance != null)
         //        throw new IllegalStateException("Only one XTandemMain allowed");
     }
+
+
+    private void setPredefinedParameter(String key, String value) {
+        setParameter(key, value);
+        if (key.equals("org.systemsbiology.algorithms")) {
+            addAlternateParameters(value);
+
+        }
+    }
+
 
     public void setPerformanceParameter(String key, String value) {
         m_PerformanceParameters.put(key, value);
@@ -477,9 +479,6 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
         throw new UnsupportedOperationException("Never get here");
     }
 
-    public String getTaskFile() {
-        return m_TaskFile;
-    }
 
     public String getDefaultParameters() {
         return m_DefaultParameters;

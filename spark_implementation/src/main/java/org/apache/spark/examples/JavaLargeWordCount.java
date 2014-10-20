@@ -57,14 +57,12 @@ public final class JavaLargeWordCount {
             System.err.println("Usage: SparkProperties JavaWordCount <file>");
             return;
         }
-        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+       SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+        SparkUtilities.setAppName("JavaWordCount");
 
-        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
-
-        String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX], sparkProperties);
+        String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX] );
         JavaRDD<String> lines = ctx.textFile(inputPath, 1);
 
         // use my function not theirs

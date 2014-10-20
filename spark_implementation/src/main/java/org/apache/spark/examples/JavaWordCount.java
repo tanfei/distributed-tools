@@ -18,7 +18,6 @@
 package org.apache.spark.examples;
 
 import com.lordjoe.distributed.*;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.*;
@@ -43,13 +42,10 @@ public final class JavaWordCount {
             System.err.println("Usage: SparkProperties JavaWordCount <file>");
             return;
         }
-        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+        SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+        SparkUtilities.setAppName("JavaWordCount");
 
-        SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
-        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
-
-
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
         JavaRDD<String> lines = ctx.textFile(args[0], 1);
         // use my function not theirs
         JavaRDD<String> words = lines.flatMap(new WordsMapFunction());

@@ -2,10 +2,7 @@ package com.lordjoe.distributed.input.spark;
 
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.input.*;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
-
-import java.util.*;
 
 /**
  * org.systemsbiology.xtandem.spark.SparkTandemUtilitiesTests
@@ -111,12 +108,9 @@ public class SparkTandemUtilitiesTests {
             System.out.println("usage <file holding mgfs>");
             return;
         }
-        SparkConf sparkConf = new SparkConf().setAppName("MGF Parser");
-        Properties props = new Properties();
-          props.setProperty("spark.mesos.coarse", "true");
-          SparkUtilities.guaranteeSparkMaster(sparkConf, props);
+        SparkUtilities.setAppName("MGF Parser");
 
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
