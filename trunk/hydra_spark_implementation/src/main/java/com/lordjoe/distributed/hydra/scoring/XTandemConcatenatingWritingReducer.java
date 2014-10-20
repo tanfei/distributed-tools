@@ -192,7 +192,7 @@ public class XTandemConcatenatingWritingReducer  extends AbstractTandemFunction 
     }
 
 
-    protected void setWriters(Reducer.Context context, XTandemMain application, String inputFileNamex) {
+    protected void setWriters(TaskInputOutputContext context, XTandemMain application, String inputFileNamex) {
 
         System.err.println("Setting up writers");
         String s = inputFileNamex;

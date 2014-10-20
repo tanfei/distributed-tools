@@ -29,7 +29,7 @@ public class PolypeptideCombiner {
     public static IPolypeptide mergeProteins(final IPolypeptide pV1, final IPolypeptide pV2) {
         IProteinPosition[] pp1 = pV1.getProteinPositions();
         IProteinPosition[] pp2 = pV2.getProteinPositions();
-        List<IProteinPosition> holder = new ArrayList<IProteinPosition>();
+        Set<IProteinPosition> holder = new HashSet<IProteinPosition>();
         for (int i = 0; i < pp1.length; i++) {
             holder.add(pp1[i]);
            }
@@ -37,6 +37,7 @@ public class PolypeptideCombiner {
               holder.add(pp2[i]);
              }
          IProteinPosition[] pps = new IProteinPosition[holder.size()];
+        holder.toArray(pps);
         ((Polypeptide)pV1).setContainedInProteins(pps);
         return pV1;
     }

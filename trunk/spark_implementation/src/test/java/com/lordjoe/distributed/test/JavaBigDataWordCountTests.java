@@ -1,7 +1,6 @@
 package com.lordjoe.distributed.test;
 
 import com.lordjoe.distributed.*;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.*;
@@ -59,13 +58,10 @@ public class JavaBigDataWordCountTests implements Serializable {
 
     @Test
     public void testVariantCount() throws Exception {
-        SparkConf sparkConf = new SparkConf().setAppName("JavaBigDataWordCount");
+        SparkUtilities.setAppName("JavaBigDataWordCount");
+        SparkUtilities.getSparkProperties().setProperty("spark.mesos.coarse", "true");
 
-        Properties props = new Properties();
-        props.setProperty("spark.mesos.coarse", "true");
-        SparkUtilities.guaranteeSparkMaster(sparkConf, props);
-
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
         String[] linesTXT = GETTYSBURG.split("\n"); // the gettysburg address as lines of text
         JavaRDD<String> lines = ctx.parallelize(Arrays.asList(linesTXT));

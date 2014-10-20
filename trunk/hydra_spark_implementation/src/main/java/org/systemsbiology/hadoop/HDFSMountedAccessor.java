@@ -350,6 +350,27 @@ public class HDFSMountedAccessor implements IHDFSFileSystem {
         return hdfsPath.contains(":") && !hdfsPath.startsWith("s3n:") && !hdfsPath.startsWith("res:");
     }
 
+    /**
+     * open a stream from a file
+     *
+     * @param hdfsPath !null remote path to an existing file
+     * @return input stream
+     */
+    @Override
+    public InputStream openPath(final String hdfsPath) {
+        return openFileForRead(new Path(hdfsPath));
+    }
+
+    /**
+     * open a stream to a file
+     *
+     * @param hdfsPath !null remote path to an existing file
+     * @return input stream
+     */
+    @Override
+    public OutputStream openPathForWrite(final String hdfsPath) {
+        return openFileForWrite(new Path(hdfsPath));
+     }
 
     /**
      * open a file for writing

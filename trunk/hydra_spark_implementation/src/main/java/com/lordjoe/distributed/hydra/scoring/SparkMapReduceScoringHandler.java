@@ -1,10 +1,8 @@
 package com.lordjoe.distributed.hydra.scoring;
 
 import com.lordjoe.distributed.*;
-import com.lordjoe.distributed.context.*;
 import com.lordjoe.distributed.tandem.*;
 import org.apache.hadoop.conf.*;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
@@ -25,49 +23,38 @@ import java.util.*;
  */
 public class SparkMapReduceScoringHandler {
 
-    private final SparkApplicationContext context;
     private XTandemMain application;
     private IFileSystem accessor = new LocalMachineFileSystem();
 
     private final JXTandemStatistics m_Statistics = new JXTandemStatistics();
     private final SparkMapReduce<String, IMeasuredSpectrum, String, IMeasuredSpectrum, String, IScoredScan> handler;
+    private Map<Integer, Integer> sizes;
 
-    public SparkMapReduceScoringHandler( Properties sparkProperties,File congiguration) {
-        context = new SparkApplicationContext("LibraryBuilder");
-        SparkConf sparkConf = context.getSparkConf();
-        SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);    // use local if no master provided
-        // needed to fix norway bug
+    public SparkMapReduceScoringHandler(String congiguration) {
 
-        application = new XTandemMain(congiguration);
+        SparkUtilities.setAppName("SparkMapReduceScoringHandler");
+
+        InputStream is = SparkUtilities.readFrom(congiguration);
+
+        application = new XTandemMain(is, congiguration);
 
         handler = new SparkMapReduce("Score Scans", new ScanTagMapperFunction(application), new ScoringReducer(application));
 
+        SparkConf sparkConf = SparkUtilities.getCurrentContext().getConf();
         /**
          * copy application parameters to spark context
          */
         for (String key : application.getParameterKeys()) {
-            sparkConf.set(key,application.getParameter(key) );
+            sparkConf.set(key, application.getParameter(key));
         }
 
     }
 
-    public SparkApplicationContext getContext() {
-        return context;
-    }
 
     public IFileSystem getAccessor() {
         return accessor;
     }
 
-    @SuppressWarnings("UnusedDeclaration")
-    public JavaSparkContext getJavaContext() {
-        SparkApplicationContext context1 = getContext();
-        return context1.getCtx();
-    }
-
-      public Configuration getHadoopConfiguration() {
-        return getJavaContext().hadoopConfiguration();
-    }
 
     public JXTandemStatistics getStatistics() {
         return m_Statistics;
@@ -96,7 +83,7 @@ public class SparkMapReduceScoringHandler {
             String paramsFile = application.getDatabaseName() + ".params";
             Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
             File hdfsPath = new File(dd.toString());
-             if (!hdfsPath.exists( ))
+            if (!hdfsPath.exists())
                 return null;
 
 
@@ -105,7 +92,8 @@ public class SparkMapReduceScoringHandler {
 
             DigesterDescription ret = new DigesterDescription(fsin);
             return ret;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return null;
 
@@ -113,52 +101,51 @@ public class SparkMapReduceScoringHandler {
     }
 
     public boolean isDatabaseBuildRequired() {
-           XTandemMain application = getApplication();
-          boolean buildDatabase;
-          // Validate build parameters
-          DigesterDescription existingDatabaseParameters = null;
-          try {
-              existingDatabaseParameters = readDigesterDescription(application);
-          } catch (Exception e) {
-              return true; // bad descriptor
-          }
-          // we have a database
-          if (existingDatabaseParameters != null) {
-              DigesterDescription desired = DigesterDescription.fromApplication(application);
-              if (desired.equivalent(existingDatabaseParameters)) {
-                  buildDatabase = false;
-              } else {
-                  buildDatabase = true;
-                  // kill the database
-                  Path dpath = XTandemHadoopUtilities.getRelativePath(application.getDatabaseName());
-                  try {
-                      FileSystem fileSystem = dpath.getFileSystem(getHadoopConfiguration());
-                      XTandemHadoopUtilities.expunge(dpath, fileSystem);
-                  } catch (IOException e) {
-                      throw new RuntimeException(e);
+        XTandemMain application = getApplication();
+        boolean buildDatabase;
+        // Validate build parameters
+        DigesterDescription existingDatabaseParameters = null;
+        try {
+            existingDatabaseParameters = readDigesterDescription(application);
+        }
+        catch (Exception e) {
+            return true; // bad descriptor
+        }
+        // we have a database
+        if (existingDatabaseParameters != null) {
+            DigesterDescription desired = DigesterDescription.fromApplication(application);
+            if (desired.equivalent(existingDatabaseParameters)) {
+                buildDatabase = false;
+            }
+            else {
+                buildDatabase = true;
+                // kill the database
+                Path dpath = XTandemHadoopUtilities.getRelativePath(application.getDatabaseName());
+                IFileSystem fileSystem = SparkUtilities.getHadoopFileSystem();
+                fileSystem.expunge(dpath.toString());
+            }
 
-                  }
-              }
+        }
+        else {
+            buildDatabase = true;
+        }
+        Configuration configuration = SparkUtilities.getCurrentContext().hadoopConfiguration();
+        Map<Integer, Integer> sizeMap = XTandemHadoopUtilities.guaranteeDatabaseSizes(application, configuration);
+        if (sizeMap == null) {
+            buildDatabase = true;
+        }
+        JXTandemStatistics statistics = getStatistics();
+        long totalFragments = XTandemHadoopUtilities.sumDatabaseSizes(sizeMap);
+        if (totalFragments < 1) {
+            buildDatabase = true;
+        }
 
-          } else {
-              buildDatabase = true;
-          }
-          Map<Integer, Integer> sizeMap = XTandemHadoopUtilities.guaranteeDatabaseSizes(application,getHadoopConfiguration());
-          if (sizeMap == null) {
-              buildDatabase = true;
-          }
-          JXTandemStatistics statistics = getStatistics();
-          long totalFragments = XTandemHadoopUtilities.sumDatabaseSizes(sizeMap);
-          if (totalFragments < 1) {
-              buildDatabase = true;
-          }
+        long MaxFragments = XTandemHadoopUtilities.maxDatabaseSizes(sizeMap);
+        statistics.setData("Total Fragments", Long.toString(totalFragments));
+        statistics.setData("Max Mass Fragments", Long.toString(MaxFragments));
 
-          long MaxFragments = XTandemHadoopUtilities.maxDatabaseSizes(sizeMap);
-          statistics.setData("Total Fragments", Long.toString(totalFragments));
-          statistics.setData("Max Mass Fragments", Long.toString(MaxFragments));
-
-          return buildDatabase;
-      }
+        return buildDatabase;
+    }
 
 
     public XTandemMain getApplication() {
@@ -187,36 +174,47 @@ public class SparkMapReduceScoringHandler {
     }
 
     protected void performSetup() {
-        ((AbstractTandemFunction) handler.getMap()).setup(getJavaContext());
-        ((AbstractTandemFunction) handler.getReduce()).setup(getJavaContext());
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
+        ((AbstractTandemFunction) handler.getMap()).setup(ctx);
+        ((AbstractTandemFunction) handler.getReduce()).setup(ctx);
     }
 
-    public  void buildLibraryIfNeeded() {
-          if(false && !isDatabaseBuildRequired())   // todo for now we force a library build
-              return;
-          buildLibrary();
+    public void buildLibraryIfNeeded() {
+        if (true && !isDatabaseBuildRequired())   // todo for now we force a library build
+            return;
+        buildLibrary();
+    }
+
+    public Map<Integer, Integer> getDatabaseSizes() {
+        if (sizes == null) {
+            LibraryBuilder libraryBuilder = new LibraryBuilder(this);
+            sizes = libraryBuilder.getDatabaseSizes();
+        }
+        return sizes;
+
     }
 
     public void buildLibrary() {
         clearAllParams(getApplication());
 
         LibraryBuilder libraryBuilder = new LibraryBuilder(this);
-        libraryBuilder.buildLibrary();
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
+        libraryBuilder.buildLibrary(ctx);
 
-        Map<Integer, Integer> sizes = XTandemHadoopUtilities.guaranteeDatabaseSizes(getApplication(),getHadoopConfiguration());
+        Map<Integer, Integer> sizes = XTandemHadoopUtilities.guaranteeDatabaseSizes(getApplication(), ctx.hadoopConfiguration());
 
-   //     throw new UnsupportedOperationException("Fix This"); // ToDo
+        //     throw new UnsupportedOperationException("Fix This"); // ToDo
     }
 
     protected void clearAllParams(XTandemMain application) {
-         String databaseName = application.getDatabaseName();
-         String paramsFile = databaseName + ".params";
-         Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
-         IFileSystem fs = getAccessor();
-         String hdfsPath = dd.toString();
-         if (fs.exists(hdfsPath))
-             fs.deleteFile(hdfsPath);
+        String databaseName = application.getDatabaseName();
+        String paramsFile = databaseName + ".params";
+        Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
+        IFileSystem fs = getAccessor();
+        String hdfsPath = dd.toString();
+        if (fs.exists(hdfsPath))
+            fs.deleteFile(hdfsPath);
 
-     }
+    }
 
 }

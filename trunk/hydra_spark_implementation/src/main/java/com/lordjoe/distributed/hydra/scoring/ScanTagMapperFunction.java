@@ -21,7 +21,7 @@ import java.util.*;
  * User: steven
  * Date: 3/7/11
  */
-public class ScanTagMapperFunction extends AbstractTandemFunction implements IMapperFunction<String, IMeasuredSpectrum  , String, IMeasuredSpectrum> {
+public class ScanTagMapperFunction extends AbstractTandemFunction implements IMapperFunction<String, IMeasuredSpectrum, String, IMeasuredSpectrum> {
     public static final ScanTagMapperFunction[] EMPTY_ARRAY = {};
 
     /// Some debugging hooks when we walk interesting cases
@@ -95,7 +95,7 @@ public class ScanTagMapperFunction extends AbstractTandemFunction implements IMa
 //            incrementCounter("Performance", "TotalDatabaseFragments", totalDatabaseFragments);
 //        }
 
-           m_Condition = new SpectrumCondition();
+        m_Condition = new SpectrumCondition();
         m_Condition.configure(app);
         getElapsed().reset(); // start a clock
     }
@@ -143,8 +143,8 @@ public class ScanTagMapperFunction extends AbstractTandemFunction implements IMa
         List<KeyValueObject<String, IMeasuredSpectrum>> ret = new ArrayList<KeyValueObject<String, IMeasuredSpectrum>>();
         long startTime = System.currentTimeMillis();
         // ignore level 1 scans
-       // if (textv.get("msLevel=\"1\""))
-       //     return ret;
+        // if (textv.get("msLevel=\"1\""))
+        //     return ret;
         String extension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
         // handle gz files
         if (".gz".equals(extension)) {
@@ -153,7 +153,7 @@ public class ScanTagMapperFunction extends AbstractTandemFunction implements IMa
             extension = realName.substring(fileName.lastIndexOf("."));
         }
 
-        RawPeptideScan scan = (RawPeptideScan)ascan;
+        RawPeptideScan scan = (RawPeptideScan) ascan;
 
         String id = scan.getId();
 
@@ -282,7 +282,7 @@ public class ScanTagMapperFunction extends AbstractTandemFunction implements IMa
         }
         long startTime = System.currentTimeMillis();
         String keyStr = String.format("%06d", mass);
-    //    String valueStr = value.toString();
+        //    String valueStr = value.toString();
         int numberEntries = getDatabaseSize(mass);
         int maxScored = getMaxScoredPeptides();
 
@@ -356,13 +356,13 @@ public class ScanTagMapperFunction extends AbstractTandemFunction implements IMa
         int numberEntries = getDatabaseSize(mass);
 
         int maxScored = getMaxScoredPeptides();
-        numberEntries =  maxScored - 1; // todo remove this forces one key
+        numberEntries = maxScored - 1; // todo remove this forces one key
         // todo app back - we need to pick up this later
         if (false && numberEntries == 0)
             return; // we will find no peptides to score
 
         String keyStr = String.format("%06d", mass);
-          long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         if (numberEntries < maxScored) {    // few entries score in one task
 
             //   System.err.println("Sending mass " + mass + " for id " + id );

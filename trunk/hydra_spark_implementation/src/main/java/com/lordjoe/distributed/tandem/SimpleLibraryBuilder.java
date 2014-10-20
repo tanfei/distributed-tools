@@ -1,7 +1,6 @@
 package com.lordjoe.distributed.tandem;
 
 import com.lordjoe.distributed.*;
-import com.lordjoe.distributed.context.*;
 import com.lordjoe.distributed.util.*;
 import org.apache.spark.api.java.*;
 
@@ -15,24 +14,12 @@ import java.util.*;
  */
 public class SimpleLibraryBuilder {
 
-    private final SparkApplicationContext context;
 
     public SimpleLibraryBuilder(File congiguration) {
-        context = new SparkApplicationContext("LibraryBuilder");
-        Properties props = new Properties();
-        props.setProperty("spark.mesos.coarse", "true");
-        SparkUtilities.guaranteeSparkMaster(context.getSparkConf(), props);
+        SparkUtilities.setAppName("LibraryBuilder");
 
      }
 
-    public SparkApplicationContext getContext() {
-        return context;
-    }
-
-    public JavaSparkContext getJavaContext() {
-        SparkApplicationContext context1 = getContext();
-        return context1.getCtx();
-    }
 
 
 
@@ -47,7 +34,7 @@ public class SimpleLibraryBuilder {
 
         ListKeyValueConsumer<String,String> consumer = new ListKeyValueConsumer();
 
-        JavaSparkContext ctx = lb.getJavaContext();
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
         List<KeyValueObject<String, String>> fromFasta =  JavaLibraryBuilder.parseFastaFile(fasta);
         JavaRDD<KeyValueObject<String, String>> proteins = ctx.parallelize(fromFasta);
 

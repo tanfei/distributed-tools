@@ -3,7 +3,6 @@ package com.lordjoe.distributed.hydra;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.util.*;
 import com.lordjoe.distributed.wordcount.*;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.examples.*;
@@ -35,18 +34,17 @@ public class SimpleLoadTest {
             System.out.println("usage SimpleLoadTest Spark.properties textToCount");
             return;
         }
-        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
-
+       SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+        Properties sparkProperties = SparkUtilities.getSparkProperties();
         String pathPrepend = sparkProperties.getProperty("com.lordjoe.distributed.PathPrepend") ;
         if(pathPrepend != null)
             XTandemHadoopUtilities.setDefaultPath(pathPrepend);
 
-        SparkConf sparkConf = new SparkConf().setAppName("Test Largely to make sure cluster can load");
-         SparkUtilities.guaranteeSparkMaster(sparkConf,sparkProperties);
+        SparkUtilities.setAppName("Test Largely to make sure cluster can load");
 
-         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
-         String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX], sparkProperties);
+         String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX] );
          JavaRDD<String> lines = ctx.textFile(inputPath, 1);
 
          // use my function not theirs

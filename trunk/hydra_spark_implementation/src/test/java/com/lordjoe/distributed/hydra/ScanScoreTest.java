@@ -86,13 +86,12 @@ public class ScanScoreTest {
             System.out.println("usage configFile fastaFile");
             return;
         }
-        File config = new File(args[0]);
         String spectra = args[1];
 
         Properties props = new Properties();
         props.setProperty("spark.mesos.coarse", "true");
-        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(props, config);
-        JavaSparkContext ctx = handler.getJavaContext();
+        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler( args[0]);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
 
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra, ctx);

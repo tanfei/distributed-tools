@@ -1,10 +1,14 @@
 package com.lordjoe.distributed;
 
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.storage.*;
+import org.systemsbiology.common.*;
+import org.systemsbiology.hadoop.*;
 import scala.*;
 
 import javax.annotation.*;
@@ -14,25 +18,144 @@ import java.util.*;
 
 /**
  * com.lordjoe.distributed.SpareUtilities
+ * A very useful class representing a number of sttaic finctions useful in Spark
  * User: Steve
  * Date: 8/28/2014
  */
 public class SparkUtilities implements Serializable {
 
+    private transient static ThreadLocal<JavaSparkContext> threadContext;
+    private static final Properties sparkProperties = new Properties();
+    private static String appName = "Anonymous";
+    private static String pathPrepend = "";
+
+    /**
+     * create a JavaSparkContext for the thread if none exists
+     *
+     * @return
+     */
+    public static synchronized JavaSparkContext getCurrentContext() {
+        if (threadContext == null)
+            threadContext = new ThreadLocal<JavaSparkContext>();
+        JavaSparkContext ret = threadContext.get();
+        if (ret != null)
+            return ret;
+        SparkConf sparkConf = new SparkConf().setAppName(getAppName());
+        SparkUtilities.guaranteeSparkMaster(sparkConf);
+        sparkConf.set("spark.mesos.coarse", "true");
+        ret = new JavaSparkContext(sparkConf);
+        threadContext.set(ret);
+        return ret;
+    }
+
+    /**
+     * return the name of the current App
+     *
+     * @return
+     */
+    public static String getAppName() {
+        return appName;
+    }
+
+    public static void setAppName(final String pAppName) {
+        appName = pAppName;
+    }
+
+    public static Properties getSparkProperties() {
+        return sparkProperties;
+    }
+
+    /**
+     * return the content of an existing file in the path
+     *
+     * @param path
+     * @return the content of what is presumed to be a text file as an strings  one per line
+     */
+    public static
+    @Nonnull
+    String[] pathLines(@Nonnull String path) {
+        String wholeFile = getPathContent(path);
+        return wholeFile.split("\n");
+    }
+
+    /**
+     * return the content of an existing file in the path
+     *
+     * @param path
+     * @return the content of what is presumed to be a text file as a string
+     */
+    public static
+    @Nonnull
+    String getPathContent(@Nonnull String path) {
+        IFileSystem accessor = getHadoopFileSystem();
+        path = mapToPath(path); // make sure we understand the path
+        return accessor.readFromFileSystem(path);
+    }
 
 
     /**
+     * a string prepended to the path =
+     * might be   hdfs://daas/steve/Sample2/
+     * usually reflects a mapping from user.dir to whatever files Spark is using
+     * - I assume hdfs
+     *
+     * @return
+     */
+    public static String getPathPrepend() {
+        return pathPrepend;
+    }
+
+
+    public static void setPathPrepend(final String pPathPrepend) {
+        pathPrepend = pPathPrepend;
+    }
+
+    public static String mapToPath(String cannonicPath) {
+        return getPathPrepend() + cannonicPath;
+    }
+
+    /**
+     * return a reference to the current hadoop file system using the currrent Spark Context
+     */
+    public static IFileSystem getHadoopFileSystem() {
+        final IFileSystem accessor;
+        try {
+            JavaSparkContext ctx = getCurrentContext();
+            Configuration entries = ctx.hadoopConfiguration();
+            accessor = new HDFSAccessor(FileSystem.get(entries));
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
+        return accessor;
+    }
+
+    /**
+     * read a path and return it as a LineNumber reader of the content
+     * Needed to fake reading a file
+     *
+     * @param ctx
+     * @param path
+     * @return
+     */
+    public static InputStream readFrom(String path) {
+        IFileSystem accessor = getHadoopFileSystem();
+        path = mapToPath(path); // make sure we understand the path
+        return accessor.openPath(path);
+    }
+
+    /**
      * read a file with a list of desired properties
+     *
      * @param fileName
      * @return
      */
-    public static Properties readSparkProperties(String fileName) {
+    public static void readSparkProperties(String fileName) {
         try {
-            Properties sparkProperties = new Properties();
             File f = new File(fileName);
             String path = f.getAbsolutePath();
             sparkProperties.load(new FileReader(f));  // read spark properties
-            return sparkProperties;
         }
         catch (IOException e) {
             throw new RuntimeException(" bad spark properties file " + fileName);
@@ -45,11 +168,12 @@ public class SparkUtilities implements Serializable {
      *
      * @param sparkConf the configuration
      */
-    public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf, Properties props) {
+    public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
         Option<String> option = sparkConf.getOption("spark.master");
 
         if (!option.isDefined()) {   // use local over nothing   {
             sparkConf.setMaster("local[4]");
+
             /**
              * liquanpei@gmail.com suggests to correct
              * 14/10/08 09:36:35 ERROR broadcast.TorrentBroadcast: Reading broadcast variable 0 failed
@@ -64,10 +188,10 @@ public class SparkUtilities implements Serializable {
             //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
         }
         // ste all properties in the SparkProperties file
-        for (String property : props.stringPropertyNames()) {
+        for (String property : sparkProperties.stringPropertyNames()) {
             if (!property.startsWith("spark."))
                 continue;
-            sparkConf.set(property, props.getProperty(property));
+            sparkConf.set(property, sparkProperties.getProperty(property));
 
         }
 
@@ -126,27 +250,58 @@ public class SparkUtilities implements Serializable {
     }
 
     public static final String PATH_PREPEND_PROPERTY = "com.lordjoe.distributed.PathPrepend";
+
     /**
-     *
      * @param pathName given path - we may need to predend hdfs access
      * @param props
      * @return
      */
-    public static String buildPath(final String pathName, Properties props) {
-        if(pathName.startsWith("hdfs://"))
+    public static String buildPath(final String pathName) {
+        if (pathName.startsWith("hdfs://"))
             return pathName;
-        String prepend = props.getProperty(PATH_PREPEND_PROPERTY);
-        if(prepend == null)
+        String prepend = sparkProperties.getProperty(PATH_PREPEND_PROPERTY);
+        if (prepend == null)
             return pathName;
         return prepend + pathName;
     }
 
 
+    /**
+        * function that returns the values of a Tuple as an RDD
+        */
+       public static final TupleValues TUPLE_VALUES = new TupleValues();
+
+       public static class TupleValues<K extends Serializable> implements Function<Tuple2<Object, K>, K> {
+           private TupleValues() {};
+
+           @Override
+           public K call(final Tuple2<Object, K> v1) throws Exception {
+               return v1._2();
+           }
+       }
+
+    /**
+     * function that returns the original object
+     */
+    public static final IdentityFunction IDENTITY_FUNCTION = new IdentityFunction();
+
+    public static class IdentityFunction<K extends Serializable> implements Function<K, K> {
+        private IdentityFunction() {};
+
+        @Override
+        public K call(final K v1) throws Exception {
+            return v1;
+        }
+    }
+
+
+
+
     public static class KeyValueObjectToTuple2<K extends Serializable, V extends Serializable> implements FlatMapFunction2<KeyValueObject<K, V>, K, V> {
         @Override
         public Iterable<V> call(final KeyValueObject<K, V> ppk, final K pK) throws Exception {
-            Object[] items =  { ppk.value };
-            return  Arrays.asList((V[])items);
+            Object[] items = {ppk.value};
+            return Arrays.asList((V[]) items);
         }
 
     }
@@ -205,6 +360,20 @@ public class SparkUtilities implements Serializable {
 
 
     /**
+     * force a JavaRDD to evaluate then return the results as a JavaRDD
+     *
+     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param <T> whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static JavaRDD realizeAndReturn(@Nonnull final JavaRDD inp ) {
+        JavaSparkContext currentContext = getCurrentContext();
+        return realizeAndReturn(inp, currentContext);
+    }
+
+
+    /**
      * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
      *
      * @param inp this is an RDD - usually one you want to examine during debugging
@@ -217,6 +386,19 @@ public class SparkUtilities implements Serializable {
         List<Tuple2<Object, Object>> collect = (List<Tuple2<Object, Object>>) (List) inp.collect();    // break here and take a look
         return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
     }
+
+
+    /**
+       * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
+       *
+       * @param inp this is an RDD - usually one you want to examine during debugging
+       * @param <T> whatever inp is a list of
+       * @return non-null RDD of the same values but realized
+       */
+      @Nonnull
+      public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp ) {
+          return realizeAndReturn(inp,getCurrentContext());
+        }
 
     /**
      * make an RDD from an iterable

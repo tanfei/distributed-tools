@@ -2,11 +2,8 @@ package com.lordjoe.distributed.input;
 
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.spectrum.*;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.systemsbiology.xtandem.*;
-
-import java.util.*;
 
 /**
  * com.lordjoe.distributed.input.ScanReaderTest
@@ -21,12 +18,9 @@ public class ScanReaderTest {
             System.out.println("usage <file holding mgfs>");
             return;
         }
-        SparkConf sparkConf = new SparkConf().setAppName("ScanReaderTest");
-        Properties props = new Properties();
-        props.setProperty("spark.mesos.coarse", "true");
-        SparkUtilities.guaranteeSparkMaster(sparkConf, props);    // use local if no master provided
+        SparkUtilities.setAppName("ScanReaderTest");
 
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];

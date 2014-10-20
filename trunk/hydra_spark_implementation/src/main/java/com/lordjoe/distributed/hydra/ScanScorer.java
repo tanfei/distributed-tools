@@ -3,12 +3,14 @@ package com.lordjoe.distributed.hydra;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
+import org.apache.hadoop.fs.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
+import org.systemsbiology.xtandem.pepxml.*;
 import org.systemsbiology.xtandem.reporting.*;
 import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
@@ -37,7 +39,7 @@ public class ScanScorer {
         public Tuple2<String, String> call(final Tuple2<String, IScoredScan> v1) throws Exception {
             IScoredScan scan = v1._2();
             StringWriter sw = new StringWriter();
-            PrintWriter out = new PrintWriter(sw);
+            Appendable out = new PrintWriter(sw);
             reporter.writeScanScores(scan, out, 1);
             return new Tuple2(v1._1(), sw.toString());
         }
@@ -92,20 +94,24 @@ public class ScanScorer {
             System.out.println("usage sparkconfig configFile fastaFile");
             return;
         }
-        Properties sparkProperties = SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+          SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
-        String pathPrepend = sparkProperties.getProperty("com.lordjoe.distributed.PathPrepend") ;
+        String pathPrepend = SparkUtilities.getSparkProperties().getProperty("com.lordjoe.distributed.PathPrepend") ;
         if(pathPrepend != null)
             XTandemHadoopUtilities.setDefaultPath(pathPrepend);
 
-        File config = new File(args[TANDEM_CONFIG_INDEX]);
 
-        String spectra = SparkUtilities.buildPath(args[SPECTRA_INDEX],sparkProperties);
+        String configStr = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX] );
 
-        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(sparkProperties,config);
-        JavaSparkContext ctx = handler.getJavaContext();
+        String spectra = SparkUtilities.buildPath(args[SPECTRA_INDEX] );
 
-        handler.buildLibraryIfNeeded();
+        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler( configStr);
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
+
+        if(false)
+            handler.buildLibraryIfNeeded();
+
+        Map<Integer, Integer> databaseSizes = handler.getDatabaseSizes();
 
 
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra, ctx);
@@ -146,16 +152,56 @@ public class ScanScorer {
             */
         JavaPairRDD<String, IScoredScan> bestScores = mappedByScanKey.reduceByKey(new chooseBestScanScore());
 
+
         /**
          * collect and write
          */
         bestScores = bestScores.sortByKey();
 
-        List<Tuple2<String, IScoredScan>> scoredScans = bestScores.collect();
+        XTandemMain application = handler.getApplication();
+        PepXMLWriter pwrtr = new PepXMLWriter(application);
+        PepXMLScoredScanWriter pWrapper = new PepXMLScoredScanWriter(pwrtr);
+        SparkConsolidator consolidator = new SparkConsolidator(pWrapper,application);
 
-        TandemXMLWriter writer = new TandemXMLWriter(handler.getApplication());
 
-        writer.buildReport(scoredScans);
+         String outputPath = BiomlReporter.buildDefaultFileName(application);
+         outputPath = outputPath.replace(".xml",".pep.xml");
+         Path prepent = XTandemHadoopUtilities.getRelativePath(outputPath);
+         FileOutputStream os = null;
+         String pathAsString = prepent.toString();
+
+
+
+
+        JavaRDD<IScoredScan> values = bestScores.values();
+
+        PrintWriter out = new PrintWriter(new FileWriter(pathAsString));
+        consolidator.writeScores(out, values);
+        out.close();
+
+//        JavaRDD<String> text =  consolidator.scoreStrings(values);
+//
+//
+//
+//        text = SparkUtilities.realizeAndReturn(text);
+//
+//        text.saveAsTextFile(pathAsString);
+
+
+//
+//        // comment out unless you want a look
+//        // SparkUtilities.realizeAndReturn(values);
+//
+//
+//
+
+
+//
+//        List<Tuple2<String, IScoredScan>> scoredScans = bestScores.collect();
+//
+//        TandemXMLWriter writer = new TandemXMLWriter(application);
+//
+//        writer.buildReport(scoredScans);
         
 
 
