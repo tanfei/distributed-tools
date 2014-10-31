@@ -28,6 +28,7 @@
         <module name="java_code" />
         <module name="jxtandem" />
         <module name="spark_implementation" />
+        <module name="UsedJarLoader" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -107,6 +108,7 @@
         <option value="$PROJECT_DIR$/../hydra_spark_implementation/pom.xml" />
         <option value="$PROJECT_DIR$/../java_implementation/pom.xml" />
         <option value="$PROJECT_DIR$/../jxtandem/pom.xml" />
+        <option value="E:/UsedJarPackager/pom.xml" />
       </list>
     </option>
   </component>
@@ -243,6 +245,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://E:/UsedJarPackager/UsedJarLoader.iml" filepath="E:/UsedJarPackager/UsedJarLoader.iml" />
       <module fileurl="file://E:/concurrent-tools/concurrenttools.iml" filepath="E:/concurrent-tools/concurrenttools.iml" />
       <module fileurl="file://$PROJECT_DIR$/../generic_code/generic_code.iml" filepath="$PROJECT_DIR$/../generic_code/generic_code.iml" />
       <module fileurl="file://$PROJECT_DIR$/../hydra_spark_implementation/hydra_spark_implementation.iml" filepath="$PROJECT_DIR$/../hydra_spark_implementation/hydra_spark_implementation.iml" />
@@ -357,6 +360,7 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="svn" />
+    <mapping directory="E:/UsedJarPackager" vcs="svn" />
     <mapping directory="E:/concurrent-tools" vcs="svn" />
     <mapping directory="$PROJECT_DIR$/../java_implementation" vcs="svn" />
     <mapping directory="$PROJECT_DIR$/../jxtandem" vcs="svn" />

@@ -1,5 +1,6 @@
 package com.lordjoe.distributed.tandem;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.output.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
@@ -48,9 +49,9 @@ public class LibraryWriter implements Serializable {
     public static class WriterObject extends AbstractKeyWriter<IPolypeptide> {
 
         public WriterObject(PolypeptideToFileName peptideToFileName, IPolypeptide pp) {
-            super(peptideToFileName.call(pp));
-            write(pp);
-        }
+                 super(peptideToFileName.call(pp));
+                write(pp);
+             }
 
 
         public void write(IPolypeptide pp) {
@@ -82,9 +83,9 @@ public class LibraryWriter implements Serializable {
         }
     }
 
-    private static class PolypeptideToFileName implements Function<IPolypeptide, String> {
+    private static class PolypeptideToFileName  extends AbstractLoggingFunction<IPolypeptide, String> {
         @Override
-        public String call(IPolypeptide pp) {
+        public String doCall(IPolypeptide pp) {
              int mass = (int) pp.getMatchingMass(); // todo should resolution be finer
              return HadoopUtilities.buildFileNameFromMass(mass);
         }

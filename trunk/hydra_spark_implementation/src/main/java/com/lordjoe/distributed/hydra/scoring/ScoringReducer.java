@@ -27,6 +27,7 @@ import java.util.*;
  */
 public class ScoringReducer extends AbstractTandemFunction implements ISingleOutputReducerFunction<String, IMeasuredSpectrum, String, IScoredScan>,
         IReducerFunction<String, IMeasuredSpectrum, String, IScoredScan>, SpectrumGenerationListener, INoticationListener {
+
     private ITaxonomy m_Taxonomy;
     private long m_MaxPeptides;
     private int m_Notifications;
@@ -77,9 +78,12 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
         String dir = application.getDatabaseName();
         if (dir != null) {
             Configuration entries = context.hadoopConfiguration();
-            HadoopFileTaxonomy ftax = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism() );
-            m_Taxonomy = ftax;
-        }
+
+            if(LibraryBuilder.USE_PARQUET_DATABASE)
+                m_Taxonomy = new ParquetDatabaseTaxonomy(application, m_Taxonomy.getOrganism() );
+            else
+                m_Taxonomy = new HadoopFileTaxonomy(application, m_Taxonomy.getOrganism() );
+          }
         else {
             // make sure the latest table is present
             throw new UnsupportedOperationException("we dropped databases for now"); // ToDo
@@ -145,12 +149,6 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
         // if we do not score this mass continue
         SpectrumCondition sp = application.getSpectrumParameters();
-      //  if (!sp.isMassScored(mass))
-     //      return new KeyValueObject(keyStr, new ScoredScan((RawPeptideScan) scan));
-
-
-        // Special code to store scans at mass for timing stueies
-        SequenceFile.Writer writer = null;
 
         int numberScoredPeptides = 0;
 
@@ -161,7 +159,7 @@ public class ScoringReducer extends AbstractTandemFunction implements ISingleOut
 
             pps = filterPeptides(pps); // drop non-complient peptides
 
-            System.err.println("Number peptides = " + pps.length);
+            System.err.println(keyStr + " Number peptides = " + pps.length);
 
             if (isCreateDecoyPeptides()) {
                 pps = addDecoyPeptides(pps);

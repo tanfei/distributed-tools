@@ -1,8 +1,8 @@
 package com.lordjoe.distributed.hydra.protein;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.spark.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.peptide.*;
 
 import java.util.*;
@@ -44,9 +44,9 @@ public class PolypeptideCombiner {
 
     public static final MergePolyPeptides  MERGE_INSTANCE = new MergePolyPeptides();
 
-    private static class MergePolyPeptides implements Function2<IPolypeptide, IPolypeptide, IPolypeptide> {
+    private static class MergePolyPeptides extends AbstractLoggingFunction2<IPolypeptide, IPolypeptide, IPolypeptide> {
         @Override
-        public IPolypeptide call(final IPolypeptide v1, final IPolypeptide v2) throws Exception {
+        public IPolypeptide doCall(final IPolypeptide v1, final IPolypeptide v2) throws Exception {
             return mergeProteins(v1,v2);
         }
     }

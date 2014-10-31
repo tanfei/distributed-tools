@@ -74,7 +74,7 @@ public class PersonDatabaseTest {
     }
 
     private static void showTeenAgersCount(final JavaSparkContext sc, final String name) {
-         JavaSQLContext sqlContext = new JavaSQLContext(sc);
+        JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();
          // Read in the Parquet file created above.  Parquet files are self-describing so the schema is preserved.
          // The result of loading a parquet file is also a JavaSchemaRDD.
          String parquetName = name + ".parquet";
@@ -105,7 +105,7 @@ public class PersonDatabaseTest {
      }
 
     private static void showTeenAgers(final JavaSparkContext sc, final String name) {
-        JavaSQLContext sqlContext = new JavaSQLContext(sc);
+        JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();
         // Read in the Parquet file created above.  Parquet files are self-describing so the schema is preserved.
         // The result of loading a parquet file is also a JavaSchemaRDD.
         String parquetName = name + ".parquet";
@@ -130,7 +130,7 @@ public class PersonDatabaseTest {
 
     public static void buildParaquetDatabase(JavaSparkContext sc , String name) {
         try {
-            JavaSQLContext sqlContext = new JavaSQLContext(sc);
+            JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();
             String fileName = name + ".txt";
             JavaRDD < Person > people = sc.textFile(fileName).map(
                     new ReadPeopleFile());

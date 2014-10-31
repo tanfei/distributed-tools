@@ -1,19 +1,25 @@
 package com.lordjoe.distributed.hydra.scoring;
 
 import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.hydra.*;
+import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.tandem.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 import org.systemsbiology.common.*;
-import org.systemsbiology.remotecontrol.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
 import org.systemsbiology.xtandem.scoring.*;
+import org.systemsbiology.xtandem.taxonomy.*;
+import scala.*;
 
 import java.io.*;
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -21,14 +27,17 @@ import java.util.*;
  * User: Steve
  * Date: 10/7/2014
  */
-public class SparkMapReduceScoringHandler {
+public class SparkMapReduceScoringHandler implements Serializable {
 
     private XTandemMain application;
-    private IFileSystem accessor = new LocalMachineFileSystem();
 
     private final JXTandemStatistics m_Statistics = new JXTandemStatistics();
     private final SparkMapReduce<String, IMeasuredSpectrum, String, IMeasuredSpectrum, String, IScoredScan> handler;
     private Map<Integer, Integer> sizes;
+    private final BinChargeMapper binMapper;
+    private transient Scorer scorer;
+    private transient ITandemScoringAlgorithm algorithm;
+
 
     public SparkMapReduceScoringHandler(String congiguration) {
 
@@ -36,7 +45,7 @@ public class SparkMapReduceScoringHandler {
 
         InputStream is = SparkUtilities.readFrom(congiguration);
 
-        application = new XTandemMain(is, congiguration);
+        application = new SparkXTandemMain(is, congiguration);
 
         handler = new SparkMapReduce("Score Scans", new ScanTagMapperFunction(application), new ScoringReducer(application));
 
@@ -48,13 +57,33 @@ public class SparkMapReduceScoringHandler {
             sparkConf.set(key, application.getParameter(key));
         }
 
+        ITaxonomy taxonomy = application.getTaxonomy();
+        System.err.println(taxonomy.getOrganism());
+
+        binMapper = new BinChargeMapper(this);
+
     }
 
 
-    public IFileSystem getAccessor() {
-        return accessor;
+//    public IFileSystem getAccessor() {
+//
+//        return accessor;
+//    }
+
+    public Scorer getScorer() {
+        if (scorer == null)
+            scorer = getApplication().getScoreRunner();
+
+        return scorer;
     }
 
+
+    public ITandemScoringAlgorithm getAlgorithm() {
+        if (algorithm == null)
+            algorithm = application.getAlgorithms()[0];
+
+        return algorithm;
+    }
 
     public JXTandemStatistics getStatistics() {
         return m_Statistics;
@@ -81,15 +110,9 @@ public class SparkMapReduceScoringHandler {
     public DigesterDescription readDigesterDescription(XTandemMain application) {
         try {
             String paramsFile = application.getDatabaseName() + ".params";
-            Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
-            File hdfsPath = new File(dd.toString());
-            if (!hdfsPath.exists())
+            InputStream fsin = SparkHydraUtilities.nameToInputStream(paramsFile, application);
+            if (fsin == null)
                 return null;
-
-
-            InputStream fsin = new FileInputStream(hdfsPath);
-
-
             DigesterDescription ret = new DigesterDescription(fsin);
             return ret;
         }
@@ -127,22 +150,22 @@ public class SparkMapReduceScoringHandler {
 
         }
         else {
-            buildDatabase = true;
+            return true;
         }
         Configuration configuration = SparkUtilities.getCurrentContext().hadoopConfiguration();
         Map<Integer, Integer> sizeMap = XTandemHadoopUtilities.guaranteeDatabaseSizes(application, configuration);
         if (sizeMap == null) {
-            buildDatabase = true;
+            return true;
         }
         JXTandemStatistics statistics = getStatistics();
         long totalFragments = XTandemHadoopUtilities.sumDatabaseSizes(sizeMap);
         if (totalFragments < 1) {
-            buildDatabase = true;
+            return true;
         }
 
-        long MaxFragments = XTandemHadoopUtilities.maxDatabaseSizes(sizeMap);
-        statistics.setData("Total Fragments", Long.toString(totalFragments));
-        statistics.setData("Max Mass Fragments", Long.toString(MaxFragments));
+//        long MaxFragments = XTandemHadoopUtilities.maxDatabaseSizes(sizeMap);
+//        statistics.setData("Total Fragments", Long.toString(totalFragments));
+//        statistics.setData("Max Mass Fragments", Long.toString(MaxFragments));
 
         return buildDatabase;
     }
@@ -160,7 +183,9 @@ public class SparkMapReduceScoringHandler {
      */
     public void performSingleReturnMapReduce(final JavaRDD<KeyValueObject<String, IMeasuredSpectrum>> pInputs) {
         performSetup();
+        System.err.println("setup Done");
         handler.performSingleReturnMapReduce(pInputs);
+        System.err.println("Map Reduce Done");
     }
 
     /**
@@ -177,12 +202,98 @@ public class SparkMapReduceScoringHandler {
         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
         ((AbstractTandemFunction) handler.getMap()).setup(ctx);
         ((AbstractTandemFunction) handler.getReduce()).setup(ctx);
+        System.err.println("Setup Performed");
     }
 
     public void buildLibraryIfNeeded() {
-        if (true && !isDatabaseBuildRequired())   // todo for now we force a library build
+        boolean dbNeedes = isDatabaseBuildRequired();
+        if (false && !dbNeedes)
             return;
         buildLibrary();
+    }
+
+    public JavaPairRDD<BinChargeKey, IMeasuredSpectrum> mapMeasuredSpectrumToKeys(JavaRDD<IMeasuredSpectrum> inp) {
+        return binMapper.mapMeasuredSpectrumToKeys(inp);
+    }
+
+    public JavaPairRDD<BinChargeKey, IPolypeptide> mapFragmentsToKeys(JavaRDD<IPolypeptide> inp) {
+        return binMapper.mapFragmentsToKeys(inp);
+    }
+
+
+    public JavaPairRDD<IMeasuredSpectrum, IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
+
+        JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
+
+        // next line is for debugging
+        //values = SparkUtilities.realizeAndReturn(values);
+
+        JavaPairRDD<IMeasuredSpectrum, IPolypeptide> valuePairs = SparkUtilities.mapToPairs(values);
+
+       // next line is for debugging
+       // valuePairs = SparkUtilities.realizeAndReturn(valuePairs);
+
+
+        JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(valuePairs);
+
+       /// next line is for debugging
+        //keyedScoringPairs = SparkUtilities.realizeAndReturn(keyedScoringPairs);
+
+
+        JavaPairRDD<IMeasuredSpectrum, IScoredScan> ret = keyedScoringPairs.combineByKey(
+                new Function<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan>() {
+                    @Override
+                    public IScoredScan call(final Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
+                        IMeasuredSpectrum spec = v1._1();
+                        IPolypeptide pp = v1._2();
+                        if (!(spec instanceof RawPeptideScan))
+                            throw new IllegalStateException("We can only handle RawScans Here");
+                        RawPeptideScan rs = (RawPeptideScan) spec;
+                        IScoredScan ret = scoreOnePeptide(rs, pp);
+                        return ret;
+                    }
+                },
+                new Function2<IScoredScan, Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan>() {
+                    @Override
+                    public IScoredScan call(final IScoredScan v1, final Tuple2<IMeasuredSpectrum, IPolypeptide> v2) throws Exception {
+                        IMeasuredSpectrum spec = v2._1();
+                          IPolypeptide pp = v2._2();
+                        if (!(spec instanceof RawPeptideScan))
+                                    throw new IllegalStateException("We can only handle RawScans Here");
+                             RawPeptideScan rs = (RawPeptideScan) spec;
+                        IScoredScan ret = scoreOnePeptide(rs, pp);
+                        if(v1.getBestMatch() == null)
+                            return ret;
+                        if(ret.getBestMatch() == null)
+                              return v1;
+
+
+                        if (v1.getExpectedValue() > ret.getExpectedValue())
+                            return v1;
+                        else
+                            return ret;
+                    }
+                },
+                new Function2<IScoredScan, IScoredScan, IScoredScan>() {
+                    @Override
+                    public IScoredScan call(final IScoredScan v1, final IScoredScan v2) throws Exception {
+                        if (v1.getExpectedValue() > v2.getExpectedValue())
+                            return v1;
+                        else
+                            return v2;
+                    }
+                }
+
+        );
+
+        return ret;
+    }
+
+    protected IScoredScan scoreOnePeptide(RawPeptideScan spec, IPolypeptide pp) {
+        IPolypeptide[] pps = {pp};
+        Scorer scorer1 = getScorer();
+        ITandemScoringAlgorithm algorithm1 = getAlgorithm();
+        return algorithm1.handleScan(scorer1, spec, pps);
     }
 
     public Map<Integer, Integer> getDatabaseSizes() {
@@ -194,27 +305,24 @@ public class SparkMapReduceScoringHandler {
 
     }
 
-    public void buildLibrary() {
-        clearAllParams(getApplication());
+    public JavaRDD<IPolypeptide> buildLibrary() {
+        //clearAllParams(getApplication());
 
         LibraryBuilder libraryBuilder = new LibraryBuilder(this);
         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
-        libraryBuilder.buildLibrary(ctx);
-
-        Map<Integer, Integer> sizes = XTandemHadoopUtilities.guaranteeDatabaseSizes(getApplication(), ctx.hadoopConfiguration());
-
-        //     throw new UnsupportedOperationException("Fix This"); // ToDo
+        return libraryBuilder.buildLibrary();
     }
 
-    protected void clearAllParams(XTandemMain application) {
-        String databaseName = application.getDatabaseName();
-        String paramsFile = databaseName + ".params";
-        Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
-        IFileSystem fs = getAccessor();
-        String hdfsPath = dd.toString();
-        if (fs.exists(hdfsPath))
-            fs.deleteFile(hdfsPath);
+//    protected void clearAllParams(XTandemMain application) {
+//        String databaseName = application.getDatabaseName();
+//        String paramsFile = databaseName + ".params";
+//        Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
+//        IFileSystem fs = getAccessor();
+//        String hdfsPath = dd.toString();
+//        if (fs.exists(hdfsPath))
+//            fs.deleteFile(hdfsPath);
+//
+//    }
 
-    }
 
 }

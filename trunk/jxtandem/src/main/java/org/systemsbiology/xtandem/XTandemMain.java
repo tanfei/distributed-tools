@@ -441,7 +441,7 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
      */
     public String seqenceToID(String sequence) {
         ITaxonomy iTaxonomy = getTaxonomy();
-        return iTaxonomy.seqenceToID(sequence);
+        return iTaxonomy.sequenceToID(sequence);
     }
 
 

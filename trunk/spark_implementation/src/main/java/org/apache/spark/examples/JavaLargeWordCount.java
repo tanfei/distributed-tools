@@ -48,16 +48,22 @@ public final class JavaLargeWordCount {
     }
 
     public static final int SPARK_CONFIG_INDEX = 0;
-      public static final int INPUT_FILE_INDEX = 1;
+    public static final int INPUT_FILE_INDEX = 1;
 
-
+    /**
+     * spark-submit --class  org.apache.spark.examples.JavaLargeWordCount SparkJar.jar   SparkCluster.properties  war_and_peace.txt
+    *
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
 
         if (args.length < INPUT_FILE_INDEX + 1) {
             System.err.println("Usage: SparkProperties JavaWordCount <file>");
             return;
         }
-       SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+
+         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
         SparkUtilities.setAppName("JavaWordCount");
 
         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
@@ -68,16 +74,6 @@ public final class JavaLargeWordCount {
         // use my function not theirs
         JavaRDD<String> words = lines.flatMap(new WordsMapFunction());
 
-//            new FlatMapFunction<String, String>() {
-//      @Override
-//      public Iterable<String> call(String s) {
-//         String[] split = SPACE.split(s);
-//         for (int i = 0; i < split.length; i++) {
-//             String trim = split[i].trim();
-//             split[i] = trim.toUpperCase();
-//         }
-//         return Arrays.asList(split);
-//     }    });
 
         JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
             @Override
@@ -87,14 +83,6 @@ public final class JavaLargeWordCount {
         });
 
 
-//        JavaPairRDD<String, Integer> counts = ones.reduceByKey(new Function2<Integer, Integer, Integer>() {
-//            @Override
-//            public Integer call(Integer i1, Integer i2) {
-//                return i1 + i2;
-//            }
-//        });
-//
-//        JavaPairRDD<String, Integer> sorted = counts.sortByKey();
 
         ones = ones.partitionBy(new PartitionByStart());
         JavaPairRDD<String, Integer> sorted = ones.sortByKey();

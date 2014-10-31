@@ -1,6 +1,7 @@
 package com.lordjoe.distributed.hydra;
 
 import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
 import org.apache.spark.api.java.*;
@@ -18,11 +19,12 @@ import java.util.*;
 
 
 /**
- * com.lordjoe.distributed.hydra.ScanScorer
+ * com.lordjoe.distributed.hydra.SparkScanScorer
+ * Attempt to exploit Spark - not converted Hadoop design for scoring
  * User: Steve
  * Date: 10/7/2014
  */
-public class ScanScorer {
+public class SparkScanScorer {
 
     public static class writeScoresMapper extends AbstractLoggingFunction<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
         final BiomlReporter reporter;
@@ -81,7 +83,7 @@ public class ScanScorer {
      *
      * @param pApplication
      * @return
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static PrintWriter buildWriter(final XTandemMain pApplication) throws IOException {
         String outputPath = BiomlReporter.buildDefaultFileName(pApplication);
@@ -100,9 +102,9 @@ public class ScanScorer {
      */
     public static void main(String[] args) throws Exception {
 
-       // code to run class loader
-       //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
-       //System.out.println(runner);
+        // code to run class loader
+        //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
+        //System.out.println(runner);
 
 
         if (args.length < TANDEM_CONFIG_INDEX + 1) {
@@ -122,17 +124,69 @@ public class ScanScorer {
 
         SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(configStr);
 
+
+
         // handler.buildLibraryIfNeeded();
         JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
 
-        // actually needed in a later stage
-        Map<Integer, Integer> databaseSizes = handler.getDatabaseSizes();
+          // next line is for debugging
+        // databasePeptides = SparkUtilities.realizeAndReturn(databasePeptides);
 
         // read spectra
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
+
+        // handler.buildLibraryIfNeeded();
+        JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
+
+         // next line is for debugging
+        //spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
+
+
+       // Map peptides into bins
+         JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides =  handler.mapFragmentsToKeys(databasePeptides);
+
+        // next line is for debugging
+        //keyedPeptides = SparkUtilities.realizeAndReturn(keyedPeptides);
+
+           // Map spectra into bins
+        JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
+
+         // next line is for debugging
+        //keyedSpectra = SparkUtilities.realizeAndReturn(keyedSpectra);
+
+      // Map peptides into bins
+        JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs = keyedSpectra.join(keyedPeptides);
+
+        // next line is for debugging
+        //  binPairs = SparkUtilities.realizeAndReturn(binPairs);
+
+         JavaPairRDD<IMeasuredSpectrum, IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
+
+       // next line is for debugging
+        bestScores = SparkUtilities.realizeAndReturn(bestScores);
+
+        XTandemMain application = handler.getApplication();
+        PepXMLWriter pwrtr = new PepXMLWriter(application);
+        PepXMLScoredScanWriter pWrapper = new PepXMLScoredScanWriter(pwrtr);
+        SparkConsolidator consolidator = new SparkConsolidator(pWrapper, application);
+
+
+        JavaRDD<IScoredScan> values = bestScores.values();
+
+        PrintWriter out = buildWriter(application);
+        consolidator.writeScores(out, values);
+        out.close();
+
+
+    }
+
+    public static void oldCodeToLookAt(SparkMapReduceScoringHandler handler,
+                                       JavaPairRDD<String, IMeasuredSpectrum> scans
+     )   throws Exception
+    {
+
         // we need Tuple2 not KeyValueObject
         JavaRDD<KeyValueObject<String, IMeasuredSpectrum>> scansKV = SparkUtilities.fromTuples(scans);
-
 
         handler.performSingleReturnMapReduce(scansKV);
 

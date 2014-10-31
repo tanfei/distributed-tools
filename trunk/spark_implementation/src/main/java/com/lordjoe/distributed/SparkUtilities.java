@@ -6,6 +6,7 @@ import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.sql.api.java.*;
 import org.apache.spark.storage.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.hadoop.*;
@@ -24,10 +25,118 @@ import java.util.*;
  */
 public class SparkUtilities implements Serializable {
 
-    private transient static ThreadLocal<JavaSparkContext> threadContext;
+    //  private transient static ThreadLocal<JavaSparkContext> threadContext;
+    private transient static JavaSparkContext threadContext;
+    //  private transient static ThreadLocal<JavaSQLContext> threadContext;
+    private transient static JavaSQLContext sqlContext;
     private static final Properties sparkProperties = new Properties();
     private static String appName = "Anonymous";
     private static String pathPrepend = "";
+    private static boolean local;
+
+    public static boolean isLocal() {
+        return local;
+    }
+
+    public static void setLocal(final boolean pLocal) {
+        local = pLocal;
+    }
+
+    public static final int DEFAULT_NUMBER_PARTITIONS = 20;
+    private static int defaultNumberPartitions = DEFAULT_NUMBER_PARTITIONS;
+
+    public static int getDefaultNumberPartitions() {
+        return defaultNumberPartitions;
+    }
+
+    public static void setDefaultNumberPartitions(final int pDefaultNumberPartitions) {
+        defaultNumberPartitions = pDefaultNumberPartitions;
+    }
+
+    public static synchronized JavaSQLContext getCurrentSQLContext() {
+        if (sqlContext != null)
+            return sqlContext;
+
+        sqlContext = new JavaSQLContext(getCurrentContext());
+        return sqlContext;
+    }
+
+
+    public static synchronized Configuration getHadoopConfiguration() {
+        Configuration configuration = getCurrentContext().hadoopConfiguration();
+        return configuration;
+    }
+
+
+    /**
+     * tuen an RDD of Tuples into a JavaPairRdd
+     * @param imp
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+     public static <K,V> JavaPairRDD<K,V>  mapToPairs(JavaRDD<Tuple2<K,V>> imp)   {
+         return imp.mapToPair(new PairFunction<Tuple2<K, V>, K, V>() {
+             @Override
+             public Tuple2<K, V> call(final Tuple2<K, V> t) throws Exception {
+                 return t;
+             }
+         });
+     }
+
+    /**
+     * convert a JavaPairRDD into onw with the tuples so that combine by key can know the key
+     * @param imp
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+     public static <K,V> JavaPairRDD<K,Tuple2<K,V>>  mapToKeyedPairs(JavaPairRDD< K,V> imp)   {
+         return imp.mapToPair(new PairFunction<Tuple2<K, V>, K, Tuple2<K, V>>() {
+             @Override
+             public Tuple2<K, Tuple2<K, V>> call(final Tuple2<K, V> t) throws Exception {
+                 return new Tuple2<K, Tuple2<K, V>>(t._1(), t);
+             }
+         });
+      }
+
+    /**
+     * dump all spark properties to System.err
+     */
+    public static void showSparkProperties()
+    {
+        showSparkProperties(System.err);
+    }
+
+
+    /**
+     * dump all spark properties to out
+     * @param out
+     */
+    public static void showSparkProperties(Appendable out)
+    {
+        try {
+            SparkConf sparkConf = new SparkConf();
+            Tuple2<String, String>[] all = sparkConf.getAll();
+            for (Tuple2<String, String> prp  : all) {
+                out.append(prp._1().toString() + "=" + prp._2());
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
+    }
+
+    public static void  showSparkPropertiesInAnotherThread()
+    {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                showSparkProperties();
+            }
+        }).start();
+    }
 
     /**
      * create a JavaSparkContext for the thread if none exists
@@ -35,17 +144,68 @@ public class SparkUtilities implements Serializable {
      * @return
      */
     public static synchronized JavaSparkContext getCurrentContext() {
-        if (threadContext == null)
-            threadContext = new ThreadLocal<JavaSparkContext>();
-        JavaSparkContext ret = threadContext.get();
+//        if (threadContext == null)
+//            threadContext = new ThreadLocal<JavaSparkContext>();
+//        JavaSparkContext ret = threadContext.get();
+        JavaSparkContext ret = threadContext;
         if (ret != null)
             return ret;
-        SparkConf sparkConf = new SparkConf().setAppName(getAppName());
+        SparkConf sparkConf = new SparkConf();
+        sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
+        sparkConf.setAppName(getAppName());
         SparkUtilities.guaranteeSparkMaster(sparkConf);
-        sparkConf.set("spark.mesos.coarse", "true");
+        SparkContext sc = new SparkContext(sparkConf);
+
+
+        // what are we using as a serializer
+        //showOption("spark.serializer",sparkConf);
+
+        Option<String> option = sparkConf.getOption("spark.serializer");
+        if (!option.isDefined())
+            sparkConf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");   // todo use kryo
+//        else {
+//             if(option.get().equals("org.apache.spark.serializer.KryoSerializer"))
+//
+//           }
+        // if we use Kryo register classes
+        sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
+
+         sparkConf.set("spark.mesos.coarse", "true");
+        sparkConf.set("spark.executor.memory", "2500m");
+
+
+        //
+
+        option = sparkConf.getOption("spark.default.parallelism");
+        if (option.isDefined())
+            System.err.println("Parellelism = " + option.get());
+
+        option = sparkConf.getOption("spark.executor.heartbeatInterval");
+        if (option.isDefined())
+            System.err.println("timeout = " + option.get());
+
+
         ret = new JavaSparkContext(sparkConf);
-        threadContext.set(ret);
+        threadContext = ret;
+        //      threadContext.set(ret);
         return ret;
+    }
+
+
+    public static void showOption(String optionName, SparkConf sparkConf) {
+        Option<String> option = sparkConf.getOption(optionName);
+        if (option.isDefined())
+            System.err.println(optionName + "=" + getOption(optionName, sparkConf));
+        else
+            System.err.println(optionName + "= undefined");
+    }
+
+    public static String getOption(String optionName, SparkConf sparkConf) {
+        Option<String> option = sparkConf.getOption(optionName);
+        if (option.isDefined())
+            return option.get();
+        else
+            return null;
     }
 
     /**
@@ -172,8 +332,8 @@ public class SparkUtilities implements Serializable {
         Option<String> option = sparkConf.getOption("spark.master");
 
         if (!option.isDefined()) {   // use local over nothing   {
-            sparkConf.setMaster("local[4]");
-
+            sparkConf.setMaster("local[*]");
+            setLocal(true);
             /**
              * liquanpei@gmail.com suggests to correct
              * 14/10/08 09:36:35 ERROR broadcast.TorrentBroadcast: Reading broadcast variable 0 failed
@@ -186,6 +346,9 @@ public class SparkUtilities implements Serializable {
 
              */
             //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+        }
+        else {
+            setLocal(option.get().startsWith("local"));
         }
         // ste all properties in the SparkProperties file
         for (String property : sparkProperties.stringPropertyNames()) {
@@ -215,6 +378,7 @@ public class SparkUtilities implements Serializable {
                 lst.add(line);
                 line = rdr.readLine();
             }
+            rdr.close();
             return sc.parallelize(lst);
         }
         catch (IOException e) {
@@ -267,34 +431,36 @@ public class SparkUtilities implements Serializable {
 
 
     /**
-        * function that returns the values of a Tuple as an RDD
-        */
-       public static final TupleValues TUPLE_VALUES = new TupleValues();
+     * function that returns the values of a Tuple as an RDD
+     */
+    public static final TupleValues TUPLE_VALUES = new TupleValues();
 
-       public static class TupleValues<K extends Serializable> implements Function<Tuple2<Object, K>, K> {
-           private TupleValues() {};
+    public static class TupleValues<K extends Serializable> extends AbstractLoggingFunction<Tuple2<Object, K>, K> {
+        private TupleValues() {
+        }
 
-           @Override
-           public K call(final Tuple2<Object, K> v1) throws Exception {
-               return v1._2();
-           }
-       }
+        ;
+
+        @Override
+        public K doCall(final Tuple2<Object, K> v1) throws Exception {
+            return v1._2();
+        }
+    }
 
     /**
      * function that returns the original object
      */
     public static final IdentityFunction IDENTITY_FUNCTION = new IdentityFunction();
 
-    public static class IdentityFunction<K extends Serializable> implements Function<K, K> {
-        private IdentityFunction() {};
+    public static class IdentityFunction<K extends Serializable> extends AbstractLoggingFunction<K, K> {
+        private IdentityFunction() {
+        }
 
         @Override
-        public K call(final K v1) throws Exception {
+        public K doCall(final K v1) throws Exception {
             return v1;
         }
     }
-
-
 
 
     public static class KeyValueObjectToTuple2<K extends Serializable, V extends Serializable> implements FlatMapFunction2<KeyValueObject<K, V>, K, V> {
@@ -316,9 +482,9 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> toTuples(@Nonnull JavaRDD<KeyValueObject<K, V>> inp) {
-        PairFunction<KeyValueObject<K, V>, K, V> pf = new PairFunction<KeyValueObject<K, V>, K, V>() {
+        PairFunction<KeyValueObject<K, V>, K, V> pf = new AbstractLoggingPairFunction<KeyValueObject<K, V>, K, V>() {
             @Override
-            public Tuple2<K, V> call(KeyValueObject<K, V> kv) {
+            public Tuple2<K, V> doCall(KeyValueObject<K, V> kv) {
                 return new Tuple2<K, V>(kv.key, kv.value);
             }
         };
@@ -335,9 +501,9 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaRDD<KeyValueObject<K, V>> fromTuples(@Nonnull JavaPairRDD<K, V> inp) {
-        return inp.map(new Function<Tuple2<K, V>, KeyValueObject<K, V>>() {
+        return inp.map(new AbstractLoggingFunction<Tuple2<K, V>, KeyValueObject<K, V>>() {
             @Override
-            public KeyValueObject<K, V> call(final Tuple2<K, V> t) throws Exception {
+            public KeyValueObject<K, V> doCall(final Tuple2<K, V> t) throws Exception {
                 KeyValueObject ret = new KeyValueObject(t._1(), t._2());
                 return ret;
             }
@@ -353,23 +519,12 @@ public class SparkUtilities implements Serializable {
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static JavaRDD realizeAndReturn(@Nonnull final JavaRDD inp, @Nonnull JavaSparkContext jcx) {
+    public static JavaRDD realizeAndReturn(@Nonnull final JavaRDD inp) {
+        JavaSparkContext jcx = getCurrentContext();
+        if (!isLocal())     // not to use on the cluster - only for debugging
+            return inp;
         List collect = inp.collect();    // break here and take a look
         return jcx.parallelize(collect);
-    }
-
-
-    /**
-     * force a JavaRDD to evaluate then return the results as a JavaRDD
-     *
-     * @param inp this is an RDD - usually one you want to examine during debugging
-     * @param <T> whatever inp is a list of
-     * @return non-null RDD of the same values but realized
-     */
-    @Nonnull
-    public static JavaRDD realizeAndReturn(@Nonnull final JavaRDD inp ) {
-        JavaSparkContext currentContext = getCurrentContext();
-        return realizeAndReturn(inp, currentContext);
     }
 
 
@@ -381,24 +536,37 @@ public class SparkUtilities implements Serializable {
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, @Nonnull JavaSparkContext jcx) {
-        // Todo Why to I need to cast
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp) {
+        JavaSparkContext jcx = getCurrentContext();
+        if (!isLocal())    // not to use on the cluster - only for debugging
+            return inp; //
         List<Tuple2<Object, Object>> collect = (List<Tuple2<Object, Object>>) (List) inp.collect();    // break here and take a look
         return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
     }
 
 
     /**
-       * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
-       *
-       * @param inp this is an RDD - usually one you want to examine during debugging
-       * @param <T> whatever inp is a list of
-       * @return non-null RDD of the same values but realized
-       */
-      @Nonnull
-      public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp ) {
-          return realizeAndReturn(inp,getCurrentContext());
-        }
+     * persist in the best way - saves remembering which storage level
+     * @param inp
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V>  presist(@Nonnull final JavaRDD<V>  inp) {
+         return inp.persist(StorageLevel.MEMORY_AND_DISK());
+    }
+
+    /**
+     * persist in the best way - saves remembering which storage level
+     * @param inp
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> persist(@Nonnull final JavaPairRDD<K, V> inp) {
+         return inp.persist(StorageLevel.MEMORY_AND_DISK());
+    }
+
+
+
 
     /**
      * make an RDD from an iterable
@@ -410,7 +578,9 @@ public class SparkUtilities implements Serializable {
      */
     public static
     @Nonnull
-    <T> JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp, @Nonnull final JavaSparkContext ctx) {
+    <T> JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp) {
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
+
         List<T> holder = new ArrayList<T>();
         for (T k : inp) {
             holder.add(k);
@@ -522,4 +692,81 @@ public class SparkUtilities implements Serializable {
             }
         };
     }
+
+
+    /**
+     * return a key representing the sort index of some value
+     *
+     * @param values
+     * @param <K>
+     * @return
+     */
+    public static <K extends Serializable> JavaPairRDD<Integer, K> indexByOrder(JavaRDD<K> values) {
+        values = values.sortBy(new Function<K, K>() {
+                                   @Override
+                                   public K call(final K v1) throws Exception {
+                                       return v1;
+                                   }
+                               }, true,
+                getDefaultNumberPartitions()
+        );
+        return values.mapToPair(new PairFunction<K, Integer, K>() {
+            private int index = 0;
+
+            @Override
+            public Tuple2<Integer, K> call(final K t) throws Exception {
+                return new Tuple2(index++, t);
+            }
+        });
+    }
+
+    /**
+     * use as a properties file when logging
+     *
+     * @param mainClass
+     * @param args
+     * @return
+     */
+    public static String buildLoggingClassLoaderPropertiesFile(Class mainClass, String[] args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("#\n" +
+                "# classpath - it is a good ides to drop any of the java jars\n");
+        String classPath = System.getProperty("java.class.path");
+        String classPathSeparator = System.getProperty("path.separator");
+        String[] items = classPath.split(classPathSeparator);
+        sb.append("classpath = ");
+        for (int i = 0; i < items.length; i++) {
+            String item = items[i];
+            sb.append("   " + item);
+            if (i < items.length - 1)
+                sb.append(";\\\n");
+            else
+                sb.append("\n");
+        }
+        sb.append("\n");
+
+        sb.append("classpath_excludes=*IntelliJ IDEA*\n" +
+                "\n" +
+                "#\n" +
+                "# if specified this will be the main in the mainfest\n");
+        sb.append("mainclass=" + mainClass.getCanonicalName() + "\n");
+
+        sb.append("#\n" +
+                "# if specified run the program using this user directory\n" +
+                "user_dir=" + System.getProperty("user.dir").replace("\\", "/") + "\n");
+
+        sb.append("#\n" +
+                "# if specified the main will run with these arguments\n" +
+                "arguments =");
+
+        for (int i = 0; i < args.length; i++) {
+            String item = items[i];
+            sb.append(item + " ");
+        }
+        sb.append("\n");
+
+        return sb.toString();
+    }
+
+
 }

@@ -307,7 +307,7 @@ public class XTandemHadoopUtilities {
     }
 
     public static Path getDefaultPath() {
-        return gDefaultPath;
+         return gDefaultPath;
     }
 
     public static Path getRelativePath(String s) {
@@ -528,7 +528,7 @@ public class XTandemHadoopUtilities {
         Map<Integer, Integer> ret;
         //noinspection EmptyCatchBlock
         try {
-            ret = XTandemHadoopUtilities.readDatabaseSizes(pApplication,conf);
+            ret = readDatabaseSizes(pApplication,conf);
             System.err.println("Read Database Sizes");
             if (ret != null && ret.size() > 0)
                 return ret;
@@ -537,6 +537,32 @@ public class XTandemHadoopUtilities {
         }
         return buildDatabaseSizes(pApplication,conf);
     }
+
+    /**
+        * read any cached database parameters
+        *
+        * @param context     !null context
+        * @param application !null application
+        * @return possibly null descripotion - null is unreadable
+        */
+       public static Map<Integer, Integer> readDatabaseSizes(XTandemMain application, Configuration config ) {
+           try {
+         //      Configuration cfg = application.getContext();
+               String paramsFile = application.getDatabaseName() + ".sizes";
+                Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
+               FileSystem fs = FileSystem.get(config);
+               if (!fs.exists(dd)) {
+                   System.err.println("Cannot find file " + dd.toString());
+                   return null;   // cant get it
+               }
+               InputStream fsout = fs.open(dd);
+               Map<Integer, Integer> ret = parseDataFileSizes(fsout);
+               return ret;
+           } catch (IOException e) {
+               return null;
+
+           }
+       }
 
     protected static Map<Integer, Integer> buildDatabaseSizes(final XTandemMain pApplication,Configuration conf) {
         System.err.println("Rebuilding Size database");
@@ -613,31 +639,7 @@ public class XTandemHadoopUtilities {
         return dbSizeLines;
     }
 
-    /**
-     * read any cached database parameters
-     *
-     * @param context     !null context
-     * @param application !null application
-     * @return possibly null descripotion - null is unreadable
-     */
-    public static Map<Integer, Integer> readDatabaseSizes(XTandemMain application, Configuration config ) {
-        try {
-      //      Configuration cfg = application.getContext();
-            String paramsFile = application.getDatabaseName() + ".sizes";
-            Path dd = XTandemHadoopUtilities.getRelativePath(paramsFile);
-            FileSystem fs = FileSystem.get(config);
-            if (!fs.exists(dd)) {
-                System.err.println("Cannot find file " + dd.toString());
-                return null;   // cant get it
-            }
-            InputStream fsout = fs.open(dd);
-            Map<Integer, Integer> ret = parseDataFileSizes(fsout);
-            return ret;
-        } catch (IOException e) {
-            return null;
 
-        }
-    }
 
     /**
      * find total peptide fragments in the database

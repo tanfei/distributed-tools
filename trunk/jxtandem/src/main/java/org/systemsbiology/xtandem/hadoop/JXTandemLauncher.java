@@ -411,7 +411,7 @@ public class JXTandemLauncher implements IStreamOpener { //extends AbstractParam
      * @return
      */
     public String seqenceToID(String sequence) {
-        return getTaxonomy().seqenceToID(sequence);
+        return getTaxonomy().sequenceToID(sequence);
     }
 
 

@@ -23,7 +23,7 @@ public class SparkWordCount {
 
         SparkMapReduce handler = new SparkMapReduce("Spark Word Count",new NullStringMapper(),new NullStringReducer(),IPartitionFunction.HASH_PARTITION,consumer);
    //     SparkMapReduce handler = new SparkMapReduce(new WordCountMapper(),new WordCountReducer(),IPartitionFunction.HASH_PARTITION,consumer);
-         JavaSparkContext ctx = handler.getCtx();
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
 
         JavaRDD<KeyValueObject<String,String>> lines;
