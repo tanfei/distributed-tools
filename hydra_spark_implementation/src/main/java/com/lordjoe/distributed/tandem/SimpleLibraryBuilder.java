@@ -39,7 +39,7 @@ public class SimpleLibraryBuilder {
         JavaRDD<KeyValueObject<String, String>> proteins = ctx.parallelize(fromFasta);
 
       // if not commented out this line forces proteins to be realized
-        proteins = SparkUtilities.realizeAndReturn(proteins, ctx);
+        proteins = SparkUtilities.realizeAndReturn(proteins );
 
 
  //       ListKeyValueConsumer<String,String> consumer = new ListKeyValueConsumer();

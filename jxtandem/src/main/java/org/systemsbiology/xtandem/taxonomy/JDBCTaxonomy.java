@@ -92,7 +92,7 @@ package org.systemsbiology.xtandem.taxonomy;
 //     * @return
 //     */
 //    @Override
-//    public String seqenceToID(final String sequence) {
+//    public String sequenceToID(final String sequence) {
 //        return null;
 //    }
 //

@@ -1,7 +1,10 @@
 package org.systemsbiology.xtandem.taxonomy;
 
-import com.lordjoe.distributed.util.*;
+import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.hydra.peptide.*;
 import org.apache.hadoop.fs.*;
+import org.apache.spark.api.java.*;
+import org.apache.spark.sql.api.java.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -17,41 +20,18 @@ import java.util.*;
  * @author Steve Lewis
  * @date Jan 7, 2011
  */
-public class HadoopFileTaxonomy implements ITaxonomy {
-    public static ITaxonomy[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = HadoopFileTaxonomy.class;
-
+public class ParquetDatabaseTaxonomy implements ITaxonomy {
     private final String m_Organism;
-     private IPeptideDigester m_Digester;
-    //    private final List<IProtein> m_Proteins = new ArrayList<IProtein>();
+    private IPeptideDigester m_Digester;
     private Map<String, IProtein> m_IdToProtein = new HashMap<String, IProtein>();
 
     private final IMainData m_Tandem;
 
-    public HadoopFileTaxonomy(IMainData tandem, String pOrganism ) {
+    public ParquetDatabaseTaxonomy(IMainData tandem, String pOrganism) {
         m_Tandem = tandem;
         m_Organism = pOrganism;
-         TaxonHandler taxonHandler = new TaxonHandler(null, "peptide", pOrganism);
-        // might be null in test code
-//        if (m_DescriptiveFile != null) {
-//            InputStream is = tandem.open(m_DescriptiveFile);
-//            String[] files = XTandemUtilities.parseFile(is, taxonHandler, m_DescriptiveFile);
-//            setTaxomonyFiles(files);
-//
-//        }
-//        else {
-//            String[] files = { pOrganism };
-//            setTaxomonyFiles(files);
-//        }
+        TaxonHandler taxonHandler = new TaxonHandler(null, "peptide", pOrganism);
     }
-//
-//
-//    public void addProtein(IProtein p) {
-//        m_Proteins.add(p);
-//        String id = p.getId();
-//        // do we want this
-//        m_IdToProtein.put(id, p);
-//    }
 
 
     @Override
@@ -143,6 +123,11 @@ public class HadoopFileTaxonomy implements ITaxonomy {
     }
 
 
+    protected String buildDatabaseName() {
+        String fasta = getTandem().getDatabaseName();
+        Path defaultPath = XTandemHadoopUtilities.getDefaultPath();
+        return defaultPath.toString() + "/" + fasta + ".parquet";
+    }
 
     /**
      * retrieve all peptides matching a specific mass
@@ -152,42 +137,77 @@ public class HadoopFileTaxonomy implements ITaxonomy {
      * @return
      */
     @Override
-    public IPolypeptide[] getPeptidesOfExactMass(final int scanmass, final boolean isSemi) {
+    public synchronized IPolypeptide[] getPeptidesOfExactMass(final int scanmass, final boolean isSemi) {
+        try {
+            JavaSparkContext sc = SparkUtilities.getCurrentContext();
+            // Read in the Parquet file created above.  Parquet files are self-describing so the schema is preserved.
+            // The result of loading a parquet file is also a JavaSchemaRDD.
+            String dbName = buildDatabaseName();
 
-        IPathReader pathReader = PathUtilities.getReader();
-        Path path = XTandemHadoopUtilities.buildPathFromMass(scanmass, getTandem());
-        System.err.println("Reading Peptide Mass " + path);
-        if(pathReader == null)
-            return IPolypeptide.EMPTY_ARRAY;
-         String[] items = pathReader.readTextLines(path.toString());
-           if (items == null || items.length == 0)
-            return IPolypeptide.EMPTY_ARRAY;
+            JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();
+            JavaSchemaRDD parquetFile = sqlContext.parquetFile(dbName);
+            //Parquet files can also be registered as tables and then used in SQL statements.
+            parquetFile.registerAsTable("peptides");
+     //       JavaSchemaRDD binCounts = sqlContext.sql("SELECT * FROM " + "peptides" );
+            JavaSchemaRDD binCounts = sqlContext.sql("SELECT * FROM " + "peptides" + " Where  massBin =" + scanmass);
 
-        List<IPolypeptide> holder = new ArrayList<IPolypeptide>();
+            JavaRDD<PeptideSchemaBean> beancounts = binCounts.map(PeptideSchemaBean.FROM_ROW);
+            JavaRDD<IPolypeptide> counts = beancounts.map(PeptideSchemaBean.FROM_BEAN);
 
-        for (int i = 0; i < items.length; i++) {
-            IPolypeptide pp = buildPeptideFromDatabaseString(items[i]);
-
-            holder.add(pp);
+            List<IPolypeptide> collect = counts.collect();
+            return collect.toArray(new IPolypeptide[collect.size()]);
         }
-        IPolypeptide[] ret = new IPolypeptide[holder.size()];
-        holder.toArray(ret);
-        return ret;
+        catch (Exception e) {
+            return null; // not found
+        }
+
     }
 
-    public  IPolypeptide buildPeptideFromDatabaseString(final String pItem ) {
-        String item = pItem;
-        String[] values = item.split(",");
-        String sequence = values[0];
+    /**
+     * retrieve all peptides matching a specific mass
+     *
+     * @param scanmass
+     * @param isSemi   if true get semitryptic masses
+     * @return
+     */
+    public IPolypeptide[] getPeptidesOfLimitedMass(final int scanmass, final boolean isSemi, MassPeptideInterval interval) {
+        if (true)
+            throw new UnsupportedOperationException("Fix This"); // ToDo
+        try {
+            JavaSparkContext sc = SparkUtilities.getCurrentContext();
+            JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();
+            // Read in the Parquet file created above.  Parquet files are self-describing so the schema is preserved.
+            // The result of loading a parquet file is also a JavaSchemaRDD.
+            String dbName = buildDatabaseName();
+
+            JavaSchemaRDD parquetFile = sqlContext.parquetFile(dbName);
+            //Parquet files can also be registered as tables and then used in SQL statements.
+            parquetFile.registerAsTable("peptides");
+            JavaSchemaRDD binCounts = sqlContext.sql("SELECT * FROM " + "peptides" + " Where  massBin =" + scanmass);
+
+            JavaRDD<PeptideSchemaBean> beancounts = binCounts.map(PeptideSchemaBean.FROM_ROW);
+            JavaRDD<IPolypeptide> counts = beancounts.map(PeptideSchemaBean.FROM_BEAN);
+
+            List<IPolypeptide> collect = counts.collect();
+            return collect.toArray(new IPolypeptide[collect.size()]);
+        }
+        catch (Exception e) {
+            return null; // not found
+        }
+    }
+
+    public IPolypeptide buildPeptideFromDatabaseRow(Row row) {
+        String sequence = row.getString(0);
         if (sequence.contains("-"))
             XTandemUtilities.breakHere();
 
         Polypeptide pp = (Polypeptide) Polypeptide.fromString(sequence);
         int missedCleavages = getDigester().probableNumberMissedCleavages(pp);
-         pp.setMissedCleavages(missedCleavages);
-        double mass = Double.parseDouble(values[1]);
+        pp.setMissedCleavages(missedCleavages);
+        double mass = row.getDouble(1);
         pp.setMatchingMass(mass);
-        String[] proteinIds = values[3].split(";");
+        String proteinStr = row.getString(3);
+        String[] proteinIds = proteinStr.split(";");
         IProteinPosition[] positions = new IProteinPosition[proteinIds.length];
         for (int i = 0; i < positions.length; i++) {
             positions[i] = new ProteinPosition(pp, proteinIds[i]);
@@ -209,71 +229,9 @@ public class HadoopFileTaxonomy implements ITaxonomy {
         int scanmass = interval.getMass();
         if (interval.isUnlimited())
             return getPeptidesOfExactMass(scanmass, isSemi);
-        Path path = XTandemHadoopUtilities.buildPathFromMass(scanmass, getTandem());
-        LineNumberReader reader = null;
-        try {
-            if(true) throw new UnsupportedOperationException("Fix This"); // ToDo
-        //    reader = XTandemHadoopUtilities.openTextLines(path, getConf());
-           reader = null;
-              if (reader == null)
-                return IPolypeptide.EMPTY_ARRAY;
-            IPolypeptide[] peptidesOfExactMass = buildReadPeptides(reader, interval, isSemi);
+        else
+            return getPeptidesOfLimitedMass(scanmass, isSemi, interval);
 
-            return peptidesOfExactMass;
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (reader != null)
-                try {
-                    reader.close();
-                }
-                catch (IOException e1) {
-                    // throw new RuntimeException(e1);
-
-                }
-        }
-    }
-
-    public  IPolypeptide[] buildReadPeptides(final LineNumberReader pReader, final MassPeptideInterval pInterval,  final boolean pSemi) {
-        List<IPolypeptide> holder = new ArrayList<IPolypeptide>();
-        int numberLines = -1;
-        try {
-            boolean done = false;
-            int start = pInterval.getStart();
-            int end = pInterval.getEnd();
-            String line = null;
-            if (start > 0) {
-                while (!done && numberLines++ < start) {
-                    line = pReader.readLine();
-                    if (line == null)
-                        if (line == null) {
-                            done = true;
-                            break;
-                        }
-                }
-            }
-            while (!done && numberLines++ < end) {
-                line = pReader.readLine();
-                if (line == null) {
-                    done = true;
-                    break;
-                }
-                holder.add(buildPeptideFromDatabaseString(line ));
-            }
-            // at end of file
-            if (line == null)
-                XTandemUtilities.breakHere();
-
-            IPolypeptide[] ret = new IPolypeptide[holder.size()];
-            holder.toArray(ret);
-            return ret;
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-
-        }
     }
 
 

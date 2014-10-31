@@ -1,5 +1,7 @@
 package org.apache.spark.examples;
 
+import com.lordjoe.distributed.*;
+import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 
 import java.util.*;
@@ -14,7 +16,15 @@ public class WordsMapFunction implements FlatMapFunction<String, String> {
 
     private static final Pattern SPACE = Pattern.compile(" ");
 
+    private transient JavaSparkContext currentContext;
+
     public Iterable<String> call(String s) {
+
+        if(currentContext == null) {
+            currentContext = SparkContextGetter.getCurrentContext();
+            SparkContextGetter.showSparkProperties();
+        }
+
         String[] split = SPACE.split(s);
         List<String> ret = new ArrayList<String>();
         for (int i = 0; i < split.length; i++) {

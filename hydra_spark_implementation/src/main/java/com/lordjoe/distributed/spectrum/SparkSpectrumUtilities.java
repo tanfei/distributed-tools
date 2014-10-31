@@ -1,5 +1,6 @@
 package com.lordjoe.distributed.spectrum;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.input.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
@@ -49,7 +50,8 @@ public class SparkSpectrumUtilities {
     }
 
     @Nonnull
-    public static JavaPairRDD<String, IMeasuredSpectrum> parseSpectrumFile( @Nonnull String path, @Nonnull JavaSparkContext ctx) {
+    public static JavaPairRDD<String, IMeasuredSpectrum> parseSpectrumFile( @Nonnull String path ) {
+        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
         //     if(path.toLowerCase().endsWith(".mgf"))
         //           return parseAsTextMGF(path,ctx);     this will fail

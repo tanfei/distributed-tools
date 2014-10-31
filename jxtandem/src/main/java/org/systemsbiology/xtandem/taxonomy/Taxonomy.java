@@ -36,7 +36,10 @@ public class Taxonomy implements ITaxonomy {
         TaxonHandler taxonHandler = new TaxonHandler(null, "peptide", pOrganism);
         // might be null in test code
         if (m_DescriptiveFile != null) {
+
             InputStream is = tandem.open(m_DescriptiveFile);
+            if(is == null)
+                throw new IllegalStateException("cannot parse taxonomy file " + m_DescriptiveFile);
             String[] files = XTandemUtilities.parseFile(is, taxonHandler, m_DescriptiveFile);
             setTaxomonyFiles(files);
 
@@ -173,7 +176,7 @@ public class Taxonomy implements ITaxonomy {
      * @param sequence
      * @return
      */
-    public String seqenceToID(String sequence) {
+    public String sequenceToID(String sequence) {
         final String[] strings = seqenceToIDs(sequence);
         if (strings.length > 0)
             return strings[0];

@@ -4,7 +4,6 @@ import org.systemsbiology.sax.*;
 import org.systemsbiology.xml.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.ionization.*;
-import org.systemsbiology.xtandem.sax.*;
 import org.systemsbiology.xtandem.testing.*;
 
 import java.util.*;
@@ -15,9 +14,7 @@ import java.util.*;
  * Date: 12/5/11
  */
 public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>, IEquivalent<IScoredScan> {
-    public static final OriginatingScoredScan[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = ScoredScan.class;
-    public static final int MAX_SERIALIZED_MATCHED = 8;
+     public static final int MAX_SERIALIZED_MATCHED = 8;
     public static final String TAG = "score";
 
     public static final Comparator<IScoredScan> ID_COMPARISON = new  Comparator<IScoredScan>() {
@@ -107,9 +104,6 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
         return m_IonUse;
     }
 
-    public static OriginatingScoredScan[] getEmptyArray() {
-        return EMPTY_ARRAY;
-    }
 
     public BoundedMatchSet getMatches() {
         return m_Matches;

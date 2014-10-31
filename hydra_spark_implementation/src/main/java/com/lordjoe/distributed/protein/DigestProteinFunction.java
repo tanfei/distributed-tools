@@ -12,10 +12,13 @@ import java.util.*;
 * Date: 10/14/2014
 */
 public class DigestProteinFunction implements FlatMapFunction<IProtein,  IPolypeptide> {
-    private final XTandemMain app;
-    private final IPeptideDigester digester;
-    private final  PeptideModification[] peptideModifications;
-    private final boolean m_GenerateDecoysForModifiedPeptides;
+    private /* final */ XTandemMain app;
+    private  /* final */  IPeptideDigester digester;
+    private  /* final */   PeptideModification[] peptideModifications;
+    private  /* final */  boolean m_GenerateDecoysForModifiedPeptides;
+
+       // this keeps Kryo happy
+    private DigestProteinFunction() {}
 
     public DigestProteinFunction(XTandemMain pApp) {
         app = pApp;

@@ -1,9 +1,9 @@
 package org.systemsbiology.xtandem.hadoop;
 
-import org.systemsbiology.xtandem.*;
+import com.lordjoe.utilities.*;
 
+import java.io.*;
 import java.util.*;
-import com.lordjoe.utilities.ElapsedTimer;
 
 /**
  * org.systemsbiology.xtandem.hadoop.JXTandemStatistics
@@ -11,8 +11,7 @@ import com.lordjoe.utilities.ElapsedTimer;
  * User: Steve
  * Date: 11/1/11
  */
-public class JXTandemStatistics {
-    public static final JXTandemStatistics[] EMPTY_ARRAY = {};
+public class JXTandemStatistics implements Serializable{
 
     public static final int ONE_SEC = 1000;
     public static final int ONE_MIN = 60 * ONE_SEC;

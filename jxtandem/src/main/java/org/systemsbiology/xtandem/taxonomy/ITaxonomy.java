@@ -27,7 +27,7 @@ public interface ITaxonomy  extends Serializable {
      * @param sequence
      * @return
      */
-    public String seqenceToID(String sequence);
+    public String sequenceToID(String sequence);
 
     public void setDigester(IPeptideDigester digester );
 
