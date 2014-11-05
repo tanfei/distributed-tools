@@ -51,9 +51,13 @@ public class RawPeptideScan implements IMeasuredSpectrum, ISpectralScan, Compara
     private final Map<String, String> m_AddedValues = new HashMap<String, String>();
 
 
-    public RawPeptideScan(final String pId, String url) {
+    public static final int ID_LENGTH = 12; // pad ids to make sure integer IDS sort properly
+    public RawPeptideScan(String pId, String url) {
 
         if (pId != null && !"".equals(pId)) {
+            while(pId.length() < ID_LENGTH)
+                pId = "0"  + pId;
+
             setId(pId);
             m_Label = fromRestOfId(pId);
         }

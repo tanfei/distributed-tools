@@ -86,7 +86,7 @@ public class PeptideDatabaseWriter implements Serializable {
         @Override
         public int getPartition(final Object key) {
             int pp = (Integer) key;
-            return pp % numPartitions();
+            return Math.abs(pp % numPartitions());
         }
     }
 

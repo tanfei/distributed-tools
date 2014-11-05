@@ -1,5 +1,6 @@
 package com.lordjoe.distributed;
 
+import com.lordjoe.distributed.database.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.*;
@@ -511,6 +512,7 @@ public class SparkUtilities implements Serializable {
     }
 
 
+    public static final int NUMBER_ELEMENTS_TO_VIEW = 100;
     /**
      * force a JavaRDD to evaluate then return the results as a JavaRDD
      *
@@ -524,6 +526,13 @@ public class SparkUtilities implements Serializable {
         if (!isLocal())     // not to use on the cluster - only for debugging
             return inp;
         List collect = inp.collect();    // break here and take a look
+
+        System.out.println("Realized with " + collect.size() + " elements");
+        // look at a few elements
+        for (int i = 0; i < Math.min(collect.size(),NUMBER_ELEMENTS_TO_VIEW); i++) {
+            Object value = collect.get(i);
+            value = null; // break hera
+        }
         return jcx.parallelize(collect);
     }
 
@@ -540,9 +549,58 @@ public class SparkUtilities implements Serializable {
         JavaSparkContext jcx = getCurrentContext();
         if (!isLocal())    // not to use on the cluster - only for debugging
             return inp; //
-        List<Tuple2<Object, Object>> collect = (List<Tuple2<Object, Object>>) (List) inp.collect();    // break here and take a look
+        List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
+        System.out.println("Realized with " + collect.size() + " elements");
+        // look at a few elements
+        for (int i = 0; i < Math.min(collect.size(),NUMBER_ELEMENTS_TO_VIEW); i++) {
+            Tuple2<K, V> value = collect.get(i);
+            value = null; // break hera
+        }
         return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
     }
+
+
+    /**
+     * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
+     *
+     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param handler all otuples are passed here
+      * @param <T> whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp,ObjectFoundListener<Tuple2<K, V>> handler) {
+        JavaSparkContext jcx = getCurrentContext();
+        if (!isLocal())    // not to use on the cluster - only for debugging
+            return inp; //
+        List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
+        for (Tuple2<K, V> kvTuple2 : collect) {
+            handler.onObjectFound(kvTuple2);
+        }
+        return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
+    }
+
+
+    /**
+     * force a JavaRDD to evaluate then return the results as a JavaRDD
+     *
+     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param handler all objects are passed here
+      * @param <T> whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static <K, V> JavaRDD< V> realizeAndReturn(@Nonnull final JavaRDD<V> inp,ObjectFoundListener<V> handler) {
+        JavaSparkContext jcx = getCurrentContext();
+        if (!isLocal())    // not to use on the cluster - only for debugging
+            return inp; //
+        List<V> collect = (List<V>) (List) inp.collect();    // break here and take a look
+        for (V value : collect) {
+            handler.onObjectFound(value);
+        }
+        return (JavaRDD<V>) jcx.parallelize(collect);
+    }
+
 
 
     /**

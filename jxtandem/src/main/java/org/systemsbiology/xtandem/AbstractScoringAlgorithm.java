@@ -498,7 +498,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
         for (int i = 0; i < numberSpectra; i++) {
             ITheoreticalSpectrum ts = spectrums[i];
 
-            double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
+         //   double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
 
             final int charge = ts.getCharge();
             if (pPrecursorCharge != 0 && charge > pPrecursorCharge)

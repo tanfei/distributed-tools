@@ -2,6 +2,7 @@ package com.lordjoe.distributed.hydra;
 
 import com.lordjoe.distributed.*;
 import org.apache.hadoop.fs.*;
+import org.apache.spark.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -16,6 +17,22 @@ import java.io.*;
 public class SparkHydraUtilities {
 
 
+
+    public static Partitioner getMeasuredSpectrumPartitioner()
+    {
+        return new Partitioner() {
+            @Override
+            public int numPartitions() {
+                return SparkUtilities.getDefaultNumberPartitions();
+            }
+
+            @Override
+            public int getPartition(final Object key) {
+                String id = ((IMeasuredSpectrum)key).getId();
+                return Math.abs(id.hashCode() % numPartitions());
+            }
+        };
+    }
     /**
      * take a name - translate to application space and if needed hdfs and open for read
      *

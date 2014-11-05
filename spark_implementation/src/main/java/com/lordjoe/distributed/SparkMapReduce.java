@@ -98,7 +98,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         public int getPartition(final Object key) {
             IPartitionFunction<K> partitioner = getPartitioner();
             int value = partitioner.getPartition((K) key);
-            return value % numPartitions();
+            return Math.abs(value % numPartitions());
         }
     };
 
@@ -193,6 +193,7 @@ public class SparkMapReduce<KEYIN extends Serializable, VALUEIN extends Serializ
         IReducerFunction reduce = getReduce();
         // for some reason the compiler thnks K or V is not Serializable
         JavaPairRDD<K, Tuple2<K, V>> kkv1 = kkv;
+
         // JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>> kkv1 = (JavaPairRDD<? extends Serializable, Tuple2<? extends Serializable, ? extends Serializable>>)kkv;
         //noinspection unchecked
         JavaPairRDD<K, KeyAndValues<K, V>> reducedSets = (JavaPairRDD<K, KeyAndValues<K, V>>) KeyAndValues.combineByKey(kkv1);
