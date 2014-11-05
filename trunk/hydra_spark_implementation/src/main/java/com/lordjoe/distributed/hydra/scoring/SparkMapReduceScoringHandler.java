@@ -4,12 +4,14 @@ import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.*;
 import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.tandem.*;
+import com.lordjoe.utilities.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -221,77 +223,84 @@ public class SparkMapReduceScoringHandler implements Serializable {
     }
 
 
-    public JavaPairRDD<IMeasuredSpectrum, IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
+    public JavaRDD< IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
+        ElapsedTimer timer = new ElapsedTimer();
 
+
+        // drop the key s- we no longer ned them
         JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
 
         // next line is for debugging
         //values = SparkUtilities.realizeAndReturn(values);
 
+        // convert to a PairRDD to keep spark happy
         JavaPairRDD<IMeasuredSpectrum, IPolypeptide> valuePairs = SparkUtilities.mapToPairs(values);
 
-       // next line is for debugging
-       // valuePairs = SparkUtilities.realizeAndReturn(valuePairs);
+        // next line is for debugging
+        // valuePairs = SparkUtilities.realizeAndReturn(valuePairs);
 
+        // bring key (original data) into value since we need to for scoring
+        JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(
+                valuePairs);
 
-        JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(valuePairs);
-
-       /// next line is for debugging
+        /// next line is for debugging
         //keyedScoringPairs = SparkUtilities.realizeAndReturn(keyedScoringPairs);
 
-
-        JavaPairRDD<IMeasuredSpectrum, IScoredScan> ret = keyedScoringPairs.combineByKey(
-                new Function<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan>() {
-                    @Override
-                    public IScoredScan call(final Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
-                        IMeasuredSpectrum spec = v1._1();
-                        IPolypeptide pp = v1._2();
-                        if (!(spec instanceof RawPeptideScan))
-                            throw new IllegalStateException("We can only handle RawScans Here");
-                        RawPeptideScan rs = (RawPeptideScan) spec;
-                        IScoredScan ret = scoreOnePeptide(rs, pp);
-                        return ret;
-                    }
-                },
-                new Function2<IScoredScan, Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan>() {
-                    @Override
-                    public IScoredScan call(final IScoredScan v1, final Tuple2<IMeasuredSpectrum, IPolypeptide> v2) throws Exception {
-                        IMeasuredSpectrum spec = v2._1();
-                          IPolypeptide pp = v2._2();
-                        if (!(spec instanceof RawPeptideScan))
-                                    throw new IllegalStateException("We can only handle RawScans Here");
-                             RawPeptideScan rs = (RawPeptideScan) spec;
-                        IScoredScan ret = scoreOnePeptide(rs, pp);
-                        if(v1.getBestMatch() == null)
-                            return ret;
-                        if(ret.getBestMatch() == null)
-                              return v1;
+        timer.showElapsed("built scoring pairs");
 
 
-                        if (v1.getExpectedValue() > ret.getExpectedValue())
-                            return v1;
-                        else
-                            return ret;
-                    }
-                },
-                new Function2<IScoredScan, IScoredScan, IScoredScan>() {
-                    @Override
-                    public IScoredScan call(final IScoredScan v1, final IScoredScan v2) throws Exception {
-                        if (v1.getExpectedValue() > v2.getExpectedValue())
-                            return v1;
-                        else
-                            return v2;
-                    }
-                }
-
+        JavaPairRDD<IMeasuredSpectrum, IScoredScan> scorings = keyedScoringPairs.combineByKey(
+                new generateFirstScore(),
+                new addNewScore(),
+                new combineScoredScans(),
+                SparkHydraUtilities.getMeasuredSpectrumPartitioner()
         );
 
-        return ret;
+        timer.showElapsed("built scorings");
+
+      /// next line is for debugging
+       // scorings = SparkUtilities.realizeAndReturn(scorings);
+
+
+        JavaPairRDD<String, IScoredScan> scoreByID = scorings.mapToPair(new PairFunction<Tuple2<IMeasuredSpectrum, IScoredScan>, String, IScoredScan>() {
+            @Override
+            public Tuple2<String, IScoredScan> call(final Tuple2<IMeasuredSpectrum, IScoredScan> t) throws Exception {
+                return new Tuple2<String, IScoredScan>(t._1().getId(), t._2());
+            }
+        });
+
+
+        // next line is for debugging
+        // scoreByID = SparkUtilities.realizeAndReturn(scoreByID);
+
+        scoreByID = scoreByID.combineByKey(SparkUtilities.IDENTITY_FUNCTION, new combineScoredScans(),
+                new combineScoredScans()
+        );
+
+        timer.showElapsed("built score by ids");
+
+
+        // sort by id
+        scoreByID = scoreByID.sortByKey();
+        // next line is for debugging
+        scoreByID = SparkUtilities.realizeAndReturn(scoreByID);
+
+
+        return scoreByID.values();
     }
 
+    /**
+     * delegate scoring to the algorithm
+     *
+     * @param spec
+     * @param pp
+     * @return
+     */
     protected IScoredScan scoreOnePeptide(RawPeptideScan spec, IPolypeptide pp) {
         IPolypeptide[] pps = {pp};
         Scorer scorer1 = getScorer();
+        scorer1.addPeptide(pp);
+        scorer1.generateTheoreticalSpectra();
         ITandemScoringAlgorithm algorithm1 = getAlgorithm();
         return algorithm1.handleScan(scorer1, spec, pps);
     }
@@ -309,9 +318,63 @@ public class SparkMapReduceScoringHandler implements Serializable {
         //clearAllParams(getApplication());
 
         LibraryBuilder libraryBuilder = new LibraryBuilder(this);
-        JavaSparkContext ctx = SparkUtilities.getCurrentContext();
         return libraryBuilder.buildLibrary();
     }
+
+    private class generateFirstScore implements Function<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
+        @Override
+        public IScoredScan call(final Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
+            IMeasuredSpectrum spec = v1._1();
+            IPolypeptide pp = v1._2();
+            if (!(spec instanceof RawPeptideScan))
+                throw new IllegalStateException("We can only handle RawScans Here");
+            RawPeptideScan rs = (RawPeptideScan) spec;
+            IScoredScan ret = scoreOnePeptide(rs, pp);
+            return ret;
+        }
+    }
+
+    private class addNewScore implements Function2<IScoredScan, Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
+        @Override
+        public IScoredScan call(final IScoredScan original, final Tuple2<IMeasuredSpectrum, IPolypeptide> v2) throws Exception {
+            IMeasuredSpectrum spec = v2._1();
+            IPolypeptide pp = v2._2();
+            if (!(spec instanceof RawPeptideScan))
+                throw new IllegalStateException("We can only handle RawScans Here");
+            RawPeptideScan rs = (RawPeptideScan) spec;
+            IScoredScan ret = scoreOnePeptide(rs, pp);
+            if (original.getBestMatch() == null)
+                return ret;
+            if (ret.getBestMatch() == null)
+                return original;
+
+
+            // Add new matches - only the best will be retaind
+            for (ISpectralMatch match : ret.getSpectralMatches()) {
+
+                ((OriginatingScoredScan) original).addSpectralMatch(match);
+            }
+            return original;
+        }
+    }
+
+
+    private static class combineScoredScans implements Function2<IScoredScan, IScoredScan, IScoredScan> {
+        @Override
+        public IScoredScan call(final IScoredScan original, final IScoredScan added) throws Exception {
+            if (original.getBestMatch() == null)
+                return added;
+            if (added.getBestMatch() == null)
+                return original;
+
+            // Add new matches - only the best will be retaind
+            for (ISpectralMatch match : added.getSpectralMatches()) {
+                ((OriginatingScoredScan) original).addSpectralMatch(match);
+            }
+            return original;
+        }
+    }
+
 
 //    protected void clearAllParams(XTandemMain application) {
 //        String databaseName = application.getDatabaseName();

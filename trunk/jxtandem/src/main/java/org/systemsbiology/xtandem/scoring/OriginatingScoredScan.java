@@ -14,13 +14,13 @@ import java.util.*;
  * Date: 12/5/11
  */
 public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>, IEquivalent<IScoredScan> {
-     public static final int MAX_SERIALIZED_MATCHED = 8;
+    public static final int MAX_SERIALIZED_MATCHED = 8;
     public static final String TAG = "score";
 
-    public static final Comparator<IScoredScan> ID_COMPARISON = new  Comparator<IScoredScan>() {
+    public static final Comparator<IScoredScan> ID_COMPARISON = new Comparator<IScoredScan>() {
         @Override
         public int compare(IScoredScan o1, IScoredScan o2) {
-            if(o1.equals(o2))
+            if (o1.equals(o2))
                 return 0;
             return o1.getId().compareTo(o2.getId());
         }
@@ -180,7 +180,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
 
     public ISpectralMatch[] getSpectralMatches() {
         guaranteeNormalized();
-        ISpectralMatch[] ret = m_Matches.toArray(ISpectralMatch.EMPTY_ARRAY);
+        ISpectralMatch[] ret = m_Matches.getMatches();
         Arrays.sort(ret);
         return ret;
     }
@@ -192,7 +192,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
      */
     @Override
     public boolean isMatchPresent() {
-        return !m_Matches.isEmpty();
+        return m_Matches.getMatches().length == 0;
     }
 
     /**
@@ -202,10 +202,10 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
      * @param mass positive testMass
      * @return as above
      */
-    public boolean isMassWithinRange(double mass,int charge, IScoringAlgorithm scorer) {
+    public boolean isMassWithinRange(double mass, int charge, IScoringAlgorithm scorer) {
         final RawPeptideScan raw = getRaw();
         final IScanPrecursorMZ mz = raw.getPrecursorMz();
-        return mz.isMassWithinRange(mass,charge, scorer);
+        return mz.isMassWithinRange(mass, charge, scorer);
     }
 
 
@@ -229,12 +229,12 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
     }
 
     @Override
-     public String getRetentionTimeString() {
-         RawPeptideScan raw = getRaw();
-         if(raw != null)
-             return raw.getRetentionTime();
-         return null;
-     }
+    public String getRetentionTimeString() {
+        RawPeptideScan raw = getRaw();
+        if (raw != null)
+            return raw.getRetentionTime();
+        return null;
+    }
 
 
     /**
@@ -245,19 +245,19 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
     @Override
     public double getRetentionTime() {
         String str = getRetentionTimeString();
-        if(str != null) {
-              str = str.replace("S","");   // handle PT5.5898S"
-            str = str.replace("PT","");
-            str =  str.trim();
-            if(str.length() > 0) {
+        if (str != null) {
+            str = str.replace("S", "");   // handle PT5.5898S"
+            str = str.replace("PT", "");
+            str = str.trim();
+            if (str.length() > 0) {
                 try {
                     double ret = Double.parseDouble(str);
                     return ret;
                 }
                 catch (NumberFormatException e) {
                     return 0;
-                 }
-             }
+                }
+            }
         }
         return 0;
     }
@@ -302,20 +302,28 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
         return m_ScoreStatistics;
     }
 
-    @Override
+
+    //    @Override
     public ISpectralMatch getBestMatch() {
         guaranteeNormalized();
-        double bestScore = Double.MIN_VALUE;
-        ISpectralMatch ret = null;
-        for (ISpectralMatch test : m_Matches) {
-            double hyperScore = test.getHyperScore();
-            if (hyperScore > bestScore) {
-                bestScore = hyperScore;
-                ret = test;
-            }
-        }
-        return ret;
+        return m_Matches.getBest();
     }
+
+
+    //      @Override
+    //    public ISpectralMatch getBestMatch() {
+    //        guaranteeNormalized();
+//        double bestScore = Double.MIN_VALUE;
+//        ISpectralMatch ret = null;
+//        for (ISpectralMatch test : m_Matches) {
+//            double hyperScore = test.getHyperScore();
+//            if (hyperScore > bestScore) {
+//                bestScore = hyperScore;
+//                ret = test;
+//            }
+//        }
+//        return ret;
+//    }
 
 //    public void setBestMatch(ISpectralMatch newBest) {
 //        m_BestMatch = newBest;
@@ -328,7 +336,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
         // m_Matches is now sorted
         if (m_Matches.size() < 2)
             return null;
-        return m_Matches.nextBest();
+        return m_Matches.getNextbest();
     }
 
 
@@ -375,10 +383,11 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
 //    }
 
     public static final int ID_LENGTH = 12;
+
     public String getKey() {
         String id = getId();
         String s = id + ":" + this.getCharge();
-        while(s.length() < ID_LENGTH)
+        while (s.length() < ID_LENGTH)
             s = "0" + s; // this allows better alphabetical sort
         return s;
     }
@@ -415,22 +424,22 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
             addSpectralMatch(sm);
         }
     }
-
-    public double lowestHyperscoreToAdd() {
-        if (!isAtMaxCapacity())
-            return Double.MIN_VALUE;
-        return m_Matches.last().getHyperScore();
-    }
-
-
-    public boolean isAtMaxCapacity() {
-        return m_Matches.size() == m_Matches.getMaxItems();
-    }
-
-
-    public int getMaxItems() {
-        return m_Matches.getMaxItems();
-    }
+//
+//    public double lowestHyperscoreToAdd() {
+//        if (!isAtMaxCapacity())
+//            return Double.MIN_VALUE;
+//        return m_Matches.last().getHyperScore();
+//    }
+//
+//
+//    public boolean isAtMaxCapacity() {
+//        return m_Matches.size() == m_Matches.getMaxItems();
+//    }
+//
+//
+//    public int getMaxItems() {
+//        return m_Matches.getMaxItems();
+//    }
 
     /**
      * in this version there is no overlap
@@ -438,10 +447,21 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
      * @param added
      */
     public void addSpectralMatch(ISpectralMatch added) {
-        double hyperScore = added.getHyperScore();
-        if (hyperScore <= lowestHyperscoreToAdd())
-            return; // drop unscored matches
-        m_Matches.add(added);
+//        double hyperScore = added.getHyperScore();
+//        if (hyperScore <= lowestHyperscoreToAdd())
+//            return; // drop unscored matches
+
+        // Test for add with wrong spectral id
+        ISpectralMatch bestMatch = getBestMatch();
+        if (bestMatch != null) {
+            String originalId = bestMatch.getMeasured().getId();
+            String matchId = added.getMeasured().getId();
+            if (!originalId.equals(matchId))
+                throw new IllegalStateException("Trying to add " + matchId + " tp scores from " + originalId);
+
+        }
+
+        m_Matches.addMatch(added);
     }
 
     /**
@@ -460,7 +480,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
     }
 
     public IMeasuredSpectrum getNormalizedRawScan() {
-        if(m_NormalizedRawScan == null)
+        if (m_NormalizedRawScan == null)
             m_NormalizedRawScan = getRaw();
         return m_NormalizedRawScan;
     }
@@ -500,7 +520,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
     @Override
     public double getExpectedValue() {
         HyperScoreStatistics hyperScores = getHyperScores();
-        if(m_ExpectedValue != 0 && !Double.isNaN(m_ExpectedValue))
+        if (m_ExpectedValue != 0 && !Double.isNaN(m_ExpectedValue))
             return m_ExpectedValue;
         ISpectralMatch bestMatch = getBestMatch();
         if (!hyperScores.isEmpty()) {

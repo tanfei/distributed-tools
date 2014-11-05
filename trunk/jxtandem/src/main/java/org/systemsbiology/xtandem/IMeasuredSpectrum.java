@@ -2,6 +2,9 @@ package org.systemsbiology.xtandem;
 
 import org.systemsbiology.sax.*;
 
+import java.io.*;
+import java.util.*;
+
 /**
  * org.systemsbiology.xtandem.IMeasuredSpectrum
  *   A spedctrum used for scoring - characteristics of the
@@ -10,9 +13,8 @@ import org.systemsbiology.sax.*;
   */
 public interface IMeasuredSpectrum extends ISpectrum
 {
-    public static IMeasuredSpectrum[] EMPTY_ARRAY = {};
-    public static Class THIS_CLASS = IMeasuredSpectrum.class;
 
+    public static Comparator<IMeasuredSpectrum> COMPARE_BY_ID = new IMeasuredSpectrumComparator();
     /**
       * make a form suitable to
       * 1) reconstruct the original given access to starting conditions
@@ -81,4 +83,11 @@ public interface IMeasuredSpectrum extends ISpectrum
      */
     public  ISpectralScan getScanData();
 
+    public static class IMeasuredSpectrumComparator implements Comparator<IMeasuredSpectrum> ,Serializable {
+        @Override
+             public int compare(final IMeasuredSpectrum o1, final IMeasuredSpectrum o2) {
+                 return o1.getId().compareTo(o2.getId());
+             }
+
+    }
 }

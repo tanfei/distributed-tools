@@ -60,7 +60,7 @@ public class ChapterAndVerse {
 
             @Override
             public int getPartition(final Object key) {
-                return ((ChapterKeyClass) key).lineNumber % numPartitions();
+                return Math.abs(((ChapterKeyClass) key).lineNumber % numPartitions());
             }
         });
 

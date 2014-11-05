@@ -358,7 +358,7 @@ public class LibraryBuilder implements Serializable {
     private static class MapPolyPeptideToSequenceKeys implements PairFunction<IPolypeptide, String, IPolypeptide> {
         @Override
         public Tuple2<String, IPolypeptide> call(final IPolypeptide t) throws Exception {
-            return new Tuple2<String, IPolypeptide>(t.getSequence(), t);
+            return new Tuple2<String, IPolypeptide>(t.toString(), t);
         }
     }
 

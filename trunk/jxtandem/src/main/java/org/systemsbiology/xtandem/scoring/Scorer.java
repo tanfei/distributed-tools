@@ -687,7 +687,6 @@ public class Scorer  implements Serializable  {
         for (int i = 0; i < numberSpectra; i++) {
             ITheoreticalSpectrum ts = spectrums[i];
 
-            double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
 
             final int charge = ts.getCharge();
             if (pPrecursorCharge != 0 && charge > pPrecursorCharge)
@@ -695,6 +694,7 @@ public class Scorer  implements Serializable  {
             //     JXTandemLauncher.logMessage(scanid + "\t" + sequence + "\t" + charge);
             if (maxCharge < charge)  // do NOT score the maximum charge
                 continue;
+//            double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
 //            if (XTandemDebugging.isDebugging()) {
 //                final DebugValues lvs = XTandemDebugging.getLocalValues();
 //                //    final int realId = XTandemUtilities.buildChargedId(scan.getId(), charge);

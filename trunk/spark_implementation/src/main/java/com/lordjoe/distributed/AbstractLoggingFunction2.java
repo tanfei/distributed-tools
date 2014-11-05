@@ -11,9 +11,9 @@ import java.io.*;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingFunction<K extends Serializable,V extends Serializable> implements Function<K,V> {
+public abstract class AbstractLoggingFunction2<T1 extends Serializable,T2 extends Serializable,R extends Serializable> implements Function2<T1,T2,R> {
 
-    private static boolean logged;
+    private boolean logged;
 
     public boolean isLogged() {
         return logged;
@@ -29,25 +29,24 @@ public abstract class AbstractLoggingFunction<K extends Serializable,V extends S
      * @return
      * @throws Exception
      */
-    @Override
-    public final V call(final K v1)  {
+     @Override
+    public R call(final T1 v1, final T2 v2)  {
         if(!logged)  {
             System.err.println("Starting Function " + getClass().getSimpleName());
             setLogged(true);
         }
-        try {
-            return doCall(v1);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-
-        }
-    }
+         try {
+             return doCall(v1,v2);
+         }
+         catch (Exception e) {
+             throw new RuntimeException(e);
+           }
+     }
 
     /**
      * do work here
      * @param v1
      * @return
      */
-    public abstract V doCall(final K v1)  throws Exception;
+    public abstract R doCall(final T1 v1, final T2 v2) throws Exception;
 }
