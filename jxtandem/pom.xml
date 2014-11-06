@@ -2,13 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>uk.ac.ebi.pride.hydra</groupId>
-        <artifactId>hydra-proteomics</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
+   <!-- <parent>
+         <artifactId>hydra-proteomics</artifactId>
+     </parent>
+    -->
 
+    <groupId>uk.ac.ebi.pride.hydra</groupId>
     <artifactId>jxtandem</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>SystemsBiology JXTandem</name>
 
@@ -124,5 +125,48 @@
         </dependency>
 
     </dependencies>
+    <!-- Repository Conventions -->
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <layout>default</layout>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+
+        <repository>
+            <id>biojava-maven-repo</id>
+            <name>BioJava repository</name>
+            <url>http://www.biojava.org/download/maven/</url>
+        </repository>
+
+        <repository>
+            <id>informatics-svcs.systemsbiology.net</id>
+            <name>informatics-svcs maven repository</name>
+            <url>http://informatics-svcs.systemsbiology.net/maven_repository</url>
+        </repository>
+
+        <repository> <!-- EBI repo -->
+            <id>nexus-ebi-repo</id>
+            <name>The EBI internal repository</name>
+            <url>http://www.ebi.ac.uk/intact/maven/nexus/content/repositories/ebi-repo/</url>
+            <releases>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository> <!-- EBI SNAPSHOT repo -->
+            <id>nexus-ebi-snapshot-repo</id>
+            <name>The EBI internal snapshot repository</name>
+            <url>http://www.ebi.ac.uk/intact/maven/nexus/content/repositories/ebi-repo-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>
