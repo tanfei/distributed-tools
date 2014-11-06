@@ -59,7 +59,7 @@ public class SimpleLoadTest {
          });
 
           JavaPairRDD<String, Integer> sorted = ones.sortByKey();
-         JavaRDD<WordNumber> answer = sorted.mapPartitions(new WordCountFlatMapFinction());
+         JavaRDD<WordNumber> answer = sorted.mapPartitions(new WordCountFlatMapFunction());
 
          List<WordNumber> objects = answer.toArray();
          for (WordNumber o : objects) {

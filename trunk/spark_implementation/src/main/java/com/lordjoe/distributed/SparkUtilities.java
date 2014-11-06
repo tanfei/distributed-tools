@@ -20,7 +20,7 @@ import java.util.*;
 
 /**
  * com.lordjoe.distributed.SpareUtilities
- * A very useful class representing a number of sttaic finctions useful in Spark
+ * A very useful class representing a number of static functions useful in Spark
  * User: Steve
  * Date: 8/28/2014
  */
@@ -152,8 +152,7 @@ public class SparkUtilities implements Serializable {
         if (ret != null)
             return ret;
         SparkConf sparkConf = new SparkConf();
-        sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
-        sparkConf.setAppName(getAppName());
+         sparkConf.setAppName(getAppName());
         SparkUtilities.guaranteeSparkMaster(sparkConf);
         SparkContext sc = new SparkContext(sparkConf);
 
@@ -162,14 +161,14 @@ public class SparkUtilities implements Serializable {
         //showOption("spark.serializer",sparkConf);
 
         Option<String> option = sparkConf.getOption("spark.serializer");
-        if (!option.isDefined())
+        if (true || !option.isDefined())
             sparkConf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");   // todo use kryo
 //        else {
 //             if(option.get().equals("org.apache.spark.serializer.KryoSerializer"))
-//
+//                   sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
 //           }
         // if we use Kryo register classes
-        sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
+
 
          sparkConf.set("spark.mesos.coarse", "true");
         sparkConf.set("spark.executor.memory", "2500m");
@@ -177,13 +176,13 @@ public class SparkUtilities implements Serializable {
 
         //
 
-        option = sparkConf.getOption("spark.default.parallelism");
-        if (option.isDefined())
-            System.err.println("Parellelism = " + option.get());
-
-        option = sparkConf.getOption("spark.executor.heartbeatInterval");
-        if (option.isDefined())
-            System.err.println("timeout = " + option.get());
+//        option = sparkConf.getOption("spark.default.parallelism");
+//        if (option.isDefined())
+//            System.err.println("Parellelism = " + option.get());
+//
+//        option = sparkConf.getOption("spark.executor.heartbeatInterval");
+//        if (option.isDefined())
+//            System.err.println("timeout = " + option.get());
 
 
         ret = new JavaSparkContext(sparkConf);
