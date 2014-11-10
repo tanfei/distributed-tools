@@ -9,7 +9,7 @@ import java.util.*;
 
 
 /**
- * com.lordjoe.distributed.StreamingMapReduce
+ * com.lordjoe.distributed.JavaMapReduce
  * User: Steve
  * Date: 8/25/2014
  */
@@ -130,7 +130,7 @@ public class JavaMapReduce<KEYIN extends Serializable,VALUEIN extends Serializab
 
     protected Iterable<KeyValueObject<K, V>> performSourceMap(final Iterable<KeyValueObject<KEYIN, VALUEIN>> pInputs) {
         IMapperFunction map = getMap();
-        List<KeyValueObject<K, V>> holder = new ArrayList<>();
+        List<KeyValueObject<K, V>> holder = new ArrayList<KeyValueObject<K, V>>();
         for (KeyValueObject<KEYIN, VALUEIN> kvx : pInputs) {
             Iterable<KeyValueObject<K, V>> iterable = map.mapValues(kvx.key,kvx.value);
             for (KeyValueObject<K, V> kv : iterable) {

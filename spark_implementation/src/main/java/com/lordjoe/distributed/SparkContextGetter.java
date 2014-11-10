@@ -14,7 +14,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * com.lordjoe.distributed.SpareUtilities
+ * com.lordjoe.distributed.SparkContextGetter
  * A very useful class representing a number of static functions useful in Spark
  * User: Steve
  * Date: 8/28/2014
@@ -77,21 +77,24 @@ public class SparkContextGetter {
         SparkConf sparkConf = new SparkConf();
         sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
         sparkConf.set("mySparkProperty", "xyzzy");
-          sparkConf.setAppName("Some App");
-         SparkUtilities.guaranteeSparkMaster(sparkConf);
+        sparkConf.setAppName("Some App");
+        //  SparkUtilities.guaranteeSparkMaster(sparkConf);
 
+        /*
          SparkContext sc = new SparkContext(sparkConf);
-         System.err.println("App Name " + sc.appName() );
+          System.err.println("App Name " + sc.appName() );
          String reg = sc.getConf().get("spark.kryo.registrator");
          System.out.println("Registrar = " + reg);
+           */
 
         // if we use Kryo register classes
-        sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
+        // sparkConf.set("spark.kryo.registrator", "com.lordjoe.distributed.hydra.HydraKryoSerializer");
 
-        SparkContextGetter.guaranteeSparkMaster(sparkConf);
 
         sparkConf.set("spark.mesos.coarse", "true");
         sparkConf.set("spark.executor.memory", "2500m");
+
+        SparkContextGetter.guaranteeSparkMaster(sparkConf);
 
         showSparkProperties();
         showSparkPropertiesInAnotherThread();
@@ -105,17 +108,15 @@ public class SparkContextGetter {
     /**
      * dump all spack properties fo System.err
      */
-    public static void showSparkProperties()
-    {
+    public static void showSparkProperties() {
         SparkConf sparkConf = new SparkConf();
         Tuple2<String, String>[] all = sparkConf.getAll();
-        for (Tuple2<String, String> prp  : all) {
+        for (Tuple2<String, String> prp : all) {
             System.err.println(prp._1().toString() + "=" + prp._2());
         }
     }
 
-    public static void  showSparkPropertiesInAnotherThread()
-    {
+    public static void showSparkPropertiesInAnotherThread() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -198,7 +199,6 @@ public class SparkContextGetter {
 
         }
     }
-
 
 
 }
