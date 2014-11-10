@@ -6,6 +6,7 @@ import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
 import com.lordjoe.utilities.*;
+import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.storage.*;
@@ -37,7 +38,8 @@ public class SparkScanScorer {
             "T[79.966]MT[79.966]SFESGMDQESLPK",
             "HAIAVIK"
 
-    } ;
+    };
+
     public static class FindInterestingPeptides implements ObjectFoundListener<IPolypeptide> {
 
         /**
@@ -48,36 +50,49 @@ public class SparkScanScorer {
          */
         @Override
         public void onObjectFound(final IPolypeptide found) {
-            if(found.isModified())
+            if (found.isModified())
                 System.out.println(found);
             String s = found.toString();
             for (int i = 0; i < InterestingPeptides.length; i++) {
                 String interestingPeptide = InterestingPeptides[i];
-                 if(interestingPeptide.equalsIgnoreCase(s))
-                     System.out.println(s); // break here
+                if (interestingPeptide.equalsIgnoreCase(s))
+                    System.out.println(s); // break here
             }
         }
     }
-    public static class FindInterestingBinnedPeptides implements ObjectFoundListener<Tuple2<BinChargeKey,IPolypeptide>> {
 
-         /**
-          * do something on finding the obejcts
-          * for debugging thiis may just find interesting cases
-          *
-          * @param found
-          */
-         @Override
-         public void onObjectFound(final Tuple2<BinChargeKey,IPolypeptide> found) {
-             String s = found._2().toString();
-             for (int i = 0; i < InterestingPeptides.length; i++) {
-                 String interestingPeptide = InterestingPeptides[i];
-                  if(interestingPeptide.equalsIgnoreCase(s))
-                      System.out.println(s); // break here
-             }
-         }
-     }
+    public static class FindInterestingBinnedPeptides implements ObjectFoundListener<Tuple2<BinChargeKey, IPolypeptide>> {
+
+        /**
+         * do something on finding the obejcts
+         * for debugging thiis may just find interesting cases
+         *
+         * @param found
+         */
+        @Override
+        public void onObjectFound(final Tuple2<BinChargeKey, IPolypeptide> found) {
+            String s = found._2().toString();
+            for (int i = 0; i < InterestingPeptides.length; i++) {
+                String interestingPeptide = InterestingPeptides[i];
+                if (interestingPeptide.equalsIgnoreCase(s))
+                    System.out.println(s); // break here
+            }
+        }
+    }
 
     public static class writeScoresMapper extends AbstractLoggingFunction<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
+        private boolean logged;
+
+        @Override
+        public boolean isLogged() {
+            return logged;
+        }
+
+        @Override
+        public void setLogged(final boolean pLogged) {
+            logged = pLogged;
+        }
+
         final BiomlReporter reporter;
 
         private writeScoresMapper(final BiomlReporter pReporter) {
@@ -110,6 +125,18 @@ public class SparkScanScorer {
     }
 
     public static class DropNoMatchScansFilter extends AbstractLoggingFunction<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
+        private boolean logged;
+
+        @Override
+        public boolean isLogged() {
+            return logged;
+        }
+
+        @Override
+        public void setLogged(final boolean pLogged) {
+            logged = pLogged;
+        }
+
         @Override
         public java.lang.Boolean doCall(final KeyValueObject<String, IScoredScan> v1) throws Exception {
             IScoredScan vx = v1.value;
@@ -118,6 +145,18 @@ public class SparkScanScorer {
     }
 
     public static class chooseBestScanScore extends AbstractLoggingFunction2<IScoredScan, IScoredScan, IScoredScan> {
+        private boolean logged;
+
+        @Override
+        public boolean isLogged() {
+            return logged;
+        }
+
+        @Override
+        public void setLogged(final boolean pLogged) {
+            logged = pLogged;
+        }
+
         @Override
         public IScoredScan doCall(final IScoredScan v1, final IScoredScan v2) throws Exception {
             ISpectralMatch match1 = v1.getBestMatch();
@@ -157,6 +196,7 @@ public class SparkScanScorer {
         //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
         //System.out.println(runner);
         ElapsedTimer timer = new ElapsedTimer();
+        ElapsedTimer totalTime = new ElapsedTimer();
 
         if (args.length < TANDEM_CONFIG_INDEX + 1) {
             System.out.println("usage sparkconfig configFile fastaFile");
@@ -164,7 +204,13 @@ public class SparkScanScorer {
         }
         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
-        String pathPrepend = SparkUtilities.getSparkProperties().getProperty("com.lordjoe.distributed.PathPrepend");
+        System.out.println("Set Log to Warn");
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.WARN);
+
+
+        Properties sparkProperties = SparkUtilities.getSparkProperties();
+        String pathPrepend = sparkProperties.getProperty("com.lordjoe.distributed.PathPrepend");
         if (pathPrepend != null)
             XTandemHadoopUtilities.setDefaultPath(pathPrepend);
 
@@ -182,19 +228,19 @@ public class SparkScanScorer {
         //databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
 
 
-       // next line is for debugging
-       // databasePeptides = SparkUtilities.realizeAndReturn(databasePeptides,new FindInterestingPeptides());
-       // System.out.println("Scoring " + databasePeptides.count() + " Peptides");
+        // next line is for debugging
+        // databasePeptides = SparkUtilities.realizeAndReturn(databasePeptides,new FindInterestingPeptides());
+        // System.out.println("Scoring " + databasePeptides.count() + " Peptides");
 
         // read spectra
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
         JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
 
-        spectraToScore =  spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
+        spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
         System.out.println("Scoring " + spectraToScore.count() + " spectra");
 
         // next line is for debugging
-         spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
+        //  spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
         timer.showElapsed("got Spectra to Score");
 
 
@@ -211,19 +257,19 @@ public class SparkScanScorer {
         JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
 
         // next line is for debugging
-         keyedSpectra = SparkUtilities.realizeAndReturn(keyedSpectra);
+        // keyedSpectra = SparkUtilities.realizeAndReturn(keyedSpectra);
 
         // find spectra-peptide pairs to score
         JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs = keyedSpectra.join(keyedPeptides,
                 BinChargeKey.getPartitioner());
 
         // next line is for debugging
-         binPairs = SparkUtilities.realizeAndReturn(binPairs);
+        // binPairs = SparkUtilities.realizeAndReturn(binPairs);
         timer.showElapsed("Joined Pairs");
 
-        binPairs =  binPairs.persist(StorageLevel.MEMORY_AND_DISK());
+        binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
 
-         System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
+        System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
 
         Map<BinChargeKey, Object> binChargeKeyObjectMap = binPairs.countByKey();
         for (BinChargeKey binChargeKey : binChargeKeyObjectMap.keySet()) {
@@ -233,11 +279,12 @@ public class SparkScanScorer {
         // now produce all peptide spectrum scores where spectrum and peptide are in the same bin
         JavaRDD<IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
 
-          // next line is for debugging
-        bestScores = SparkUtilities.realizeAndReturn(bestScores);
+        // next line is for debugging
+        //bestScores = SparkUtilities.realizeAndReturn(bestScores);
+
         timer.showElapsed("built best scores");
-        bestScores =  bestScores.persist(StorageLevel.MEMORY_AND_DISK());
-         System.out.println("Total Scores " + bestScores.count() + " Scores");
+        //bestScores =  bestScores.persist(StorageLevel.MEMORY_AND_DISK());
+        // System.out.println("Total Scores " + bestScores.count() + " Scores");
 
         XTandemMain application = handler.getApplication();
         PepXMLWriter pwrtr = new PepXMLWriter(application);
@@ -248,6 +295,8 @@ public class SparkScanScorer {
         PrintWriter out = buildWriter(application);
         consolidator.writeScores(out, bestScores);
         out.close();
+
+        totalTime.showElapsed("Finished Scoring");
 
 
     }

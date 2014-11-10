@@ -306,6 +306,15 @@ public class LibraryBuilder implements Serializable {
 
 
     public static class ParsedProteinToProtein extends AbstractLoggingFunction<Tuple2<String, String>, IProtein> {
+        private boolean logged;
+           @Override
+          public boolean isLogged() {
+              return logged;
+          }
+            @Override
+          public void setLogged(final boolean pLogged) {
+              logged = pLogged;
+          }
         @Override
         public IProtein doCall(final Tuple2<String, String> v1) throws Exception {
             String annotation = v1._1();
@@ -321,6 +330,15 @@ public class LibraryBuilder implements Serializable {
 
         private transient List<String> lines;
         private transient String currentKey;
+        private boolean logged;
+           @Override
+          public boolean isLogged() {
+              return logged;
+          }
+            @Override
+          public void setLogged(final boolean pLogged) {
+              logged = pLogged;
+          }
 
         @Override
         public Tuple2<Integer, IPolypeptide> doCall(final Tuple2<String, IPolypeptide> t) throws Exception {

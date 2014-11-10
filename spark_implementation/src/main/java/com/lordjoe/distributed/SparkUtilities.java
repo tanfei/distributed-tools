@@ -177,7 +177,6 @@ public class SparkUtilities implements Serializable {
             threadContext = ret;
             //      threadContext.set(ret);
             return ret;
-
         }
         // not set up so fill in app name and properties
          // mark properties so we know things have been set
@@ -197,9 +196,9 @@ public class SparkUtilities implements Serializable {
 //           }
         // if we use Kryo register classes
 
-
-        sparkConf.set("spark.mesos.coarse", "true");
-        sparkConf.set("spark.executor.memory", "2500m");
+ //         Now set in properties
+ //       sparkConf.set("spark.mesos.coarse", "true");
+ //       sparkConf.set("spark.executor.memory", "2500m");
 
 //        option = sparkConf.getOption("spark.default.parallelism");
 //        if (option.isDefined())
@@ -346,6 +345,7 @@ public class SparkUtilities implements Serializable {
         }
     }
 
+    public static final String FORCE_LOCAL_EXECUTION_PROPERTY = "com.lordjoe.distributes.ForceLocalExecution";
     /**
      * if no spark master is  defined then use "local
      *
@@ -354,7 +354,9 @@ public class SparkUtilities implements Serializable {
     public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
         Option<String> option = sparkConf.getOption("spark.master");
 
-        if (!option.isDefined()) {   // use local over nothing   {
+        boolean forceLocalExecution = "true".equals(sparkProperties.getProperty(FORCE_LOCAL_EXECUTION_PROPERTY,"false"));
+
+        if (forceLocalExecution || !option.isDefined()) {   // use local over nothing
             sparkConf.setMaster("local[*]");
             setLocal(true);
             /**
@@ -459,10 +461,17 @@ public class SparkUtilities implements Serializable {
     public static final TupleValues TUPLE_VALUES = new TupleValues();
 
     public static class TupleValues<K extends Serializable> extends AbstractLoggingFunction<Tuple2<Object, K>, K> {
+        private boolean logged;
+           @Override
+          public boolean isLogged() {
+              return logged;
+          }
+            @Override
+          public void setLogged(final boolean pLogged) {
+              logged = pLogged;
+          }
         private TupleValues() {
         }
-
-        ;
 
         @Override
         public K doCall(final Tuple2<Object, K> v1) throws Exception {
@@ -476,6 +485,15 @@ public class SparkUtilities implements Serializable {
     public static final IdentityFunction IDENTITY_FUNCTION = new IdentityFunction();
 
     public static class IdentityFunction<K extends Serializable> extends AbstractLoggingFunction<K, K> {
+        private boolean logged;
+            @Override
+           public boolean isLogged() {
+               return logged;
+           }
+             @Override
+           public void setLogged(final boolean pLogged) {
+               logged = pLogged;
+           }
         private IdentityFunction() {
         }
 
@@ -506,6 +524,15 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> toTuples(@Nonnull JavaRDD<KeyValueObject<K, V>> inp) {
         PairFunction<KeyValueObject<K, V>, K, V> pf = new AbstractLoggingPairFunction<KeyValueObject<K, V>, K, V>() {
+            private boolean logged;
+            @Override
+           public boolean isLogged() {
+               return logged;
+           }
+             @Override
+           public void setLogged(final boolean pLogged) {
+               logged = pLogged;
+           }
             @Override
             public Tuple2<K, V> doCall(KeyValueObject<K, V> kv) {
                 return new Tuple2<K, V>(kv.key, kv.value);
@@ -525,6 +552,15 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaRDD<KeyValueObject<K, V>> fromTuples(@Nonnull JavaPairRDD<K, V> inp) {
         return inp.map(new AbstractLoggingFunction<Tuple2<K, V>, KeyValueObject<K, V>>() {
+            private boolean logged;
+           @Override
+          public boolean isLogged() {
+              return logged;
+          }
+            @Override
+          public void setLogged(final boolean pLogged) {
+              logged = pLogged;
+          }
             @Override
             public KeyValueObject<K, V> doCall(final Tuple2<K, V> t) throws Exception {
                 KeyValueObject ret = new KeyValueObject(t._1(), t._2());

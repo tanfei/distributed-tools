@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<bioml label="x! taxon-to-file matching list">
+     <taxon label="yeast_orfs_pruned.fasta">
+          <file format="peptide" URL="yeast_orfs_pruned.fasta" />
+     </taxon>
+     <taxon label="uniprot_sprot.fasta">
+          <file format="peptide" URL="uniprot_sprot.fasta" />
+     </taxon>
+     <taxon label="yeast_orfs_all_REV.20060126.short.fasta">
+          <file format="peptide" URL="yeast_orfs_all_REV.20060126.short.fasta" />
+     </taxon>
+</bioml>

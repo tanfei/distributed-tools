@@ -3,6 +3,7 @@ package com.lordjoe.distributed.hydra;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
+import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
@@ -26,6 +27,15 @@ public class ScanScorer {
 
     public static class writeScoresMapper extends AbstractLoggingFunction<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
         final BiomlReporter reporter;
+        private boolean logged;
+           @Override
+          public boolean isLogged() {
+              return logged;
+          }
+            @Override
+          public void setLogged(final boolean pLogged) {
+              logged = pLogged;
+          }
 
         private writeScoresMapper(final BiomlReporter pReporter) {
             reporter = pReporter;
@@ -57,6 +67,15 @@ public class ScanScorer {
     }
 
     public static class DropNoMatchScansFilter  extends AbstractLoggingFunction<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
+        private boolean logged;
+             @Override
+            public boolean isLogged() {
+                return logged;
+            }
+              @Override
+            public void setLogged(final boolean pLogged) {
+                logged = pLogged;
+            }
         @Override
         public java.lang.Boolean doCall(final KeyValueObject<String, IScoredScan> v1) throws Exception {
             IScoredScan vx = v1.value;
@@ -65,6 +84,15 @@ public class ScanScorer {
     }
 
     public static class chooseBestScanScore extends AbstractLoggingFunction2<IScoredScan, IScoredScan, IScoredScan> {
+        private boolean logged;
+            @Override
+           public boolean isLogged() {
+               return logged;
+           }
+             @Override
+           public void setLogged(final boolean pLogged) {
+               logged = pLogged;
+           }
         @Override
         public IScoredScan doCall(final IScoredScan v1, final IScoredScan v2) throws Exception {
             ISpectralMatch match1 = v1.getBestMatch();
@@ -109,6 +137,11 @@ public class ScanScorer {
             System.out.println("usage sparkconfig configFile fastaFile");
             return;
         }
+
+        System.out.println("Set Log to Warn");
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.WARN);
+
         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
         String pathPrepend = SparkUtilities.getSparkProperties().getProperty("com.lordjoe.distributed.PathPrepend");

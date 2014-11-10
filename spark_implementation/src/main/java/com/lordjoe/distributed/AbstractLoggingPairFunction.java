@@ -14,15 +14,9 @@ import java.io.Serializable;
  */
 public abstract class AbstractLoggingPairFunction<T extends Serializable,K extends Serializable,V extends Serializable> implements PairFunction<T,K,V> {
 
-    private boolean logged;
+    public abstract boolean isLogged() ;
 
-    public boolean isLogged() {
-        return logged;
-    }
-
-    public void setLogged(final boolean pLogged) {
-        logged = pLogged;
-    }
+    public abstract void setLogged(final boolean pLogged);
 
     /**
      * NOTE override doCall not this
@@ -31,7 +25,7 @@ public abstract class AbstractLoggingPairFunction<T extends Serializable,K exten
      */
     @Override
     public final  Tuple2<K, V> call(final T t)  {
-        if(!logged)  {
+        if(!isLogged())  {
             System.err.println("Starting Function " + getClass().getSimpleName());
             setLogged(true);
         }
