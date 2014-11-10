@@ -208,10 +208,7 @@ public class SparkUtilities implements Serializable {
 //        option = sparkConf.getOption("spark.executor.heartbeatInterval");
 //        if (option.isDefined())
 //            System.err.println("timeout = " + option.get());
-
-
-        SparkContext sc = new SparkContext(sparkConf);
-        ret = new JavaSparkContext(sparkConf);
+         ret = new JavaSparkContext(sparkConf);
         threadContext = ret;
         //      threadContext.set(ret);
         return ret;
