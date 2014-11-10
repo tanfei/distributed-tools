@@ -283,7 +283,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
         // sort by id
         scoreByID = scoreByID.sortByKey();
         // next line is for debugging
-        scoreByID = SparkUtilities.realizeAndReturn(scoreByID);
+        //scoreByID = SparkUtilities.realizeAndReturn(scoreByID);
 
 
         return scoreByID.values();

@@ -13,15 +13,9 @@ import java.io.*;
  */
 public abstract class AbstractLoggingFunction2<T1 extends Serializable,T2 extends Serializable,R extends Serializable> implements Function2<T1,T2,R> {
 
-    private boolean logged;
+    public abstract boolean isLogged() ;
 
-    public boolean isLogged() {
-        return logged;
-    }
-
-    public void setLogged(final boolean pLogged) {
-        logged = pLogged;
-    }
+    public abstract void setLogged(final boolean pLogged);
 
     /**
      * override doCall
@@ -31,7 +25,7 @@ public abstract class AbstractLoggingFunction2<T1 extends Serializable,T2 extend
      */
      @Override
     public R call(final T1 v1, final T2 v2)  {
-        if(!logged)  {
+        if(!isLogged())  {
             System.err.println("Starting Function " + getClass().getSimpleName());
             setLogged(true);
         }
