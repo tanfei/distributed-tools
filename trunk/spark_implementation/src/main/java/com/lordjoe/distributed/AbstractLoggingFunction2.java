@@ -11,34 +11,33 @@ import java.io.*;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingFunction2<T1 extends Serializable,T2 extends Serializable,R extends Serializable> implements Function2<T1,T2,R> {
+public abstract class AbstractLoggingFunction2<T1 extends Serializable, T2 extends Serializable, R extends Serializable>
+        extends AbstractLoggingFunctionBase implements Function2<T1, T2, R>
+{
 
-    public abstract boolean isLogged() ;
-
-    public abstract void setLogged(final boolean pLogged);
 
     /**
      * override doCall
+     *
      * @param v1
      * @return
      * @throws Exception
      */
-     @Override
-    public R call(final T1 v1, final T2 v2)  {
-        if(!isLogged())  {
-            System.err.println("Starting Function " + getClass().getSimpleName());
-            setLogged(true);
+    @Override
+    public R call(final T1 v1, final T2 v2) {
+        reportCalls();
+        try {
+            return doCall(v1, v2);
         }
-         try {
-             return doCall(v1,v2);
-         }
-         catch (Exception e) {
-             throw new RuntimeException(e);
-           }
-     }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * do work here
+     *
      * @param v1
      * @return
      */

@@ -1,9 +1,8 @@
 package com.lordjoe.distributed;
 
 import org.apache.spark.api.java.function.*;
-import scala.*;
 
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * org.apache.spark.api.java.function.AbstraceLoggingFunction
@@ -12,9 +11,8 @@ import java.io.Serializable;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingPairFunction<T extends Serializable,K extends Serializable,V extends Serializable>
-        extends AbstractLoggingFunctionBase implements PairFunction<T,K,V> {
-
+public abstract class AbstractLoggingFlatMapFunction<T ,R extends Serializable>
+        extends AbstractLoggingFunctionBase implements FlatMapFunction<T,R> {
 
 
     /**
@@ -23,9 +21,9 @@ public abstract class AbstractLoggingPairFunction<T extends Serializable,K exten
      * @return
      */
     @Override
-    public final  Tuple2<K, V> call(final T t)  {
-       reportCalls();
-         try {
+    public final  Iterable<R> call(final T t)  {
+        reportCalls();
+           try {
             return doCall(t);
           }
          catch (Exception e) {
@@ -39,6 +37,6 @@ public abstract class AbstractLoggingPairFunction<T extends Serializable,K exten
      * @return
      */
 
-    public abstract Tuple2<K, V> doCall(final T t) throws Exception;
+    public abstract Iterable<R> doCall(final T t) throws Exception;
 
 }

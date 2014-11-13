@@ -18,6 +18,7 @@
 package org.apache.spark.examples;
 
 import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.spark.*;
 import com.lordjoe.distributed.util.*;
 import com.lordjoe.distributed.wordcount.*;
 import org.apache.spark.*;
@@ -63,16 +64,23 @@ public final class JavaLargeWordCount {
             return;
         }
 
-         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
+        SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
         SparkUtilities.setAppName("JavaWordCount");
 
         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
+
+
+        // Add some accumulators  NOTE functions extending AbstractLoggingFunctionBase register automatically
+     //   SparkAccumulators.createAccumulator("WordsMapFunction");
+        SparkAccumulators.createAccumulator("TotalLetters");
 
         String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX] );
         JavaRDD<String> lines = ctx.textFile(inputPath, 1);
 
         // use my function not theirs
         JavaRDD<String> words = lines.flatMap(new WordsMapFunction());
+        
+        words = words.coalesce(4);
 
 
         JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
@@ -86,12 +94,18 @@ public final class JavaLargeWordCount {
 
         ones = ones.partitionBy(new PartitionByStart());
         JavaPairRDD<String, Integer> sorted = ones.sortByKey();
+        sorted = sorted.partitionBy(new PartitionByStart());
         JavaRDD<WordNumber> answer = sorted.mapPartitions(new WordCountFlatMapFunction());
 
+        List<WordNumber> answers = answer.collect();
+        /*
         List<WordNumber> objects = answer.toArray();
         for (WordNumber o : objects) {
             System.out.println(o);
         }
+        */
+
+        SparkAccumulators.showAccumulators();
     }
 
 }

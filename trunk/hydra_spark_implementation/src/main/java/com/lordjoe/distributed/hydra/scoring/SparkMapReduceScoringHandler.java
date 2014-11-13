@@ -9,8 +9,6 @@ import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.xtandem.*;
@@ -321,9 +319,9 @@ public class SparkMapReduceScoringHandler implements Serializable {
         return libraryBuilder.buildLibrary();
     }
 
-    private class generateFirstScore implements Function<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
+    private class generateFirstScore extends AbstractLoggingFunction<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
         @Override
-        public IScoredScan call(final Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
+        public IScoredScan doCall(final Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
             IMeasuredSpectrum spec = v1._1();
             IPolypeptide pp = v1._2();
             if (!(spec instanceof RawPeptideScan))
@@ -334,9 +332,9 @@ public class SparkMapReduceScoringHandler implements Serializable {
         }
     }
 
-    private class addNewScore implements Function2<IScoredScan, Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
+    private class addNewScore extends AbstractLoggingFunction2<IScoredScan, Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
         @Override
-        public IScoredScan call(final IScoredScan original, final Tuple2<IMeasuredSpectrum, IPolypeptide> v2) throws Exception {
+        public IScoredScan doCall(final IScoredScan original, final Tuple2<IMeasuredSpectrum, IPolypeptide> v2) throws Exception {
             IMeasuredSpectrum spec = v2._1();
             IPolypeptide pp = v2._2();
             if (!(spec instanceof RawPeptideScan))
@@ -359,9 +357,9 @@ public class SparkMapReduceScoringHandler implements Serializable {
     }
 
 
-    private static class combineScoredScans implements Function2<IScoredScan, IScoredScan, IScoredScan> {
+    private static class combineScoredScans extends AbstractLoggingFunction2<IScoredScan, IScoredScan, IScoredScan> {
         @Override
-        public IScoredScan call(final IScoredScan original, final IScoredScan added) throws Exception {
+        public IScoredScan doCall(final IScoredScan original, final IScoredScan added) throws Exception {
             if (original.getBestMatch() == null)
                 return added;
             if (added.getBestMatch() == null)
