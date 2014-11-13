@@ -92,18 +92,16 @@ public class LibraryBuilder implements Serializable {
 
 
         JavaRDD<IProtein> proteins = readProteins(jctx);
+        // force partitioning
+        proteins = SparkUtilities.coalesce(proteins);
+         JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
 
-        // uncomment when you want to look
-        // proteins = SparkUtilities.realizeAndReturn(proteins, jctx);
-
-        // Digest
-        JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
-
-        // uncomment when you want to look
+         // uncomment when you want to look
         //  digested = SparkUtilities.realizeAndReturn(digested, jctx);
 
 
         // Peptide Sequence is the key
+        digested = SparkUtilities.coalesce(digested);
         JavaPairRDD<String, IPolypeptide> bySequence = digested.mapToPair(new MapPolyPeptideToSequenceKeys());
 
         // uncomment when you want to look
@@ -306,16 +304,7 @@ public class LibraryBuilder implements Serializable {
 
 
     public static class ParsedProteinToProtein extends AbstractLoggingFunction<Tuple2<String, String>, IProtein> {
-        private boolean logged;
-           @Override
-          public boolean isLogged() {
-              return logged;
-          }
-            @Override
-          public void setLogged(final boolean pLogged) {
-              logged = pLogged;
-          }
-        @Override
+             @Override
         public IProtein doCall(final Tuple2<String, String> v1) throws Exception {
             String annotation = v1._1();
             String sequence = v1._2();
@@ -330,15 +319,6 @@ public class LibraryBuilder implements Serializable {
 
         private transient List<String> lines;
         private transient String currentKey;
-        private boolean logged;
-           @Override
-          public boolean isLogged() {
-              return logged;
-          }
-            @Override
-          public void setLogged(final boolean pLogged) {
-              logged = pLogged;
-          }
 
         @Override
         public Tuple2<Integer, IPolypeptide> doCall(final Tuple2<String, IPolypeptide> t) throws Exception {
@@ -373,9 +353,10 @@ public class LibraryBuilder implements Serializable {
     }
 
 
-    private static class MapPolyPeptideToSequenceKeys implements PairFunction<IPolypeptide, String, IPolypeptide> {
+    private static class MapPolyPeptideToSequenceKeys extends AbstractLoggingPairFunction<IPolypeptide, String, IPolypeptide> {
+
         @Override
-        public Tuple2<String, IPolypeptide> call(final IPolypeptide t) throws Exception {
+        public Tuple2<String, IPolypeptide> doCall(final IPolypeptide t) throws Exception {
             return new Tuple2<String, IPolypeptide>(t.toString(), t);
         }
     }

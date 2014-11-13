@@ -45,17 +45,7 @@ public class PolypeptideCombiner {
     public static final MergePolyPeptides  MERGE_INSTANCE = new MergePolyPeptides();
 
     private static class MergePolyPeptides extends AbstractLoggingFunction2<IPolypeptide, IPolypeptide, IPolypeptide> {
-        private boolean logged;
 
-        @Override
-        public boolean isLogged() {
-            return logged;
-        }
-
-        @Override
-        public void setLogged(final boolean pLogged) {
-            logged = pLogged;
-        }
 
         @Override
         public IPolypeptide doCall(final IPolypeptide v1, final IPolypeptide v2) throws Exception {

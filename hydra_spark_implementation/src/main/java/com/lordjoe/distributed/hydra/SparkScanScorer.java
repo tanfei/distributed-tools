@@ -4,12 +4,12 @@ import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.hydra.scoring.*;
+import com.lordjoe.distributed.spark.*;
 import com.lordjoe.distributed.spectrum.*;
 import com.lordjoe.utilities.*;
 import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
-import org.apache.spark.storage.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -81,17 +81,6 @@ public class SparkScanScorer {
     }
 
     public static class writeScoresMapper extends AbstractLoggingFunction<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
-        private boolean logged;
-
-        @Override
-        public boolean isLogged() {
-            return logged;
-        }
-
-        @Override
-        public void setLogged(final boolean pLogged) {
-            logged = pLogged;
-        }
 
         final BiomlReporter reporter;
 
@@ -125,17 +114,6 @@ public class SparkScanScorer {
     }
 
     public static class DropNoMatchScansFilter extends AbstractLoggingFunction<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
-        private boolean logged;
-
-        @Override
-        public boolean isLogged() {
-            return logged;
-        }
-
-        @Override
-        public void setLogged(final boolean pLogged) {
-            logged = pLogged;
-        }
 
         @Override
         public java.lang.Boolean doCall(final KeyValueObject<String, IScoredScan> v1) throws Exception {
@@ -145,17 +123,6 @@ public class SparkScanScorer {
     }
 
     public static class chooseBestScanScore extends AbstractLoggingFunction2<IScoredScan, IScoredScan, IScoredScan> {
-        private boolean logged;
-
-        @Override
-        public boolean isLogged() {
-            return logged;
-        }
-
-        @Override
-        public void setLogged(final boolean pLogged) {
-            logged = pLogged;
-        }
 
         @Override
         public IScoredScan doCall(final IScoredScan v1, final IScoredScan v2) throws Exception {
@@ -214,7 +181,6 @@ public class SparkScanScorer {
         if (pathPrepend != null)
             XTandemHadoopUtilities.setDefaultPath(pathPrepend);
 
-
         String configStr = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX]);
 
         String spectra = SparkUtilities.buildPath(args[SPECTRA_INDEX]);
@@ -225,7 +191,9 @@ public class SparkScanScorer {
         // handler.buildLibraryIfNeeded();
         // find all polypeptides and modified polypeptides
         JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
-        //databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
+       // databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
+      //  System.out.println("Found " + databasePeptides.count() + " peptides");
+        timer.showElapsed("Found Peptides");
 
 
         // next line is for debugging
@@ -236,8 +204,8 @@ public class SparkScanScorer {
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
         JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
 
-        spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
-        System.out.println("Scoring " + spectraToScore.count() + " spectra");
+      //  spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
+      //  System.out.println("Scoring " + spectraToScore.count() + " spectra");
 
         // next line is for debugging
         //  spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
@@ -249,7 +217,7 @@ public class SparkScanScorer {
 
         // next line is for debugging
         //  keyedPeptides =  keyedPeptides.persist(StorageLevel.MEMORY_AND_DISK());
-        keyedPeptides = SparkUtilities.realizeAndReturn(keyedPeptides, new FindInterestingBinnedPeptides());
+        // keyedPeptides = SparkUtilities.realizeAndReturn(keyedPeptides, new FindInterestingBinnedPeptides());
 
         timer.showElapsed("Mapped Peptides");
 
@@ -267,20 +235,21 @@ public class SparkScanScorer {
         // binPairs = SparkUtilities.realizeAndReturn(binPairs);
         timer.showElapsed("Joined Pairs");
 
-        binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
+      //  binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
+      //   System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
 
-        System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
-
-        Map<BinChargeKey, Object> binChargeKeyObjectMap = binPairs.countByKey();
-        for (BinChargeKey binChargeKey : binChargeKeyObjectMap.keySet()) {
-            System.out.println(binChargeKey.toString() + " has " + binChargeKeyObjectMap.get(binChargeKey));
-        }
+//        Map<BinChargeKey, Object> binChargeKeyObjectMap = binPairs.countByKey();
+//        for (BinChargeKey binChargeKey : binChargeKeyObjectMap.keySet()) {
+//            System.out.println(binChargeKey.toString() + " has " + binChargeKeyObjectMap.get(binChargeKey));
+//        }
 
         // now produce all peptide spectrum scores where spectrum and peptide are in the same bin
         JavaRDD<IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
 
         // next line is for debugging
         //bestScores = SparkUtilities.realizeAndReturn(bestScores);
+        //bestScores = bestScores.persist(StorageLevel.MEMORY_AND_DISK());
+       // System.out.println("Scorings " + bestScores.count() + " Scores");
 
         timer.showElapsed("built best scores");
         //bestScores =  bestScores.persist(StorageLevel.MEMORY_AND_DISK());
@@ -298,6 +267,7 @@ public class SparkScanScorer {
 
         totalTime.showElapsed("Finished Scoring");
 
+        SparkAccumulators.showAccumulators();
 
     }
 

@@ -84,16 +84,7 @@ public class LibraryWriter implements Serializable {
     }
 
     private static class PolypeptideToFileName  extends AbstractLoggingFunction<IPolypeptide, String> {
-        private boolean logged;
-              @Override
-             public boolean isLogged() {
-                 return logged;
-             }
-               @Override
-             public void setLogged(final boolean pLogged) {
-                 logged = pLogged;
-             }
-        @Override
+           @Override
         public String doCall(IPolypeptide pp) {
              int mass = (int) pp.getMatchingMass(); // todo should resolution be finer
              return HadoopUtilities.buildFileNameFromMass(mass);

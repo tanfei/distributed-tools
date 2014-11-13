@@ -5,7 +5,6 @@ import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.spectrum.*;
 import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -27,15 +26,6 @@ public class ScanScorer {
 
     public static class writeScoresMapper extends AbstractLoggingFunction<Tuple2<String, IScoredScan>, Tuple2<String, String>> {
         final BiomlReporter reporter;
-        private boolean logged;
-           @Override
-          public boolean isLogged() {
-              return logged;
-          }
-            @Override
-          public void setLogged(final boolean pLogged) {
-              logged = pLogged;
-          }
 
         private writeScoresMapper(final BiomlReporter pReporter) {
             reporter = pReporter;
@@ -52,9 +42,11 @@ public class ScanScorer {
         }
     }
 
-    public static class ScanKeyMapper implements PairFlatMapFunction<Iterator<KeyValueObject<String, IScoredScan>>, String, IScoredScan> {
+    public static class ScanKeyMapper extends AbstractLoggingPairFlatMapFunction< Iterator<KeyValueObject<String, IScoredScan>>, String, IScoredScan> {
+
+
         @Override
-        public Iterable<Tuple2<String, IScoredScan>> call(final Iterator<KeyValueObject<String, IScoredScan>> t) throws Exception {
+        public Iterable<Tuple2<String, IScoredScan>> doCall(final  Iterator<KeyValueObject<String, IScoredScan>> t) throws Exception {
             List<Tuple2<String, IScoredScan>> mapped = new ArrayList<Tuple2<String, IScoredScan>>();
             while (t.hasNext()) {
                 KeyValueObject<String, IScoredScan> kscan = t.next();
@@ -66,16 +58,8 @@ public class ScanScorer {
         }
     }
 
-    public static class DropNoMatchScansFilter  extends AbstractLoggingFunction<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
-        private boolean logged;
-             @Override
-            public boolean isLogged() {
-                return logged;
-            }
-              @Override
-            public void setLogged(final boolean pLogged) {
-                logged = pLogged;
-            }
+    public static class DropNoMatchScansFilter extends AbstractLoggingFunction<KeyValueObject<String, IScoredScan>, java.lang.Boolean> {
+
         @Override
         public java.lang.Boolean doCall(final KeyValueObject<String, IScoredScan> v1) throws Exception {
             IScoredScan vx = v1.value;
@@ -84,15 +68,7 @@ public class ScanScorer {
     }
 
     public static class chooseBestScanScore extends AbstractLoggingFunction2<IScoredScan, IScoredScan, IScoredScan> {
-        private boolean logged;
-            @Override
-           public boolean isLogged() {
-               return logged;
-           }
-             @Override
-           public void setLogged(final boolean pLogged) {
-               logged = pLogged;
-           }
+
         @Override
         public IScoredScan doCall(final IScoredScan v1, final IScoredScan v2) throws Exception {
             ISpectralMatch match1 = v1.getBestMatch();
@@ -128,9 +104,9 @@ public class ScanScorer {
      */
     public static void main(String[] args) throws Exception {
 
-       // code to run class loader
-       //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
-       //System.out.println(runner);
+        // code to run class loader
+        //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
+        //System.out.println(runner);
 
 
         if (args.length < TANDEM_CONFIG_INDEX + 1) {
@@ -159,7 +135,7 @@ public class ScanScorer {
         JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
 
         // actually needed in a later stage
-        Map<Integer, Integer> databaseSizes = handler.getDatabaseSizes();
+        //Map<Integer, Integer> databaseSizes = handler.getDatabaseSizes();
 
         // read spectra
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);

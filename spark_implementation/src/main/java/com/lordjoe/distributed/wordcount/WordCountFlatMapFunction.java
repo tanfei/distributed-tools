@@ -1,5 +1,6 @@
 package com.lordjoe.distributed.wordcount;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.util.*;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.spillable.*;
@@ -12,13 +13,13 @@ import java.util.*;
 * User: Steve
 * Date: 9/4/2014
 */
-public class WordCountFlatMapFunction implements FlatMapFunction<Iterator<Tuple2<String, Integer>>, WordNumber> {
+public class WordCountFlatMapFunction extends AbstractLoggingFlatMapFunction<Iterator<Tuple2<String, Integer>>, WordNumber> {
 
 
     private String word;
     private SpillableList<WordNumber> ret = new SpillableList<WordNumber>(500);
 
-    @Override public Iterable<WordNumber> call(final Iterator<Tuple2<String, Integer>> pTuple2Iterator) throws Exception {
+    @Override public Iterable<WordNumber> doCall(final Iterator<Tuple2<String, Integer>> pTuple2Iterator) throws Exception {
         int sum = 0;
         while (pTuple2Iterator.hasNext()) {
 

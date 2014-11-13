@@ -1,8 +1,8 @@
 package com.lordjoe.distributed.hydra.fragment;
 
+import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.peptide.*;
 import org.systemsbiology.xtandem.scoring.*;
@@ -77,9 +77,9 @@ public class BinChargeMapper implements Serializable {
     /**
      * peptides are only mapped once whereas spectra map to multiple  bins
      */
-    private class mapPolypeptidesToBins implements PairFlatMapFunction<IPolypeptide, BinChargeKey, IPolypeptide> {
+    private class mapPolypeptidesToBins extends AbstractLoggingPairFlatMapFunction<IPolypeptide, BinChargeKey, IPolypeptide> {
         @Override
-        public Iterable<Tuple2<BinChargeKey, IPolypeptide>> call(final IPolypeptide pp) throws Exception {
+        public Iterable<Tuple2<BinChargeKey, IPolypeptide>> doCall(final IPolypeptide pp) throws Exception {
             double matchingMass = pp.getMatchingMass();
             List<Tuple2<BinChargeKey, IPolypeptide>> holder = new ArrayList<Tuple2<BinChargeKey, IPolypeptide>>();
             for (int charge = 1; charge < 4; charge++) {
@@ -93,9 +93,9 @@ public class BinChargeMapper implements Serializable {
         }
     }
 
-    private class mapMeasuredSpectraToBins implements PairFlatMapFunction<IMeasuredSpectrum, BinChargeKey, IMeasuredSpectrum> {
+    private class mapMeasuredSpectraToBins extends AbstractLoggingPairFlatMapFunction<IMeasuredSpectrum, BinChargeKey, IMeasuredSpectrum> {
         @Override
-        public Iterable<Tuple2<BinChargeKey, IMeasuredSpectrum>> call(final IMeasuredSpectrum spec) throws Exception {
+        public Iterable<Tuple2<BinChargeKey, IMeasuredSpectrum>> doCall(final IMeasuredSpectrum spec) throws Exception {
             double matchingMass = spec.getPrecursorMass();
             int charge = spec.getPrecursorCharge();
             List<Tuple2<BinChargeKey, IMeasuredSpectrum>> holder = new ArrayList<Tuple2<BinChargeKey, IMeasuredSpectrum>>();

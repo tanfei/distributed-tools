@@ -11,15 +11,9 @@ import java.io.*;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingFunction<K extends Serializable,V extends Serializable> implements Function<K,V> {
+public abstract class AbstractLoggingFunction<K extends Serializable,V extends Serializable>
+        extends AbstractLoggingFunctionBase implements Function<K,V> {
 
-    private static boolean logged;
-
-    public abstract boolean isLogged();
-
-    public void setLogged(final boolean pLogged) {
-        logged = pLogged;
-    }
 
     /**
      * override doCall
@@ -29,10 +23,7 @@ public abstract class AbstractLoggingFunction<K extends Serializable,V extends S
      */
     @Override
     public final V call(final K v1)  {
-        if(!isLogged())  {
-            System.err.println("Starting Function " + getClass().getSimpleName());
-            setLogged(true);
-        }
+       reportCalls();
         try {
             return doCall(v1);
         }

@@ -1,6 +1,7 @@
 package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.database.*;
+import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.*;
@@ -16,6 +17,7 @@ import scala.*;
 import javax.annotation.*;
 import java.io.*;
 import java.io.Serializable;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -38,6 +40,7 @@ public class SparkUtilities implements Serializable {
 
     private static String appName = DEFAULT_APP_NAME;
     private static String pathPrepend = "";
+
     private static boolean local;
 
     public static boolean isLocal() {
@@ -48,7 +51,7 @@ public class SparkUtilities implements Serializable {
         local = pLocal;
     }
 
-    public static final int DEFAULT_NUMBER_PARTITIONS = 20;
+    public static final int DEFAULT_NUMBER_PARTITIONS = 100;
     private static int defaultNumberPartitions = DEFAULT_NUMBER_PARTITIONS;
 
     public static int getDefaultNumberPartitions() {
@@ -58,6 +61,23 @@ public class SparkUtilities implements Serializable {
     public static void setDefaultNumberPartitions(final int pDefaultNumberPartitions) {
         defaultNumberPartitions = pDefaultNumberPartitions;
     }
+
+    /**
+     * set up a sane partition scheme
+     */
+    public static final Partitioner DEFAULT_PARTITIONER = new Partitioner() {
+        @Override
+        public int numPartitions() {
+            return getDefaultNumberPartitions();
+        }
+
+        @Override
+        public int getPartition(final Object key) {
+            int hsh = Math.abs(key.hashCode());
+            return hsh % numPartitions();
+        }
+    };
+
 
     public static synchronized JavaSQLContext getCurrentSQLContext() {
         if (sqlContext != null)
@@ -153,7 +173,7 @@ public class SparkUtilities implements Serializable {
      * @return
      */
     protected static boolean isPropertiesSetAsOriginal(SparkConf sparkConf) {
-        String test = sparkConf.get(MARKER_PROPERTY_NAME,"");
+        String test = sparkConf.get(MARKER_PROPERTY_NAME, "");
         return MARKER_PROPERTY_VALUE.equals(test);
     }
 
@@ -179,7 +199,7 @@ public class SparkUtilities implements Serializable {
             return ret;
         }
         // not set up so fill in app name and properties
-         // mark properties so we know things have been set
+        // mark properties so we know things have been set
         sparkConf.set(MARKER_PROPERTY_NAME, MARKER_PROPERTY_VALUE);
         SparkUtilities.guaranteeSparkMaster(sparkConf);
 
@@ -196,9 +216,9 @@ public class SparkUtilities implements Serializable {
 //           }
         // if we use Kryo register classes
 
- //         Now set in properties
- //       sparkConf.set("spark.mesos.coarse", "true");
- //       sparkConf.set("spark.executor.memory", "2500m");
+        //         Now set in properties
+        //       sparkConf.set("spark.mesos.coarse", "true");
+        //       sparkConf.set("spark.executor.memory", "2500m");
 
 //        option = sparkConf.getOption("spark.default.parallelism");
 //        if (option.isDefined())
@@ -207,7 +227,7 @@ public class SparkUtilities implements Serializable {
 //        option = sparkConf.getOption("spark.executor.heartbeatInterval");
 //        if (option.isDefined())
 //            System.err.println("timeout = " + option.get());
-         ret = new JavaSparkContext(sparkConf);
+        ret = new JavaSparkContext(sparkConf);
         threadContext = ret;
         //      threadContext.set(ret);
         return ret;
@@ -343,9 +363,12 @@ public class SparkUtilities implements Serializable {
             throw new RuntimeException(" bad spark properties file " + fileName);
 
         }
+        SparkAccumulators.createInstance();
+
     }
 
     public static final String FORCE_LOCAL_EXECUTION_PROPERTY = "com.lordjoe.distributes.ForceLocalExecution";
+
     /**
      * if no spark master is  defined then use "local
      *
@@ -354,7 +377,7 @@ public class SparkUtilities implements Serializable {
     public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
         Option<String> option = sparkConf.getOption("spark.master");
 
-        boolean forceLocalExecution = "true".equals(sparkProperties.getProperty(FORCE_LOCAL_EXECUTION_PROPERTY,"false"));
+        boolean forceLocalExecution = "true".equals(sparkProperties.getProperty(FORCE_LOCAL_EXECUTION_PROPERTY, "false"));
 
         if (forceLocalExecution || !option.isDefined()) {   // use local over nothing
             sparkConf.setMaster("local[*]");
@@ -376,6 +399,7 @@ public class SparkUtilities implements Serializable {
             setLocal(option.get().startsWith("local"));
         }
         // ste all properties in the SparkProperties file
+        sparkConf.set("spark.ui.killEnabled", "true");  // always allow a job to be killed
         for (String property : sparkProperties.stringPropertyNames()) {
             if (!property.startsWith("spark."))
                 continue;
@@ -461,15 +485,6 @@ public class SparkUtilities implements Serializable {
     public static final TupleValues TUPLE_VALUES = new TupleValues();
 
     public static class TupleValues<K extends Serializable> extends AbstractLoggingFunction<Tuple2<Object, K>, K> {
-        private boolean logged;
-           @Override
-          public boolean isLogged() {
-              return logged;
-          }
-            @Override
-          public void setLogged(final boolean pLogged) {
-              logged = pLogged;
-          }
         private TupleValues() {
         }
 
@@ -485,15 +500,6 @@ public class SparkUtilities implements Serializable {
     public static final IdentityFunction IDENTITY_FUNCTION = new IdentityFunction();
 
     public static class IdentityFunction<K extends Serializable> extends AbstractLoggingFunction<K, K> {
-        private boolean logged;
-            @Override
-           public boolean isLogged() {
-               return logged;
-           }
-             @Override
-           public void setLogged(final boolean pLogged) {
-               logged = pLogged;
-           }
         private IdentityFunction() {
         }
 
@@ -524,15 +530,6 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> toTuples(@Nonnull JavaRDD<KeyValueObject<K, V>> inp) {
         PairFunction<KeyValueObject<K, V>, K, V> pf = new AbstractLoggingPairFunction<KeyValueObject<K, V>, K, V>() {
-            private boolean logged;
-            @Override
-           public boolean isLogged() {
-               return logged;
-           }
-             @Override
-           public void setLogged(final boolean pLogged) {
-               logged = pLogged;
-           }
             @Override
             public Tuple2<K, V> doCall(KeyValueObject<K, V> kv) {
                 return new Tuple2<K, V>(kv.key, kv.value);
@@ -552,15 +549,6 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaRDD<KeyValueObject<K, V>> fromTuples(@Nonnull JavaPairRDD<K, V> inp) {
         return inp.map(new AbstractLoggingFunction<Tuple2<K, V>, KeyValueObject<K, V>>() {
-            private boolean logged;
-           @Override
-          public boolean isLogged() {
-              return logged;
-          }
-            @Override
-          public void setLogged(final boolean pLogged) {
-              logged = pLogged;
-          }
             @Override
             public KeyValueObject<K, V> doCall(final Tuple2<K, V> t) throws Exception {
                 KeyValueObject ret = new KeyValueObject(t._1(), t._2());
@@ -571,6 +559,54 @@ public class SparkUtilities implements Serializable {
 
 
     public static final int NUMBER_ELEMENTS_TO_VIEW = 100;
+
+
+    /**
+     * This partitions data and may significantly increase speed
+     *
+     * @param inp original rdd
+     * @return
+     */
+    @Nonnull
+    public static JavaRDD coalesce(@Nonnull final JavaRDD inp) {
+        return coalesce(inp, getDefaultNumberPartitions());
+    }
+
+    /**
+     * This partitions data and may significantly increase speed
+     *
+     * @param inp              original rdd
+     * @param numberPartitions number of partitions
+     * @return
+     */
+    @Nonnull
+    public static JavaRDD coalesce(@Nonnull final JavaRDD inp, int numberPartitions) {
+        return inp.coalesce(numberPartitions, false);
+    }
+
+    /**
+     * This partitions data and may significantly increase speed
+     *
+     * @param inp original rdd
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> coalesce(@Nonnull final JavaPairRDD<K, V> inp) {
+        return coalesce(inp, getDefaultNumberPartitions());
+    }
+
+    /**
+     * This partitions data and may significantly increase speed
+     *
+     * @param inp              original rdd
+     * @param numberPartitions number of partitions
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> coalesce(@Nonnull final JavaPairRDD<K, V> inp, int numberPartitions) {
+        return inp.coalesce(numberPartitions, false);
+    }
+
 
     /**
      * force a JavaRDD to evaluate then return the results as a JavaRDD
@@ -882,6 +918,38 @@ public class SparkUtilities implements Serializable {
         sb.append("\n");
 
         return sb.toString();
+    }
+
+    private transient static String macAddress;
+     /**
+     * identify the machine we are running on
+     * @see http://www.mkyong.com/java/how-to-get-mac-address-in-java/
+     * @return  String representing a Mac address
+     */
+    public static String getMacAddress() {
+        if (macAddress != null)
+            return macAddress;
+        InetAddress ip;
+        try {
+
+            ip = InetAddress.getLocalHost();
+            System.out.println("Current IP address : " + ip.getHostAddress());
+
+            NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+
+            byte[] mac = network.getHardwareAddress();
+
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mac.length; i++) {
+                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+            }
+            return sb.toString();
+
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e); // should never happen
+        }
     }
 
 
