@@ -16,34 +16,39 @@ import java.util.*;
  */
 public class SparkAccumulators implements Serializable {
 
-    public static final int MAX_TRACKED_THREADS = 16;
-    private static  SparkAccumulators instance;
+
+    public static final int MAX_TRACKED_THREADS = 10;
+    private static SparkAccumulators instance;
 
     public static SparkAccumulators getInstance() {
-           return instance;
+        return instance;
     }
 
     public static void createInstance() {
-           instance = new SparkAccumulators();
+        instance = new SparkAccumulators();
         for (int i = 0; i < MAX_TRACKED_THREADS; i++) {
-             instance.createAccumulator(ThreadUseLogger.getThreadAccumulatorName(i));
+            //noinspection AccessStaticViaInstance
+            instance.createAccumulator(ThreadUseLogger.getThreadAccumulatorName(i));
         }
-      }
+
+        instance.createMachineAccumulator();
+    }
 
     // this is a singleton and should be serialized
     private SparkAccumulators() {
-     }
+    }
 
     /**
      * holds accumulators by name
      */
-    private final Map<String, Accumulator<Integer>> accumulators = new HashMap<String, Accumulator<Integer>>();
-
-
+    private final Map<String, Accumulator<Long>> accumulators = new HashMap<String, Accumulator<Long>>();
+    private Accumulator<Set<String>> machines;
+    private transient Set<String> deliveredMessages = new HashSet<String>();
 
     /**
      * append lines for all accumulators to an appendable
      * NOTE - call only in the Executor
+     *
      * @param out where to append
      */
     public static void showAccumulators(Appendable out) {
@@ -51,10 +56,12 @@ public class SparkAccumulators implements Serializable {
             SparkAccumulators me = getInstance();
             List<String> accumulatorNames = me.getAccumulatorNames();
             for (String accumulatorName : accumulatorNames) {
-                Accumulator<Integer> accumulator = me.getAccumulator(accumulatorName);
-                Integer value = accumulator.value();
+                Accumulator<Long> accumulator = me.getAccumulator(accumulatorName);
+                Long value = accumulator.value();
+                //noinspection StringConcatenationInsideStringBufferAppend
                 out.append(accumulatorName + " " + value + "\n");
             }
+            out.append("machines " + me.getMachineList() + "\n");
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -62,35 +69,22 @@ public class SparkAccumulators implements Serializable {
         }
     }
 
-    
-    public static class LongAccumulableParam implements AccumulableParam<Long,Long>,Serializable {
-         @Override
-        public Long addAccumulator(final Long r, final Long t) {
-            return r + t;
-        }
-         @Override
-        public Long addInPlace(final Long r1, final Long r2) {
-            return  r1 + r2;
-        }
-         @Override
-        public Long zero(final Long initialValue) {
-            return 0L;
-        }
-    }
+
+
 
     /**
-     *
      * must be called in the Executor before accumulators can be used
+     *
      * @param acc
      */
     public static void createAccumulator(String acc) {
         SparkAccumulators me = getInstance();
-          if (me.accumulators.get(acc) != null)
+        if (me.accumulators.get(acc) != null)
             return; // already done - should an exception be thrown
         JavaSparkContext currentContext = SparkUtilities.getCurrentContext();
-        Accumulator<Integer> accumulator = currentContext.accumulator(0, acc );
+        Accumulator<Long> accumulator = currentContext.accumulator(0L, acc, LongAccumulableParam.INSTANCE);
 
-        me.accumulators.put(acc,accumulator);
+        me.accumulators.put(acc, accumulator);
     }
 
 
@@ -98,53 +92,93 @@ public class SparkAccumulators implements Serializable {
      * append lines for all accumulators to System.out
      * NOTE - call only in the Executor
      */
-    public static void showAccumulators(  ) {
+    public static void showAccumulators() {
         showAccumulators(System.out);
     }
 
 
+    protected void createMachineAccumulator() {
+        JavaSparkContext currentContext = SparkUtilities.getCurrentContext();
+
+        machines = currentContext.accumulator(new HashSet<String>(),"machines",StringSetAccumulableParam.INSTANCE);
+    }
+
+    public String getMachineList() {
+        List<String> machinesList = new ArrayList(machines.value());
+        Collections.sort(machinesList);
+        StringBuilder sb = new StringBuilder();
+        for (String s : machinesList) {
+          if(sb.length() > 0)
+              sb.append("\n");
+           sb.append(s);
+        }
+        return sb.toString();
+    }
+
     /**
      * return all registerd aaccumlators
+     *
      * @return
      */
-    public List<String> getAccumulatorNames( ) {
-         List<String> keys = new ArrayList<String>(accumulators.keySet());
-         Collections.sort(keys);  // alphapetize
-         return keys;
+    public List<String> getAccumulatorNames() {
+        List<String> keys = new ArrayList<String>(accumulators.keySet());
+        Collections.sort(keys);  // alphapetize
+        return keys;
     }
 
     /**
      * how much work are we spreading across threads
      */
-    public void incrementThreadAccumulator()
-    {
+    public void incrementThreadAccumulator() {
         int threadNumber = ThreadUseLogger.getThreadNumber();
-        if(threadNumber > MAX_TRACKED_THREADS)
+        if (threadNumber > MAX_TRACKED_THREADS)
             return; // too many threads
         incrementAccumulator(ThreadUseLogger.getThreadAccumulatorName(threadNumber));
-      }
+        incrementMachineAccumulator();
+    }
 
 
     /**
      * true is an accumulator exists
      */
     public boolean isAccumulatorRegistered(String acc) {
-        return accumulators.containsKey(acc) ;
+        return accumulators.containsKey(acc);
     }
 
     /**
      * @param acc name of am existing accumulator
-      * @return !null existing accumulator
+     * @return !null existing accumulator
      */
-    public Accumulator<Integer> getAccumulator(String acc) {
-        Accumulator<Integer> ret = accumulators.get(acc);
-        if (ret == null)
-            throw new IllegalStateException("Accumulators need to be created in advance in the executor");
+    public Accumulator<Long> getAccumulator(String acc) {
+        Accumulator<Long> ret = accumulators.get(acc);
+        if (ret == null) {
+            String message = "Accumulators need to be created in advance in the executor - cannot get " + acc;
+            if(!deliveredMessages.contains(message))   {
+                System.err.println(message);
+                deliveredMessages.add(message);
+            }
+         }
         return ret;
     }
 
+
     /**
      * add one to an existing accumulator
+     *
+     * @param acc
+     */
+    public void incrementMachineAccumulator( ) {
+        Set<String> thisMachine = new HashSet<String>();
+        String macAddress = SparkUtilities.getMacAddress();
+        String thread = String.format("%05d", ThreadUseLogger.getThreadNumber());
+        thisMachine.add(macAddress + "|" + thread);
+        machines.add(thisMachine);
+    }
+
+
+    /**
+     * add one to an existing accumulator
+     *
      * @param acc
      */
     public void incrementAccumulator(String acc) {
@@ -153,12 +187,14 @@ public class SparkAccumulators implements Serializable {
 
     /**
      * add added to an existing accumulator
-     * @param acc name of am existing accumulator
-     * @param added  amount to add
+     *
+     * @param acc   name of am existing accumulator
+     * @param added amount to add
      */
-    public void incrementAccumulator(String acc, int added) {
-        Accumulator<Integer> accumulator = getAccumulator(acc);
-        accumulator.add(added);
+    public void incrementAccumulator(String acc, long added) {
+        Accumulator<Long> accumulator = getAccumulator(acc);
+        if(accumulator != null)
+             accumulator.add(added);
     }
 
 }

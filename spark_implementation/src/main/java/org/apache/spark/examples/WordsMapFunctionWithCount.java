@@ -1,7 +1,9 @@
 package org.apache.spark.examples;
 
-import com.lordjoe.distributed.*;
+import org.apache.spark.*;
+import org.apache.spark.api.java.function.*;
 
+import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
@@ -10,14 +12,19 @@ import java.util.regex.*;
  * User: Steve
  * Date: 8/25/2014
  */
-public class WordsMapFunction extends AbstractLoggingFlatMapFunction<String, String> {
+public class WordsMapFunctionWithCount implements FlatMapFunction<String, String>,Serializable {
 
     private static final Pattern SPACE = Pattern.compile(" ");
 
+    private final Accumulator<Long> counts;
 
-    public Iterable<String> doCall(String s) {
+    public WordsMapFunctionWithCount(final Accumulator<Long> pCounts) {
+        counts = pCounts;
+    }
+
+    public Iterable<String> call(String s) {
         // keep count of letters
-        getAccumulators().incrementAccumulator("TotalLetters",s.length());
+        counts.add(1L);
          String[] split = SPACE.split(s);
         List<String> ret = new ArrayList<String>();
         for (int i = 0; i < split.length; i++) {

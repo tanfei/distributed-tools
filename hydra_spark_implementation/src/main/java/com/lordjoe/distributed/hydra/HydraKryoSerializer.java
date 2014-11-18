@@ -43,7 +43,7 @@ public class HydraKryoSerializer implements KryoRegistrator, Serializable {
         if (Modifier.isAbstract(c.getModifiers()))
             return;
 
-        validateClass(c);
+       // validateClass(c);
 
         if (handled.contains(c))
             return;
@@ -200,7 +200,11 @@ public class HydraKryoSerializer implements KryoRegistrator, Serializable {
         doRegistration(kryo, "com.lordjoe.distributed.SparkUtilities", handler);
         doRegistration(kryo, "com.lordjoe.distributed.SparkHydraUtilities", handler);
         doRegistration(kryo, "com.lordjoe.distributed.hydra.scoring.SparkMapReduceScoringHandler", handler);
-        doRegistration(kryo, "org.systemsbiology.xtandem.hadoop.JXTandemStatistics", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.SparkAccumulators", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.Statistics", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.LongAccumulableParam", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.StringAccumulableParam", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.StringSetAccumulableParam", handler);
 
 
     }

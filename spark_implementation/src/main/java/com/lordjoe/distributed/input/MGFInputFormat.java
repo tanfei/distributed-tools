@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.util.*;
 
 import java.io.*;
+import java.util.*;
 
 /**
  * org.systemsbiology.hadoop.MGFInputFormat
@@ -28,6 +29,11 @@ public class MGFInputFormat extends FileInputFormat<String, String> implements S
 
     public MGFInputFormat() {
 
+    }
+
+    @Override
+    public List<InputSplit> getSplits(final JobContext job) throws IOException {
+         return super.getSplits(job);
     }
 
     @SuppressWarnings("UnusedDeclaration")

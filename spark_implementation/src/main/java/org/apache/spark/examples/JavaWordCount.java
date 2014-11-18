@@ -52,9 +52,13 @@ public final class JavaWordCount {
         SparkAccumulators.createAccumulator("WordsMapFunction");
         SparkAccumulators.createAccumulator("TotalLetters");
 
-        JavaRDD<String> lines = ctx.textFile(args[0], 1);
-        // use my function not theirs
-        JavaRDD<String> words = lines.flatMap(new WordsMapFunction());
+        JavaRDD<String> lines = ctx.textFile(args[0], 12);
+
+
+         JavaRDD <String> words = lines.flatMap(new WordsMapFunction());
+
+        words = words.coalesce(12);
+
 
 //            new FlatMapFunction<String, String>() {
 //      @Override
@@ -74,6 +78,8 @@ public final class JavaWordCount {
             }
         });
 
+        ones = ones.partitionBy(SparkUtilities.DEFAULT_PARTITIONER);
+
         JavaPairRDD<String, Integer> counts = ones.reduceByKey(new Function2<Integer, Integer, Integer>() {
             @Override
             public Integer call(Integer i1, Integer i2) {
@@ -87,5 +93,7 @@ public final class JavaWordCount {
         }
 
         SparkAccumulators.showAccumulators();
+
+
     }
 }

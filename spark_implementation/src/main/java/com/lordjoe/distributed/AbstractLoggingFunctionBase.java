@@ -90,7 +90,8 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
             accumulators1.incrementThreadAccumulator(); // track which thread we are using
         }
         else {
-            // TODO track slave process is well
+            accumulators1.incrementThreadAccumulator(); // track which thread we are using
+            accumulators1.incrementMachineAccumulator();
         }
     }
 

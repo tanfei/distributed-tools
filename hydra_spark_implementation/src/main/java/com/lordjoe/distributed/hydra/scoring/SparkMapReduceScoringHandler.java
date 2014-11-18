@@ -225,7 +225,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
         ElapsedTimer timer = new ElapsedTimer();
 
 
-        // drop the key s- we no longer ned them
+        // drop the key s- we no longer need them
         JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
 
         // next line is for debugging
