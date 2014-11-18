@@ -11,6 +11,7 @@ import com.lordjoe.distributed.spectrum.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.*;
@@ -63,7 +64,8 @@ public class LibraryBuilder implements Serializable {
         //      JavaSparkContext ctx = getJavaContext();
 
 
-        String fasta = getApplication().getDatabaseName();
+        XTandemMain application1 = getApplication();
+        String fasta = application1.getDatabaseName();
         Path defaultPath = XTandemHadoopUtilities.getDefaultPath();
         fasta = defaultPath.toString() + "/" + fasta + ".fasta";
 
@@ -92,17 +94,28 @@ public class LibraryBuilder implements Serializable {
 
 
         JavaRDD<IProtein> proteins = readProteins(jctx);
-        // force partitioning
-        proteins = SparkUtilities.coalesce(proteins);
-         JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
+        List<Partition> partitions = proteins.partitions();
+        System.err.println("Number proteins Partitions " + partitions.size());
 
+        proteins = proteins.coalesce(SparkUtilities.getDefaultNumberPartitions());
+        partitions = proteins.partitions();
+        System.err.println("Number proteins Partitions after coalesce" + partitions.size());
+
+        // force partitioning
+        proteins = proteins.repartition(SparkUtilities.getDefaultNumberPartitions()) ;
+        JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
+
+        partitions = digested.partitions();
+        System.err.println("Number Partitions " + partitions.size());
+       // digested = digested.repartition(SparkUtilities.getDefaultNumberPartitions());
          // uncomment when you want to look
         //  digested = SparkUtilities.realizeAndReturn(digested, jctx);
 
 
         // Peptide Sequence is the key
-        digested = SparkUtilities.coalesce(digested);
+
         JavaPairRDD<String, IPolypeptide> bySequence = digested.mapToPair(new MapPolyPeptideToSequenceKeys());
+
 
         // uncomment when you want to look
         // bySequence = SparkUtilities.realizeAndReturn(bySequence, jctx);
@@ -156,17 +169,17 @@ public class LibraryBuilder implements Serializable {
         PeptideDatabaseWriter dbw = new PeptideDatabaseWriter(getApplication());
         JavaPairRDD<Integer, IPolypeptide> sorted = byMZ.sortByKey();
         //JavaPairRDD<Integer, IPolypeptide> sortedAndViewed = SparkUtilities.realizeAndReturn(sorted);
-        dbw.saveRDDAsDatabaseFiles(sorted) ;
+        dbw.saveRDDAsDatabaseFiles(sorted);
     }
 
 
-    protected PrintWriter getOutputWriter( final int pMass) throws IOException {
-         Configuration cfg = SparkUtilities.getHadoopConfiguration();
-         Path outPath = XTandemHadoopUtilities.buildPathFromMass(pMass, getApplication());
-         FileSystem fs = FileSystem.get(cfg);
-         FSDataOutputStream fsout = fs.create(outPath);
-         return new PrintWriter(fsout);
-     }
+    protected PrintWriter getOutputWriter(final int pMass) throws IOException {
+        Configuration cfg = SparkUtilities.getHadoopConfiguration();
+        Path outPath = XTandemHadoopUtilities.buildPathFromMass(pMass, getApplication());
+        FileSystem fs = FileSystem.get(cfg);
+        FSDataOutputStream fsout = fs.create(outPath);
+        return new PrintWriter(fsout);
+    }
 
 
     protected void saveAsParquetDatabase(JavaPairRDD<Integer, IPolypeptide> pByMZ) {
@@ -185,7 +198,7 @@ public class LibraryBuilder implements Serializable {
         // beans = SparkUtilities.realizeAndReturn(beans);
 
         throw new UnsupportedOperationException("Fix This"); // ToDo uncomment next line IntelliJ Does not like it
-   //     DatabaseUtilities.buildParaquetDatabase(dbName, beans, PeptideSchemaBean.class);
+        //     DatabaseUtilities.buildParaquetDatabase(dbName, beans, PeptideSchemaBean.class);
     }
 
 
@@ -262,6 +275,7 @@ public class LibraryBuilder implements Serializable {
 
     /**
      * get database sizes assuming we use files on HDFS as a database
+     *
      * @return
      */
     public Map<Integer, Integer> getFileDatabaseSizes() {
@@ -304,7 +318,7 @@ public class LibraryBuilder implements Serializable {
 
 
     public static class ParsedProteinToProtein extends AbstractLoggingFunction<Tuple2<String, String>, IProtein> {
-             @Override
+        @Override
         public IProtein doCall(final Tuple2<String, String> v1) throws Exception {
             String annotation = v1._1();
             String sequence = v1._2();
@@ -371,7 +385,6 @@ public class LibraryBuilder implements Serializable {
             return;
         }
         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
-
 
 
         String congiguration = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX]);

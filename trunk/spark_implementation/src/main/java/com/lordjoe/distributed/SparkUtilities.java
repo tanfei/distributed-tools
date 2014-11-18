@@ -4,6 +4,7 @@ import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
@@ -45,13 +46,14 @@ public class SparkUtilities implements Serializable {
 
     public static boolean isLocal() {
         return local;
+        // return getCurrentContext().isLocal();
     }
 
     public static void setLocal(final boolean pLocal) {
         local = pLocal;
     }
 
-    public static final int DEFAULT_NUMBER_PARTITIONS = 100;
+    public static final int DEFAULT_NUMBER_PARTITIONS = 16;
     private static int defaultNumberPartitions = DEFAULT_NUMBER_PARTITIONS;
 
     public static int getDefaultNumberPartitions() {
@@ -90,6 +92,11 @@ public class SparkUtilities implements Serializable {
 
     public static synchronized Configuration getHadoopConfiguration() {
         Configuration configuration = getCurrentContext().hadoopConfiguration();
+        // Pass our properties to the hadoopConfiguration
+        for (String property : sparkProperties.stringPropertyNames()) {
+            configuration.set(property, sparkProperties.getProperty(property));
+        }
+
         return configuration;
     }
 
@@ -228,8 +235,27 @@ public class SparkUtilities implements Serializable {
 //        if (option.isDefined())
 //            System.err.println("timeout = " + option.get());
         ret = new JavaSparkContext(sparkConf);
+
+
         threadContext = ret;
+
+        // Show spark properties
+        Tuple2<String, String>[] all = sparkConf.getAll();
+        System.err.println("Spark Conf Properties");
+        for (int i = 0; i < all.length; i++) {
+            Tuple2<String, String> prop = all[i];
+            System.err.println(prop._1() + "=" + prop._2());
+        }
         //      threadContext.set(ret);
+
+        SparkAccumulators.createInstance();
+
+        System.out.println("Set Log to Warn");
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.WARN);
+//        LoggerRepository loggerRepository = rootLogger.getLoggerRepository();
+//        Logger logger = loggerRepository.getLogger("storage.MemoryStore");
+//        logger.setLevel();
         return ret;
     }
 
@@ -363,7 +389,7 @@ public class SparkUtilities implements Serializable {
             throw new RuntimeException(" bad spark properties file " + fileName);
 
         }
-        SparkAccumulators.createInstance();
+
 
     }
 
@@ -375,6 +401,9 @@ public class SparkUtilities implements Serializable {
      * @param sparkConf the configuration
      */
     public static void guaranteeSparkMaster(@Nonnull SparkConf sparkConf) {
+
+        // I used to force local but think that could be a mistake
+
         Option<String> option = sparkConf.getOption("spark.master");
 
         boolean forceLocalExecution = "true".equals(sparkProperties.getProperty(FORCE_LOCAL_EXECUTION_PROPERTY, "false"));
@@ -382,23 +411,23 @@ public class SparkUtilities implements Serializable {
         if (forceLocalExecution || !option.isDefined()) {   // use local over nothing
             sparkConf.setMaster("local[*]");
             setLocal(true);
-            /**
-             * liquanpei@gmail.com suggests to correct
-             * 14/10/08 09:36:35 ERROR broadcast.TorrentBroadcast: Reading broadcast variable 0 failed
-             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Reading broadcast variable 0 took 5.006378813 s
-             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Started reading broadcast variable 0
-             14/10/08 09:36:35 ERROR executor.Executor: Exception in task 0.0 in stage 0.0 (TID 0)
-             java.lang.NullPointerException
-             at java.nio.ByteBuffer.wrap(ByteBuffer.java:392)
-             at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
-
-             */
-            //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
+//            /**
+//             * liquanpei@gmail.com suggests to correct
+//             * 14/10/08 09:36:35 ERROR broadcast.TorrentBroadcast: Reading broadcast variable 0 failed
+//             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Reading broadcast variable 0 took 5.006378813 s
+//             14/10/08 09:36:35 INFO broadcast.TorrentBroadcast: Started reading broadcast variable 0
+//             14/10/08 09:36:35 ERROR executor.Executor: Exception in task 0.0 in stage 0.0 (TID 0)
+//             java.lang.NullPointerException
+//             at java.nio.ByteBuffer.wrap(ByteBuffer.java:392)
+//             at org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:58)
+//
+//             */
+//            //  sparkConf.set("spark.broadcast.factory","org.apache.spark.broadcast.HttpBroadcastFactory" );
         }
         else {
             setLocal(option.get().startsWith("local"));
         }
-        // ste all properties in the SparkProperties file
+//        // set all properties in the SparkProperties file
         sparkConf.set("spark.ui.killEnabled", "true");  // always allow a job to be killed
         for (String property : sparkProperties.stringPropertyNames()) {
             if (!property.startsWith("spark."))
@@ -537,6 +566,7 @@ public class SparkUtilities implements Serializable {
         };
         return inp.mapToPair(pf);
     }
+
 
     /**
      * convert anRDD of KeyValueObject to a JavaPairRDD of keys and values
@@ -921,10 +951,12 @@ public class SparkUtilities implements Serializable {
     }
 
     private transient static String macAddress;
-     /**
+
+    /**
      * identify the machine we are running on
+     *
+     * @return String representing a Mac address
      * @see http://www.mkyong.com/java/how-to-get-mac-address-in-java/
-     * @return  String representing a Mac address
      */
     public static String getMacAddress() {
         if (macAddress != null)
@@ -933,7 +965,7 @@ public class SparkUtilities implements Serializable {
         try {
 
             ip = InetAddress.getLocalHost();
-            System.out.println("Current IP address : " + ip.getHostAddress());
+            // System.out.println("Current IP address : " + ip.getHostAddress());
 
             NetworkInterface network = NetworkInterface.getByInetAddress(ip);
 
@@ -944,7 +976,8 @@ public class SparkUtilities implements Serializable {
             for (int i = 0; i < mac.length; i++) {
                 sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
             }
-            return sb.toString();
+            macAddress = sb.toString();
+            return macAddress;
 
         }
         catch (Exception e) {

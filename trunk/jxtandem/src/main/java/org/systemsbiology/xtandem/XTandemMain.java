@@ -261,7 +261,7 @@ public class XTandemMain extends AbstractParameterHolder implements IMainData {
     @Override
     public String getDatabaseName() {
         String ret = m_TaxonomyName; //getParameter("protein, taxon");
-      //  System.err.println("database name = " + m_TaxonomyName);
+         //  System.err.println("database name = " + m_TaxonomyName);
         return conditionDatabaseName(ret);
     }
 

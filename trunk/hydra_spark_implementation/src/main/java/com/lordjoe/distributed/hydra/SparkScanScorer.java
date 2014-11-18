@@ -204,11 +204,12 @@ public class SparkScanScorer {
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
         JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
 
+
       //  spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
       //  System.out.println("Scoring " + spectraToScore.count() + " spectra");
 
         // next line is for debugging
-        //  spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
+        // spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
         timer.showElapsed("got Spectra to Score");
 
 

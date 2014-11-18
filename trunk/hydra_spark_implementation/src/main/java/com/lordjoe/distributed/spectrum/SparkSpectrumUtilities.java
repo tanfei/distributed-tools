@@ -4,7 +4,6 @@ import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.input.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import scala.*;
@@ -73,22 +72,24 @@ public class SparkSpectrumUtilities {
                 inputFormatClass,
                 keyClass,
                 valueClass,
-                ctx.hadoopConfiguration()
+                SparkUtilities.getHadoopConfiguration()
         );
+
+        // debug code
+        spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
+
         // filter out MS Level 1 spectra
         spectraAsStrings = spectraAsStrings.filter( new Function<Tuple2<String,String>, Boolean>() {
            public Boolean call(Tuple2<String,String> s) {
-               return !s._2().contains("msLevel=\"1\""); }
+               String s1 = s._2();
+               return !s1.contains("msLevel=\"1\""); }
          });
+
+         // debug code
+        spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
+
         // parse scan tags as  IMeasuredSpectrum
-        JavaPairRDD<String, IMeasuredSpectrum> parsed = spectraAsStrings.mapToPair(new PairFunction<Tuple2<String, String>, String, IMeasuredSpectrum>() {
-            @Override
-            public Tuple2<String, IMeasuredSpectrum> call(final Tuple2<String, String> in) throws Exception {
-                String key = in._1();
-                RawPeptideScan scan = XTandemHadoopUtilities.readScan(in._2(), null);
-                return new Tuple2(key,scan);
-            }
-        });
+        JavaPairRDD<String, IMeasuredSpectrum> parsed = spectraAsStrings.mapToPair(new MapSpectraStringToRawScan());
         return parsed;
     }
 
@@ -176,4 +177,12 @@ public class SparkSpectrumUtilities {
         return spectra;
     }
 
+    private static class MapSpectraStringToRawScan extends AbstractLoggingPairFunction<Tuple2<String, String>, String, IMeasuredSpectrum> {
+        @Override
+        public Tuple2<String, IMeasuredSpectrum> doCall(final Tuple2<String, String> in) throws Exception {
+            String key = in._1();
+            RawPeptideScan scan = XTandemHadoopUtilities.readScan(in._2(), null);
+            return new Tuple2(key,scan);
+        }
+    }
 }

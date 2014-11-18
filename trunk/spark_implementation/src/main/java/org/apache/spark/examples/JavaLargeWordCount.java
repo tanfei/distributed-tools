@@ -20,7 +20,6 @@ package org.apache.spark.examples;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.spark.*;
 import com.lordjoe.distributed.util.*;
-import com.lordjoe.distributed.wordcount.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
@@ -33,17 +32,19 @@ public final class JavaLargeWordCount {
     private static final Pattern SPACE = Pattern.compile(" ");
 
     public static class PartitionByStart extends Partitioner {
-        @Override public int numPartitions() {
+        @Override
+        public int numPartitions() {
             return 26;
         }
 
-        @Override public int getPartition(final Object key) {
-            String s = (String)key;
-            if(s.length() == 0)
+        @Override
+        public int getPartition(final Object key) {
+            String s = (String) key;
+            if (s.length() == 0)
                 throw new IllegalStateException("problem"); // ToDo change
             int ret = s.charAt(0) - 'A';
-            ret = Math.min(25,ret) ;
-            ret = Math.max(0,ret);
+            ret = Math.min(25, ret);
+            ret = Math.max(0, ret);
             return 25 - ret;
         }
     }
@@ -51,9 +52,10 @@ public final class JavaLargeWordCount {
     public static final int SPARK_CONFIG_INDEX = 0;
     public static final int INPUT_FILE_INDEX = 1;
 
+    public static final int NUMBER_PARTITIONS = 11;
     /**
      * spark-submit --class  org.apache.spark.examples.JavaLargeWordCount SparkJar.jar   SparkCluster.properties  war_and_peace.txt
-    *
+     *
      * @param args
      * @throws Exception
      */
@@ -64,6 +66,8 @@ public final class JavaLargeWordCount {
             return;
         }
 
+        System.out.println("Running on " + SparkUtilities.getMacAddress());
+
         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
         SparkUtilities.setAppName("JavaWordCount");
 
@@ -71,16 +75,20 @@ public final class JavaLargeWordCount {
 
 
         // Add some accumulators  NOTE functions extending AbstractLoggingFunctionBase register automatically
-     //   SparkAccumulators.createAccumulator("WordsMapFunction");
+        //   SparkAccumulators.createAccumulator("WordsMapFunction");
         SparkAccumulators.createAccumulator("TotalLetters");
+        final Accumulator<Statistics> letterStats = ctx.accumulator(Statistics.ZERO, "Letter Statistics", Statistics.PARAM_INSTANCE);
+        final Accumulator<java.lang.Long> totalWords = ctx.accumulator(0L, "Word Statistics", LongAccumulableParam.INSTANCE);
 
-        String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX] );
+        String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX]);
         JavaRDD<String> lines = ctx.textFile(inputPath, 1);
+
+        lines = lines.repartition(NUMBER_PARTITIONS);
 
         // use my function not theirs
         JavaRDD<String> words = lines.flatMap(new WordsMapFunction());
-        
-        words = words.coalesce(4);
+
+        words = words.repartition(NUMBER_PARTITIONS);
 
 
         JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
@@ -91,11 +99,42 @@ public final class JavaLargeWordCount {
         });
 
 
-
         ones = ones.partitionBy(new PartitionByStart());
         JavaPairRDD<String, Integer> sorted = ones.sortByKey();
         sorted = sorted.partitionBy(new PartitionByStart());
-        JavaRDD<WordNumber> answer = sorted.mapPartitions(new WordCountFlatMapFunction());
+        //  JavaRDD<WordNumber> answer = sorted.mapPartitions(new WordCountFlatMapFunction());
+        JavaRDD<WordNumber> answer = sorted.mapPartitions(
+                new FlatMapFunction<Iterator<Tuple2<String, Integer>>, WordNumber>() {
+                    @Override
+                    public Iterable<WordNumber> call(final Iterator<Tuple2<String, Integer>> t) throws Exception {
+                        int sum = 0;
+                        String word = null;
+                        List<WordNumber> ret = new ArrayList<WordNumber>();
+                        while (t.hasNext()) {
+
+                            Tuple2<String, Integer> next = t.next();
+                            String s = next._1();
+                            if (s.length() == 0)
+                                continue;
+                            if (word == null) {
+                                word = s;
+                            }
+                            else {
+                                if (!word.equals(s)) {
+                                    ret.add(new WordNumber(word, sum));
+                                    totalWords.add(1L);  // accumulate total words
+                                    letterStats.add(new Statistics(s.length()));    // keep statistics on letters
+
+                                    sum = 1;
+                                    word = s;
+                                }
+                            }
+                            sum += next._2();
+                        }
+                        return ret;
+                    }
+                }
+        );
 
         List<WordNumber> answers = answer.collect();
         /*
@@ -106,6 +145,16 @@ public final class JavaLargeWordCount {
         */
 
         SparkAccumulators.showAccumulators();
+        java.lang.Long wordCount = totalWords.value();
+        System.out.println("total words = " + wordCount);
+
+        Statistics value = letterStats.value();
+        System.out.println("total words = " + value.getNumber());
+        System.out.println("total letters = " + value.getSum());
+         System.out.println("average letters = " + String.format("%10.2f", value.getAverage()));
+        System.out.println("Sd average letters = " + String.format("%10.2f", value.getStandardDeviation()));
+        System.out.println("Max letters = " + value.getMax());
+
     }
 
 }
