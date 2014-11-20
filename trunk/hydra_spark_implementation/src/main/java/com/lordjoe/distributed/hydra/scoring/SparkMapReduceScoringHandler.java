@@ -9,7 +9,6 @@ import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -221,25 +220,39 @@ public class SparkMapReduceScoringHandler implements Serializable {
     }
 
 
+    private static class MapToSpectrumIDKey extends AbstractLoggingPairFunction<Tuple2< IMeasuredSpectrum, IPolypeptide>, String, Tuple2<IMeasuredSpectrum,  IPolypeptide>> {
+        @Override
+        public Tuple2<String, Tuple2<org.systemsbiology.xtandem.IMeasuredSpectrum, IPolypeptide>> doCall(final Tuple2<org.systemsbiology.xtandem.IMeasuredSpectrum, org.systemsbiology.xtandem.peptide.IPolypeptide> t) throws Exception {
+            return new Tuple2<String, Tuple2<IMeasuredSpectrum, IPolypeptide>>(t._1().getId(),t);
+        }
+    }
+
+
     public JavaRDD< IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
         ElapsedTimer timer = new ElapsedTimer();
 
 
-        // drop the key s- we no longer need them
+        // drop the keys- we no longer need them
         JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
 
-        // next line is for debugging
-        //values = SparkUtilities.realizeAndReturn(values);
 
-        // convert to a PairRDD to keep spark happy
-        JavaPairRDD<IMeasuredSpectrum, IPolypeptide> valuePairs = SparkUtilities.mapToPairs(values);
 
-        // next line is for debugging
-        // valuePairs = SparkUtilities.realizeAndReturn(valuePairs);
 
-        // bring key (original data) into value since we need to for scoring
-        JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(
-                valuePairs);
+//        // next line is for debugging
+//        //values = SparkUtilities.realizeAndReturn(values);
+//
+//        // convert to a PairRDD to keep spark happy
+//        JavaPairRDD<IMeasuredSpectrum, IPolypeptide> valuePairs = SparkUtilities.mapToKeyedPairs(values);
+//
+//        // next line is for debugging
+//        // valuePairs = SparkUtilities.realizeAndReturn(valuePairs);
+//
+//        // bring key (original data) into value since we need to for scoring
+//        JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(
+//                valuePairs);
+
+ //       JavaPairRDD<IMeasuredSpectrum, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = SparkUtilities.mapToKeyedPairs(values);
+        JavaPairRDD<String, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = values.mapToPair(new MapToSpectrumIDKey());
 
         /// next line is for debugging
         //keyedScoringPairs = SparkUtilities.realizeAndReturn(keyedScoringPairs);
@@ -247,7 +260,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
         timer.showElapsed("built scoring pairs");
 
 
-        JavaPairRDD<IMeasuredSpectrum, IScoredScan> scorings = keyedScoringPairs.combineByKey(
+        JavaPairRDD<String, IScoredScan> scoreByID = keyedScoringPairs.combineByKey(
                 new generateFirstScore(),
                 new addNewScore(),
                 new combineScoredScans(),
@@ -259,13 +272,13 @@ public class SparkMapReduceScoringHandler implements Serializable {
       /// next line is for debugging
        // scorings = SparkUtilities.realizeAndReturn(scorings);
 
-
-        JavaPairRDD<String, IScoredScan> scoreByID = scorings.mapToPair(new PairFunction<Tuple2<IMeasuredSpectrum, IScoredScan>, String, IScoredScan>() {
-            @Override
-            public Tuple2<String, IScoredScan> call(final Tuple2<IMeasuredSpectrum, IScoredScan> t) throws Exception {
-                return new Tuple2<String, IScoredScan>(t._1().getId(), t._2());
-            }
-        });
+//
+//        JavaPairRDD<String, IScoredScan> scoreByID = scorings.mapToPair(new PairFunction<Tuple2<IMeasuredSpectrum, IScoredScan>, String, IScoredScan>() {
+//            @Override
+//            public Tuple2<String, IScoredScan> call(final Tuple2<IMeasuredSpectrum, IScoredScan> t) throws Exception {
+//                return new Tuple2<String, IScoredScan>(t._1().getId(), t._2());
+//            }
+//        });
 
 
         // next line is for debugging
