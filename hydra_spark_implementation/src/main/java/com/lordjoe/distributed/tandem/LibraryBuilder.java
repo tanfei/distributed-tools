@@ -97,12 +97,10 @@ public class LibraryBuilder implements Serializable {
         List<Partition> partitions = proteins.partitions();
         System.err.println("Number proteins Partitions " + partitions.size());
 
-        proteins = proteins.coalesce(SparkUtilities.getDefaultNumberPartitions());
+        proteins = proteins.repartition(SparkUtilities.getDefaultNumberPartitions());
         partitions = proteins.partitions();
         System.err.println("Number proteins Partitions after coalesce" + partitions.size());
 
-        // force partitioning
-        proteins = proteins.repartition(SparkUtilities.getDefaultNumberPartitions()) ;
         JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
 
         partitions = digested.partitions();

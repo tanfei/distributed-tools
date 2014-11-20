@@ -13,15 +13,7 @@ import java.io.*;
  */
 public abstract class AbstractLoggingFunctionBase implements Serializable {
 
-    private static boolean functionCallsLogged = true;
 
-    public static boolean isFunctionCallsLogged() {
-        return functionCallsLogged;
-    }
-
-    public static void setFunctionCallsLogged(final boolean pFunctionCallsLogged) {
-        functionCallsLogged = pFunctionCallsLogged;
-    }
 
     private static int callReportInterval = 50000;
 
@@ -48,6 +40,14 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
             SparkAccumulators.createAccumulator(className);
         }
     }
+
+    /**
+     * Override this to prevent logging
+     * @return
+     */
+    public boolean isFunctionCallsLogged() {
+         return SparkAccumulators.isFunctionsLoggedByDefault();
+     }
 
     public final boolean isLogged() {
         return logged;
@@ -83,7 +83,9 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         }
         incrementNumberCalled();
         SparkAccumulators accumulators1 = getAccumulators();
-        if (accumulators1 != null && accumulators1.isAccumulatorRegistered(className)) {
+        if(accumulators1 == null)
+            return;
+        if ( accumulators1.isAccumulatorRegistered(className)) {
             accumulators1.incrementAccumulator(className);
         }
         if(SparkUtilities.isLocal()) {

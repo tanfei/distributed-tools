@@ -18,6 +18,7 @@ import scala.*;
 import javax.annotation.*;
 import java.io.*;
 import java.io.Serializable;
+import java.lang.Boolean;
 import java.net.*;
 import java.util.*;
 
@@ -37,6 +38,8 @@ public class SparkUtilities implements Serializable {
 
     public static final String DEFAULT_APP_NAME = "Anonymous";
     public static final String MARKER_PROPERTY_NAME = "com.lordjoe.distributed.marker_property";
+    public static final String NUMBER_PARTITIONS_PROPERTY_NAME = "com.lordjoe.distributed.number_partitions";
+    public static final String LOG_FUNCTIONS_PROPERTY_NAME = "com.lordjoe.distributed.logFunctionsByDefault";
     public static final String MARKER_PROPERTY_VALUE = "spark_property_set";
 
     private static String appName = DEFAULT_APP_NAME;
@@ -94,7 +97,15 @@ public class SparkUtilities implements Serializable {
         Configuration configuration = getCurrentContext().hadoopConfiguration();
         // Pass our properties to the hadoopConfiguration
         for (String property : sparkProperties.stringPropertyNames()) {
-            configuration.set(property, sparkProperties.getProperty(property));
+            String value = sparkProperties.getProperty(property);
+            // handle hard coded properties
+            if(NUMBER_PARTITIONS_PROPERTY_NAME.equals(property))
+                setDefaultNumberPartitions(Integer.parseInt(value));
+            if(LOG_FUNCTIONS_PROPERTY_NAME.equals(property))
+                SparkAccumulators.setFunctionsLoggedByDefault(Boolean.parseBoolean(value));
+
+            configuration.set(property, value);
+
         }
 
         return configuration;
@@ -102,7 +113,7 @@ public class SparkUtilities implements Serializable {
 
 
     /**
-     * tuen an RDD of Tuples into a JavaPairRdd
+     * turn an RDD of Tuples into a JavaPairRdd
      *
      * @param imp
      * @param <K>
@@ -119,20 +130,44 @@ public class SparkUtilities implements Serializable {
     }
 
     /**
-     * convert a JavaPairRDD into onw with the tuples so that combine by key can know the key
+     * turn an RDD of Tuples into a JavaPairRdd with the original key as a key
      *
      * @param imp
      * @param <K>
      * @param <V>
      * @return
      */
-    public static <K, V> JavaPairRDD<K, Tuple2<K, V>> mapToKeyedPairs(JavaPairRDD<K, V> imp) {
-        return imp.mapToPair(new PairFunction<Tuple2<K, V>, K, Tuple2<K, V>>() {
-            @Override
-            public Tuple2<K, Tuple2<K, V>> call(final Tuple2<K, V> t) throws Exception {
-                return new Tuple2<K, Tuple2<K, V>>(t._1(), t);
-            }
-        });
+    public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, Tuple2<K, V>> mapToKeyedPairs(JavaRDD<Tuple2<K, V>> imp) {
+        return imp.mapToPair(new Tuple2Tuple2PairFunction<K, V>());
+    }
+
+
+    private static class Tuple2Tuple2PairFunction<K extends Serializable, V extends Serializable> extends AbstractLoggingPairFunction<Tuple2<K, V>, K, Tuple2<K, V>> {
+        @Override
+        public Tuple2<K, Tuple2<K, V>> doCall(final Tuple2<K, V> t) throws Exception {
+            return new Tuple2<K, Tuple2<K, V>>(t._1(),t);
+        }
+    }
+
+
+    /**
+     * convert a JavaPairRDD into one with the tuples so that combine by key can know the key
+     *
+     * @param imp
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, Tuple2<K, V>> mapToKeyedPairs(JavaPairRDD<K, V> imp) {
+        return imp.mapToPair(new TupleToKeyPlusTuple<K, V>());
+    }
+
+
+    private static class TupleToKeyPlusTuple<K extends Serializable, V extends Serializable> extends AbstractLoggingPairFunction<Tuple2<K, V>, K, Tuple2<K, V>> {
+        @Override
+        public Tuple2<K, Tuple2<K, V>> doCall(final Tuple2<K, V> t) throws Exception {
+            return new Tuple2<K,Tuple2<K, V>>(t._1(), t);
+        }
     }
 
     /**
@@ -984,6 +1019,4 @@ public class SparkUtilities implements Serializable {
             throw new RuntimeException(e); // should never happen
         }
     }
-
-
 }

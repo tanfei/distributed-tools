@@ -19,6 +19,15 @@ public class SparkAccumulators implements Serializable {
 
     public static final int MAX_TRACKED_THREADS = 10;
     private static SparkAccumulators instance;
+    private static boolean functionsLoggedByDefault = true;
+
+    public static boolean isFunctionsLoggedByDefault() {
+        return functionsLoggedByDefault;
+    }
+
+    public static void setFunctionsLoggedByDefault(final boolean pFunctionsLoggedByDefault) {
+        functionsLoggedByDefault = pFunctionsLoggedByDefault;
+    }
 
     public static SparkAccumulators getInstance() {
         return instance;
