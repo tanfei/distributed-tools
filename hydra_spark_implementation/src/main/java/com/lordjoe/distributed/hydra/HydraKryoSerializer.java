@@ -205,6 +205,8 @@ public class HydraKryoSerializer implements KryoRegistrator, Serializable {
         doRegistration(kryo, "com.lordjoe.distributed.spark.LongAccumulableParam", handler);
         doRegistration(kryo, "com.lordjoe.distributed.spark.StringAccumulableParam", handler);
         doRegistration(kryo, "com.lordjoe.distributed.spark.StringSetAccumulableParam", handler);
+        doRegistration(kryo, "com.lordjoe.distributed.spark.MachineUseAccumulator", handler);
+
 
 
     }

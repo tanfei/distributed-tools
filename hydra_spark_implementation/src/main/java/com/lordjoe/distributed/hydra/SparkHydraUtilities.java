@@ -33,6 +33,8 @@ public class SparkHydraUtilities {
             }
         };
     }
+
+
     /**
      * take a name - translate to application space and if needed hdfs and open for read
      *

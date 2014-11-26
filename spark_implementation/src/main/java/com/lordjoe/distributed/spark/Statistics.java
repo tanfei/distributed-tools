@@ -6,7 +6,7 @@ import java.io.*;
 
 /**
  * com.lordjoe.distributed.spark.Statistics
- * keep statistics
+ * keep statistics  This structure is immutable
  * User: Steve
  * Date: 11/13/2014
  */
@@ -40,6 +40,7 @@ public class Statistics implements Serializable {
         double tsumsq = d * d;
         double tmin = d;
         double tsmax = d;
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < values.length; i++) {
             double value = values[i];
             tsum += value;
@@ -85,6 +86,7 @@ public class Statistics implements Serializable {
         return sum;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public double getSumsquare() {
         return sumsquare;
     }
@@ -93,6 +95,7 @@ public class Statistics implements Serializable {
         return max;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public double getMin() {
         return min;
     }
@@ -107,6 +110,7 @@ public class Statistics implements Serializable {
         if (number < 2)
             return Double.MAX_VALUE;
         double variance = (sumsquare - sum * getAverage()) / (number - 1.0);
+        //noinspection UnnecessaryLocalVariable,UnusedDeclaration,UnusedAssignment
         double answer = Math.sqrt(variance);
         return answer;
     }

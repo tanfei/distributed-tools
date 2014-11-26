@@ -232,9 +232,18 @@ public class SparkScanScorer {
         JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs = keyedSpectra.join(keyedPeptides,
                 BinChargeKey.getPartitioner());
 
+
+        System.out.println("number partitions before " + binPairs.partitions().size());
+
+        // Todo - I wonder if this step ios needed - it is expensive SLewis
+//        System.out.println("number partitions forced " + SparkUtilities.getDefaultNumberPartitions());
+//        binPairs = binPairs.repartition(SparkUtilities.getDefaultNumberPartitions());
+//        System.out.println("number partitions after " + binPairs.partitions().size());
+
         // next line is for debugging
         // binPairs = SparkUtilities.realizeAndReturn(binPairs);
         timer.showElapsed("Joined Pairs");
+
 
       //  binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
       //   System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
@@ -266,56 +275,13 @@ public class SparkScanScorer {
         consolidator.writeScores(out, bestScores);
         out.close();
 
-        totalTime.showElapsed("Finished Scoring");
 
         SparkAccumulators.showAccumulators();
+        totalTime.showElapsed("Finished Scoring");
 
     }
 
-    public static void oldCodeToLookAt(SparkMapReduceScoringHandler handler,
-                                       JavaPairRDD<String, IMeasuredSpectrum> scans
-    ) throws Exception {
 
-        // we need Tuple2 not KeyValueObject
-        JavaRDD<KeyValueObject<String, IMeasuredSpectrum>> scansKV = SparkUtilities.fromTuples(scans);
-
-        handler.performSingleReturnMapReduce(scansKV);
-
-        JavaRDD<KeyValueObject<String, IScoredScan>> scores = handler.getOutput();
-
-          /*
-          Drop unmatched scans
-         */
-        scores = scores.filter(new DropNoMatchScansFilter());
-
-        /**
-         * make into tuples
-         */
-        JavaPairRDD<String, IScoredScan> mappedByScanKey = scores.mapPartitionsToPair(new ScanKeyMapper());
-
-        /**
-         *  find the best score
-         */
-        JavaPairRDD<String, IScoredScan> bestScores = mappedByScanKey.reduceByKey(new chooseBestScanScore());
-        /**
-         * collect and write
-         */
-        bestScores = bestScores.sortByKey();
-
-
-        XTandemMain application = handler.getApplication();
-        PepXMLWriter pwrtr = new PepXMLWriter(application);
-        PepXMLScoredScanWriter pWrapper = new PepXMLScoredScanWriter(pwrtr);
-        SparkConsolidator consolidator = new SparkConsolidator(pWrapper, application);
-
-
-        JavaRDD<IScoredScan> values = bestScores.values();
-
-        PrintWriter out = buildWriter(application);
-        consolidator.writeScores(out, values);
-        out.close();
-
-    }
 
 
 }
