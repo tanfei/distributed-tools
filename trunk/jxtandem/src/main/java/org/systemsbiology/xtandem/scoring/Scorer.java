@@ -1110,7 +1110,7 @@ public class Scorer  implements Serializable  {
 
     public void generateTheoreticalSpectra() {
         IPolypeptide[] peptides = getPeptides();
-        XMLUtilities.outputLine("Total Peptides  " + peptides.length);
+      //  XMLUtilities.outputLine("Total Peptides  " + peptides.length);
         generateTheoreticalSpectra(peptides);
 
     }

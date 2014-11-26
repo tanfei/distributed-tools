@@ -56,7 +56,7 @@ public class SparkUtilities implements Serializable {
         local = pLocal;
     }
 
-    public static final int DEFAULT_NUMBER_PARTITIONS = 16;
+    public static final int DEFAULT_NUMBER_PARTITIONS = 120;
     private static int defaultNumberPartitions = DEFAULT_NUMBER_PARTITIONS;
 
     public static int getDefaultNumberPartitions() {
@@ -99,17 +99,13 @@ public class SparkUtilities implements Serializable {
         for (String property : sparkProperties.stringPropertyNames()) {
             String value = sparkProperties.getProperty(property);
             // handle hard coded properties
-            if(NUMBER_PARTITIONS_PROPERTY_NAME.equals(property))
-                setDefaultNumberPartitions(Integer.parseInt(value));
-            if(LOG_FUNCTIONS_PROPERTY_NAME.equals(property))
-                SparkAccumulators.setFunctionsLoggedByDefault(Boolean.parseBoolean(value));
 
             configuration.set(property, value);
 
         }
-
         return configuration;
     }
+
 
 
     /**
@@ -232,6 +228,8 @@ public class SparkUtilities implements Serializable {
         if (ret != null)
             return ret;
         SparkConf sparkConf = new SparkConf();
+
+
         sparkConf.setAppName(getAppName());
         // we have a configuration already set
         if (isPropertiesSetAsOriginal(sparkConf)) {
@@ -270,6 +268,7 @@ public class SparkUtilities implements Serializable {
 //        if (option.isDefined())
 //            System.err.println("timeout = " + option.get());
         ret = new JavaSparkContext(sparkConf);
+
 
 
         threadContext = ret;
@@ -424,8 +423,6 @@ public class SparkUtilities implements Serializable {
             throw new RuntimeException(" bad spark properties file " + fileName);
 
         }
-
-
     }
 
     public static final String FORCE_LOCAL_EXECUTION_PROPERTY = "com.lordjoe.distributes.ForceLocalExecution";
@@ -467,7 +464,12 @@ public class SparkUtilities implements Serializable {
         for (String property : sparkProperties.stringPropertyNames()) {
             if (!property.startsWith("spark."))
                 continue;
-            sparkConf.set(property, sparkProperties.getProperty(property));
+            String value = sparkProperties.getProperty(property);
+            sparkConf.set(property, value);
+            if(NUMBER_PARTITIONS_PROPERTY_NAME.equals(property))
+                 setDefaultNumberPartitions(Integer.parseInt(value));
+             if(LOG_FUNCTIONS_PROPERTY_NAME.equals(property))
+                 SparkAccumulators.setFunctionsLoggedByDefault(Boolean.parseBoolean(value));
 
         }
 
@@ -1018,5 +1020,34 @@ public class SparkUtilities implements Serializable {
         catch (Exception e) {
             throw new RuntimeException(e); // should never happen
         }
+    }
+
+    public static final long ONE_THOUSAND = 1000L;
+    public static final long ONE_MILLION = 1000 * ONE_THOUSAND;
+    public static final long ONE_BILLION = 1000 * ONE_MILLION;
+
+    /**
+     * write integers in an easier way than a large number of digits
+      * @param n number
+     * @return   string might be 1234, 30K  45M ..
+     */
+    public static String formatLargeNumber(long realN)
+    {
+       long n = realN;
+
+       if(n < 20 * ONE_THOUSAND)
+             return java.lang.Long.toString(n);
+
+        n /= ONE_THOUSAND;
+        if(n < 20 * ONE_THOUSAND)
+            return java.lang.Long.toString(n) + "K" ;
+
+        n /= ONE_THOUSAND;
+
+        if(n < 20 * ONE_THOUSAND)
+              return java.lang.Long.toString(n) + "M" ;
+
+        n /= ONE_THOUSAND;
+        return java.lang.Long.toString(n) + "G" ;
     }
 }
