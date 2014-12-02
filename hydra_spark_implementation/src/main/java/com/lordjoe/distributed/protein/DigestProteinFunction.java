@@ -1,6 +1,6 @@
 package com.lordjoe.distributed.protein;
 
-import org.apache.spark.api.java.function.*;
+import com.lordjoe.distributed.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.peptide.*;
 
@@ -11,14 +11,11 @@ import java.util.*;
 * User: Steve
 * Date: 10/14/2014
 */
-public class DigestProteinFunction implements FlatMapFunction<IProtein,  IPolypeptide> {
-    private /* final */ XTandemMain app;
-    private  /* final */  IPeptideDigester digester;
-    private  /* final */   PeptideModification[] peptideModifications;
-    private  /* final */  boolean m_GenerateDecoysForModifiedPeptides;
-
-       // this keeps Kryo happy
-    private DigestProteinFunction() {}
+public class DigestProteinFunction extends AbstractLoggingFlatMapFunction<IProtein,  IPolypeptide> {
+    private  final XTandemMain app;
+    private  final IPeptideDigester digester;
+    private  final PeptideModification[] peptideModifications;
+    private  final  boolean m_GenerateDecoysForModifiedPeptides;
 
     public DigestProteinFunction(XTandemMain pApp) {
         app = pApp;
@@ -33,7 +30,7 @@ public class DigestProteinFunction implements FlatMapFunction<IProtein,  IPolype
     }
 
     @Override
-    public Iterable<IPolypeptide> call(final IProtein prot) throws Exception {
+    public Iterable<IPolypeptide> doCall(final IProtein prot)  {
         List holder = new ArrayList<IPolypeptide>();
             // do a boolean for a peptide belonging to a decoy protein, but use the public isDecoy boolean/method in Protein class
 

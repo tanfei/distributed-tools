@@ -14,6 +14,7 @@ import org.apache.spark.storage.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.hadoop.*;
 import scala.*;
+import com.lordjoe.distributed.spark.MachineUseAccumulator.CountedItem;
 
 import javax.annotation.*;
 import java.io.*;
@@ -107,7 +108,6 @@ public class SparkUtilities implements Serializable {
     }
 
 
-
     /**
      * turn an RDD of Tuples into a JavaPairRdd
      *
@@ -141,7 +141,7 @@ public class SparkUtilities implements Serializable {
     private static class Tuple2Tuple2PairFunction<K extends Serializable, V extends Serializable> extends AbstractLoggingPairFunction<Tuple2<K, V>, K, Tuple2<K, V>> {
         @Override
         public Tuple2<K, Tuple2<K, V>> doCall(final Tuple2<K, V> t) throws Exception {
-            return new Tuple2<K, Tuple2<K, V>>(t._1(),t);
+            return new Tuple2<K, Tuple2<K, V>>(t._1(), t);
         }
     }
 
@@ -162,7 +162,7 @@ public class SparkUtilities implements Serializable {
     private static class TupleToKeyPlusTuple<K extends Serializable, V extends Serializable> extends AbstractLoggingPairFunction<Tuple2<K, V>, K, Tuple2<K, V>> {
         @Override
         public Tuple2<K, Tuple2<K, V>> doCall(final Tuple2<K, V> t) throws Exception {
-            return new Tuple2<K,Tuple2<K, V>>(t._1(), t);
+            return new Tuple2<K, Tuple2<K, V>>(t._1(), t);
         }
     }
 
@@ -270,7 +270,6 @@ public class SparkUtilities implements Serializable {
         ret = new JavaSparkContext(sparkConf);
 
 
-
         threadContext = ret;
 
         // Show spark properties
@@ -283,6 +282,7 @@ public class SparkUtilities implements Serializable {
         //      threadContext.set(ret);
 
         SparkAccumulators.createInstance();
+        SparkBroadcastObjects.createInstance();
 
         System.out.println("Set Log to Warn");
         Logger rootLogger = Logger.getRootLogger();
@@ -466,14 +466,15 @@ public class SparkUtilities implements Serializable {
                 continue;
             String value = sparkProperties.getProperty(property);
             sparkConf.set(property, value);
-            if(NUMBER_PARTITIONS_PROPERTY_NAME.equals(property))
-                 setDefaultNumberPartitions(Integer.parseInt(value));
-             if(LOG_FUNCTIONS_PROPERTY_NAME.equals(property))
-                 SparkAccumulators.setFunctionsLoggedByDefault(Boolean.parseBoolean(value));
+            if (NUMBER_PARTITIONS_PROPERTY_NAME.equals(property))
+                setDefaultNumberPartitions(Integer.parseInt(value));
+            if (LOG_FUNCTIONS_PROPERTY_NAME.equals(property))
+                SparkAccumulators.setFunctionsLoggedByDefault(Boolean.parseBoolean(value));
 
         }
 
     }
+
 
     /**
      * read a stream into memory and return it as an RDD
@@ -700,6 +701,46 @@ public class SparkUtilities implements Serializable {
 
 
     /**
+     * force an RDD to have defaultNumberPartitions - it if is already partitioned do nothing
+     * otherwise force partition and shuffle - NOTE this may be expensive but
+     * is cheaper than a poorly partitioned implementation
+     *
+     * @param inp input rdd
+     * @param <K> key type
+     * @param <V> value type
+     * @return output rdd of same type and data but partitioned
+     */
+    @Nonnull
+    public static <K extends Serializable, V > JavaPairRDD<K, V> guaranteePairedPartition(@Nonnull final JavaPairRDD<K, V> inp) {
+        List<Partition> partitions = inp.partitions();
+        int defaultNumberPartitions1 = getDefaultNumberPartitions();
+        if (partitions.size() == defaultNumberPartitions1)
+            return inp;
+        boolean doShuffle = true;
+        return inp.coalesce(defaultNumberPartitions1, doShuffle);
+    }
+
+    /**
+     * force an RDD to have defaultNumberPartitions - it if is already partitioned do nothing
+     * otherwise force partition and shuffle - NOTE this may be expensive but
+     * is cheaper than a poorly partitioned implementation
+     *
+     * @param inp input rdd
+     * @param <V> value type
+     * @return output rdd of same type and data but partitioned
+     */
+    @Nonnull
+    public static <V extends Serializable> JavaRDD<V> guaranteePartition(@Nonnull final JavaRDD<V> inp) {
+        List<Partition> partitions = inp.partitions();
+        int defaultNumberPartitions1 = getDefaultNumberPartitions();
+        if (partitions.size() == defaultNumberPartitions1)
+            return inp;
+        boolean doShuffle = true;
+        return inp.coalesce(defaultNumberPartitions1, doShuffle);
+    }
+
+
+    /**
      * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
      *
      * @param inp this is an RDD - usually one you want to examine during debugging
@@ -708,8 +749,38 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp) {
+     // if not local ignore
+        return realizeAndReturn(inp,false);
+     }
+
+
+    /**
+     * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
+     *
+     * @param inp     this is an RDD - usually one you want to examine during debugging
+     * @param handler all otuples are passed here
+     * @param <T>     whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler) {
+        // if not local ignore
+        return realizeAndReturn(inp,false);
+    }
+
+
+    /**
+     * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
+     *
+     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param force only run the function on the cluster if true
+       * @param <T> whatever inp is a list of
+     * @return non-null RDD of the same values but realized
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, boolean force) {
         JavaSparkContext jcx = getCurrentContext();
-        if (!isLocal())    // not to use on the cluster - only for debugging
+        if (!isLocal() && !force)    // not to use on the cluster - only for debugging
             return inp; //
         List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
         System.out.println("Realized with " + collect.size() + " elements");
@@ -726,14 +797,15 @@ public class SparkUtilities implements Serializable {
      * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
      *
      * @param inp     this is an RDD - usually one you want to examine during debugging
+     * @param force only run the function on the cluster if true
      * @param handler all otuples are passed here
      * @param <T>     whatever inp is a list of
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler) {
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler,boolean force) {
         JavaSparkContext jcx = getCurrentContext();
-        if (!isLocal())    // not to use on the cluster - only for debugging
+        if (!isLocal() && !force)    // not to use on the cluster - only for debugging
             return inp; //
         List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
         for (Tuple2<K, V> kvTuple2 : collect) {
@@ -741,7 +813,6 @@ public class SparkUtilities implements Serializable {
         }
         return (JavaPairRDD<K, V>) jcx.parallelizePairs(collect);
     }
-
 
     /**
      * force a JavaRDD to evaluate then return the results as a JavaRDD
@@ -1028,26 +1099,90 @@ public class SparkUtilities implements Serializable {
 
     /**
      * write integers in an easier way than a large number of digits
-      * @param n number
-     * @return   string might be 1234, 30K  45M ..
+     *
+     * @param n number
+     * @return string might be 1234, 30K  45M ..
      */
-    public static String formatLargeNumber(long realN)
-    {
-       long n = realN;
+    public static String formatLargeNumber(long realN) {
+        long n = realN;
 
-       if(n < 20 * ONE_THOUSAND)
-             return java.lang.Long.toString(n);
-
-        n /= ONE_THOUSAND;
-        if(n < 20 * ONE_THOUSAND)
-            return java.lang.Long.toString(n) + "K" ;
+        if (n < 20 * ONE_THOUSAND)
+            return java.lang.Long.toString(n);
 
         n /= ONE_THOUSAND;
-
-        if(n < 20 * ONE_THOUSAND)
-              return java.lang.Long.toString(n) + "M" ;
+        if (n < 20 * ONE_THOUSAND)
+            return java.lang.Long.toString(n) + "K";
 
         n /= ONE_THOUSAND;
-        return java.lang.Long.toString(n) + "G" ;
+
+        if (n < 20 * ONE_THOUSAND)
+            return java.lang.Long.toString(n) + "M";
+
+        n /= ONE_THOUSAND;
+        return java.lang.Long.toString(n) + "G";
+    }
+
+    public static final int MAX_COUNTS_SHOWN = 10;
+    public static <K, V> void showCounts(JavaPairRDD<K, V> binPairs) {
+        Map<K, Object> counts = binPairs.countByKey();
+        List< CountedItem> holder = new ArrayList< CountedItem>();
+        for (K key : counts.keySet()) {
+            Object countObj = counts.get(key);
+            String keyStr = key.toString();
+            long count = java.lang.Long.parseLong(countObj.toString());
+            holder.add(new CountedItem(keyStr,count));
+        }
+        Collections.sort(holder);
+        int shown = 0;
+        for (CountedItem countedItem : holder) {
+            System.err.println(countedItem.getValue() + " " + countedItem.getValue());
+            if(shown++ > MAX_COUNTS_SHOWN)
+                break;
+        }
+
+
+
+    }
+
+
+    public static <T extends Serializable> JavaRDD<T> getFirstN(final long n,JavaRDD<T> inp) {
+        return inp.filter(new FilterFirstN<T>(n));
+    }
+
+    /**
+     * return a fraction of the original RDD
+     * @param fraction
+     * @param inp
+     * @param <T>
+     * @return
+     */
+    public static <T extends Serializable> JavaRDD<T> getFraction(double fraction,JavaRDD<T> inp) {
+        return inp.filter(new FilterRandomFraction<T>(fraction));
+    }
+
+    private static class FilterFirstN<T extends Serializable> extends AbstractLoggingFunction<T, Boolean> {
+        private final long maxSaved;
+        private long numberSaved;
+        private FilterFirstN(long n) {
+            maxSaved = n;
+          }
+
+        @Override
+        public Boolean doCall(final T v1) throws Exception {
+            return maxSaved > numberSaved++;
+        }
+    }
+
+    private static class FilterRandomFraction<T extends Serializable> extends AbstractLoggingFunction<T, Boolean> {
+        private final double fractionSaved;
+        private final Random rnd = new Random();
+        private FilterRandomFraction(double n) {
+            fractionSaved = n;
+          }
+
+        @Override
+        public Boolean doCall(final T v1) throws Exception {
+            return rnd.nextDouble() < fractionSaved;
+        }
     }
 }

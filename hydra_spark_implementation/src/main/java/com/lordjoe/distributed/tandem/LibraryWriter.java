@@ -49,7 +49,7 @@ public class LibraryWriter implements Serializable {
     public static class WriterObject extends AbstractKeyWriter<IPolypeptide> {
 
         public WriterObject(PolypeptideToFileName peptideToFileName, IPolypeptide pp) {
-                 super(peptideToFileName.call(pp));
+                 super(peptideToFileName.doCall(pp));
                 write(pp);
              }
 

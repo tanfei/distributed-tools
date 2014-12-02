@@ -11,28 +11,25 @@ import java.io.*;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingFlatMapFunction<T ,R extends Serializable>
-        extends AbstractLoggingFunctionBase implements FlatMapFunction<T,R> {
+public abstract class AbstractLoggingFlatMapFunction<T, R extends Serializable>
+        extends AbstractLoggingFunctionBase implements FlatMapFunction<T, R> {
 
 
     /**
      * NOTE override doCall not this
+     *
      * @param t
      * @return
      */
     @Override
-    public final  Iterable<R> call(final T t)  {
+    public final Iterable<R> call(final T t) throws Exception {
         reportCalls();
-           try {
-            return doCall(t);
-          }
-         catch (Exception e) {
-             throw new RuntimeException(e);
-           }
-     }
+        return doCall(t);
+    }
 
     /**
      * do work here
+     *
      * @param v1
      * @return
      */

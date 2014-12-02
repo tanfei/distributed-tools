@@ -13,78 +13,74 @@ import java.util.*;
  * User: Steve
  * Date: 1/20/12
  */
-public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorithm {
+public abstract class AbstractScoringAlgorithm implements ITandemScoringAlgorithm {
 
     /**
-      * fast lookup table for factorial
-      */
-     public static double[] FACTORIALS = {
-             1, // 0
-             1, // 1
-             2, // 2
-             6, // 3
-             24, // 4
-             120, // 5
-             720, // 6
-             5040, // 7
-             40320, // 8
-             362880, // 9
-             3628800, // 10
-             39916800, // 11
-             479001600,  // 12
-             6227020800.0,  // 13
-             87178291200.0,  // 14
-             1307674368000.0,  // 15
-     };
+     * fast lookup table for factorial
+     */
+    public static double[] FACTORIALS = {
+            1, // 0
+            1, // 1
+            2, // 2
+            6, // 3
+            24, // 4
+            120, // 5
+            720, // 6
+            5040, // 7
+            40320, // 8
+            362880, // 9
+            3628800, // 10
+            39916800, // 11
+            479001600,  // 12
+            6227020800.0,  // 13
+            87178291200.0,  // 14
+            1307674368000.0,  // 15
+    };
 
-     /**
-      * return n! - usually does a lookup
-      *
-      * @param n positive n
-      * @return n!
-      */
-     public static double factorial(int n)
-     {
-         try {
-             //  fast version is to lookup
-             // throws an exception for n > 16
-             return FACTORIALS[n];
-         }
-         catch (IndexOutOfBoundsException e) {
-             return generateFactorial(n);
+    /**
+     * return n! - usually does a lookup
+     *
+     * @param n positive n
+     * @return n!
+     */
+    public static double factorial(int n) {
+        try {
+            //  fast version is to lookup
+            // throws an exception for n > 16
+            return FACTORIALS[n];
+        }
+        catch (IndexOutOfBoundsException e) {
+            return generateFactorial(n);
 
-         }
-     }
+        }
+    }
 
-     public static double generateFactorial(final int n)
-     {
-         if (n < 2)
-             return 1;
-         // for large cases compute
-         double ret = 1;
-         for (int i = 2; i <= n; i++) {
-             ret *= i;
-         }
-         return ret;
-     }
-
-
+    public static double generateFactorial(final int n) {
+        if (n < 2)
+            return 1;
+        // for large cases compute
+        double ret = 1;
+        for (int i = 2; i <= n; i++) {
+            ret *= i;
+        }
+        return ret;
+    }
 
 
     public static final AbstractScoringAlgorithm[] EMPTY_ARRAY = {};
     public static final int MAX_MASS = 10000;
     protected MassType m_MassType = MassType.average;
-     private boolean m_SemiTryptic;
-    private  double m_PlusLimit = 4.1;
-    private  double m_MinusLimit = 2.1;
-//    private boolean m_ScoringXIons;
+    private boolean m_SemiTryptic;
+    private double m_PlusLimit = 4.1;
+    private double m_MinusLimit = 2.1;
+    //    private boolean m_ScoringXIons;
 //    private boolean m_ScoringYIons;
 //    private boolean m_ScoringAIons;
 //    private boolean m_ScoringBIons;
 //    private boolean m_ScoringCIons;
 //    protected boolean m_ScoringCyclicPermutation;
 //    protected boolean m_ScoringIncludeReverse;
- //   protected boolean m_RefineSpectrumSynthesis;
+    //   protected boolean m_RefineSpectrumSynthesis;
     // in c code is m_ferr
     protected float m_SpectrumMassError;
 
@@ -99,23 +95,21 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
     }
 
     @Override
-    public MassType getMassType()
-    {
+    public MassType getMassType() {
         return m_MassType;
     }
 
     /**
-      * return false if the algorithm will not score the spectrum
-      * @param !null spectrum measured
-      * @return   as above
-      */
-     public boolean canScore(IMeasuredSpectrum measured)
-     {
-         if(measured.getPeaksCount() == 0)
-             return false;
-         return true; // override if some spectra are not scored
-     }
-
+     * return false if the algorithm will not score the spectrum
+     *
+     * @param !null spectrum measured
+     * @return as above
+     */
+    public boolean canScore(IMeasuredSpectrum measured) {
+        if (measured.getPeaksCount() == 0)
+            return false;
+        return true; // override if some spectra are not scored
+    }
 
 
     public boolean isSemiTryptic() {
@@ -198,15 +192,14 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
 //    }
 
     @Override
-    public float getSpectrumMassError()
-    {
+    public float getSpectrumMassError() {
         return m_SpectrumMassError;
     }
 
-    public   void setAcceptableMassLimits(double plusLimit, double minusLimit) {
+    public void setAcceptableMassLimits(double plusLimit, double minusLimit) {
         m_PlusLimit = plusLimit;
         m_MinusLimit = minusLimit;
-     }
+    }
 
     /**
      * true if scanMass within mass2 + gPlusLimit mass2 - gMinusLimit
@@ -216,21 +209,21 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
      * @return
      */
     @Override
-    public   boolean isWithinLimits(double scanMass, double mass2,int charge) {
+    public boolean isWithinLimits(double scanMass, double mass2, int charge) {
         double del = scanMass - mass2;
-        if(charge > 1)
+        if (charge > 1)
             del /= charge;
 
         if (Math.abs(del) < 30)
             XTandemUtilities.breakHere();
 
         boolean ret = false;
- //       XTandemUtilities.workUntil(2012,5,3);
+        //       XTandemUtilities.workUntil(2012,5,3);
         // Note looks backwards but this is what they do
-         if (del > 0)
-             ret = del <=  Math.abs(m_PlusLimit);
-         else
-             ret = -del <= Math.abs(m_MinusLimit);
+        if (del > 0)
+            ret = del <= Math.abs(m_PlusLimit);
+        else
+            ret = -del <= Math.abs(m_MinusLimit);
 
 //        // Note looks backwards but this is what they do
 //        if (del > 0)
@@ -286,40 +279,37 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
      * @param in !null spectrum
      * @return null if the spectrum is to be ignored otherwise a conditioned spectrum
      */
-    public IMeasuredSpectrum conditionSpectrum(IScoredScan in, final SpectrumCondition sc)
-    {
+    public IMeasuredSpectrum conditionSpectrum(IScoredScan in, final SpectrumCondition sc) {
         return sc.conditionSpectrum(in, 200);
     }
 
     /**
      * alter the score from dot_product in algorithm dependent manner
      *
-     * @param score  old score
-     * @param measured  !null measured spectrum
+     * @param score    old score
+     * @param measured !null measured spectrum
      * @param theory   !null theoretical spectrum
-     * @param counter    !null use counter
+     * @param counter  !null use counter
      * @return new score
      */
     @Override
     public double conditionScore(double score, IMeasuredSpectrum measured,
-                                 ITheoreticalSpectrumSet theory, IonUseScore counter)
-    {
+                                 ITheoreticalSpectrumSet theory, IonUseScore counter) {
         return score;
     }
 
     /**
      * find the hyperscore the score from dot_product in algorithm depdndent manner
      *
-     * @param score  old score
-     * @param measured  !null measured spectrum
+     * @param score    old score
+     * @param measured !null measured spectrum
      * @param theory   !null theoretical spectrum
-     * @param counter    !null use counter
+     * @param counter  !null use counter
      * @return new score
      */
     @Override
     public double buildHyperscoreScore(double score, IMeasuredSpectrum measured,
-                                       ITheoreticalSpectrumSet theory, IonUseScore counter)
-    {
+                                       ITheoreticalSpectrumSet theory, IonUseScore counter) {
         double factor = 1;
         for (IonType type : IonType.values()) {
             final int count = counter.getCount(type);
@@ -336,8 +326,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
      * @return as above
      */
     @Override
-    public double getExpectedValue(IScoredScan scan)
-    {
+    public double getExpectedValue(IScoredScan scan) {
         return scan.getExpectedValue();
     }
 
@@ -359,8 +348,8 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
 
         final String units = params.getParameter("spectrum, parent monoisotopic mass error units",
                 "Daltons");
-    //    if (!"Daltons".equals(units))
-    //        throw new IllegalStateException("We can only deal with Daltons at this time");
+        //    if (!"Daltons".equals(units))
+        //        throw new IllegalStateException("We can only deal with Daltons at this time");
         // put then where anyone can get to them
         setAcceptableMassLimits(plusMassDifferenceAllowed,
                 minusMassDifferenceAllowed);
@@ -426,38 +415,52 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
     /**
      * an algorithm may choose not to score a petide - for example high resolution algorithms may
      * choose not to score ppetides too far away
-     * @param ts !null peptide spectrum
-     * @param pScan  !null scan to score
+     *
+     * @param ts    !null peptide spectrum
+     * @param pScan !null scan to score
      * @return true if scoring is desired
      */
     @Override
-    public boolean isTheoreticalSpectrumScored(ITheoreticalSpectrum ts,IMeasuredSpectrum pScan)
-    {
+    public boolean isTheoreticalSpectrumScored(ITheoreticalSpectrum ts, IMeasuredSpectrum pScan) {
         return true; // override for better filtering
     }
 
     /**
-      * actually do the scorring
-      * @param scorer  !null scorrer
-      * @param scan  !null scan to score
-      * @param pPps  !null set of peptides ot score
-      * @return !null score
-      */
-     public IScoredScan handleScan(final Scorer scorer,  final RawPeptideScan scan, final IPolypeptide[] pPps )
-     {
-         String id = scan.getId();
-          OriginatingScoredScan scoring = new OriginatingScoredScan(scan);
-          scoring.setAlgorithm( getName());
-          IonUseCounter counter = new IonUseCounter();
-          final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
+     * actually do the scorring
+     *
+     * @param scorer !null scorrer
+     * @param scan   !null scan to score
+     * @param pPps   !null set of peptides ot score
+     * @return !null score
+     */
+    @Override
+    public IScoredScan handleScan(final Scorer scorer, final RawPeptideScan scan, final IPolypeptide[] pPps) {
+        final ITheoreticalSpectrumSet[] tss = scorer.getAllSpectra();
+        return handleScan(scorer, scan, pPps, tss);
+    }
 
-          int numberDotProducts = scoreScan(scorer,   counter, tss, scoring);
-           return scoring;
+    /**
+     * actually do the scorring
+     *
+     * @param scorer !null scorrer
+     * @param scan   !null scan to score
+     * @param pPps   !null set of peptides ot score
+     * @return !null score
+     */
+    @Override
+    public IScoredScan handleScan(final Scorer scorer, final RawPeptideScan scan, final IPolypeptide[] pPps, ITheoreticalSpectrumSet[] tss) {
+        String id = scan.getId();
+        OriginatingScoredScan scoring = new OriginatingScoredScan(scan);
+        scoring.setAlgorithm(getName());
+        IonUseCounter counter = new IonUseCounter();
 
-     }
+        int numberDotProducts = scoreScan(scorer, counter, tss, scoring);
+        return scoring;
+    }
 
     /**
      * fill bins - by default these are global but they do not have to be
+     *
      * @param peaks
      */
     protected void fillSpectrumPeaks(final IMeasuredSpectrum pScan) {
@@ -471,7 +474,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
         }
     }
 
-    protected int scoreOnePeptide(  final IonUseCounter pCounter, final IScoredScan pConditionedScan, final IMeasuredSpectrum pScan, final double[] pPeaksByMass, final int pPrecursorCharge, final ITheoreticalSpectrumSet pTsSet) {
+    protected int scoreOnePeptide(final IonUseCounter pCounter, final IScoredScan pConditionedScan, final IMeasuredSpectrum pScan, final double[] pPeaksByMass, final int pPrecursorCharge, final ITheoreticalSpectrumSet pTsSet) {
         double oldscore = 0;
         int numberScored = 0;
 
@@ -498,7 +501,7 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
         for (int i = 0; i < numberSpectra; i++) {
             ITheoreticalSpectrum ts = spectrums[i];
 
-         //   double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
+            //   double lowestScoreToAdd = conditionedScan.lowestHyperscoreToAdd();
 
             final int charge = ts.getCharge();
             if (pPrecursorCharge != 0 && charge > pPrecursorCharge)
@@ -507,20 +510,20 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
             if (maxCharge <= charge) // if (maxCharge <= charge)  // do NOT score the maximum charge
                 continue;
 
-            if(!isTheoreticalSpectrumScored( ts,  pScan))
+            if (!isTheoreticalSpectrumScored(ts, pScan))
                 continue;
 
             List<DebugMatchPeak> holder = new ArrayList<DebugMatchPeak>();
 
             // filter the theoretical peaks
-            ITheoreticalSpectrum scoredScan =  buildScoredScan(ts);
+            ITheoreticalSpectrum scoredScan = buildScoredScan(ts);
 
             XTandemUtilities.showProgress(i, 10);
 
             // handleDebugging(pScan, logDotProductB, logDotProductY, ts, scoredScan);
 
             double dot_product = 0;
-            dot_product =  dot_product(pScan, scoredScan, pCounter, holder, pPeaksByMass, usage);
+            dot_product = dot_product(pScan, scoredScan, pCounter, holder, pPeaksByMass, usage);
 
             if (dot_product == 0)
                 continue; // really nothing further to do
@@ -572,11 +575,11 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
 //        if (LOG_INTERMEDIATE_RESULTS)
 //            XTandemUtilities.breakHere();
 
-        double score =  conditionScore(oldscore, pScan, pTsSet, pCounter);
-        String algorithm =  getName();
+        double score = conditionScore(oldscore, pScan, pTsSet, pCounter);
+        String algorithm = getName();
         if (score <= 0)
             return 0; // nothing to do
-        double hyperscore =  buildHyperscoreScore(score, pScan, pTsSet, pCounter);
+        double hyperscore = buildHyperscoreScore(score, pScan, pTsSet, pCounter);
 
         final IonUseScore useScore = new IonUseScore(pCounter);
 
@@ -597,56 +600,54 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
     }
 
 
-
     /**
-      *
-      * @param scorer
-      * @param sa
-      * @param pCounter
-      * @param pSpectrums
-      * @param pConditionedScan
-      * @return
-      */
-     protected int scoreScan(final Scorer scorer,   final IonUseCounter pCounter, final ITheoreticalSpectrumSet[] pSpectrums, final IScoredScan pConditionedScan) {
-         int numberScoredSpectra = 0;
-         boolean LOG_INTERMEDIATE_RESULTS = false;
-         SpectrumCondition sc = scorer.getSpectrumCondition();
-         IMeasuredSpectrum scan = pConditionedScan.conditionScan(this, sc);
-         if (scan == null)
-             return 0; // not scoring this one
-         if(! canScore(scan))
-             return 0; // not scoring this one
+     * @param scorer
+     * @param sa
+     * @param pCounter
+     * @param pSpectrums
+     * @param pConditionedScan
+     * @return
+     */
+    protected int scoreScan(final Scorer scorer, final IonUseCounter pCounter, final ITheoreticalSpectrumSet[] pSpectrums, final IScoredScan pConditionedScan) {
+        int numberScoredSpectra = 0;
+        boolean LOG_INTERMEDIATE_RESULTS = false;
+        SpectrumCondition sc = scorer.getSpectrumCondition();
+        IMeasuredSpectrum scan = pConditionedScan.conditionScan(this, sc);
+        if (scan == null)
+            return 0; // not scoring this one
+        if (!canScore(scan))
+            return 0; // not scoring this one
 
-            // NOTE this is totally NOT Thread Safe
-         fillSpectrumPeaks(scan);
+        // NOTE this is totally NOT Thread Safe
+        fillSpectrumPeaks(scan);
 
- //        DebugDotProduct logDotProductB = null;
- //        DebugDotProduct logDotProductY = null;
+        //        DebugDotProduct logDotProductB = null;
+        //        DebugDotProduct logDotProductY = null;
 
-         if (!pConditionedScan.isValid())
-             return 0;
-         String scanid = scan.getId();
- //        if (scanid.equals("7868"))
- //            XTandemUtilities.breakHere();
-         int precursorCharge = scan.getPrecursorCharge();
+        if (!pConditionedScan.isValid())
+            return 0;
+        String scanid = scan.getId();
+        //        if (scanid.equals("7868"))
+        //            XTandemUtilities.breakHere();
+        int precursorCharge = scan.getPrecursorCharge();
 
-         double testmass = scan.getPrecursorMass();
-         if (pSpectrums.length == 0)
-             return 0; // nothing to do
-         // for debugging isolate one case
+        double testmass = scan.getPrecursorMass();
+        if (pSpectrums.length == 0)
+            return 0; // nothing to do
+        // for debugging isolate one case
 
-         for (int j = 0; j < pSpectrums.length; j++) {
-             ITheoreticalSpectrumSet tsSet = pSpectrums[j];
-             // debugging test
-             IPolypeptide peptide = tsSet.getPeptide();
-             double matching = peptide.getMatchingMass();
+        for (int j = 0; j < pSpectrums.length; j++) {
+            ITheoreticalSpectrumSet tsSet = pSpectrums[j];
+            // debugging test
+            IPolypeptide peptide = tsSet.getPeptide();
+            double matching = peptide.getMatchingMass();
 
 
-             if (scorer.isTheoreticalSpectrumScored(pConditionedScan, tsSet)) {
-                 numberScoredSpectra += scoreOnePeptide(  pCounter, pConditionedScan, scan, Scorer.PEAKS_BY_MASS, precursorCharge, tsSet);
-             }
+            if (scorer.isTheoreticalSpectrumScored(pConditionedScan, tsSet)) {
+                numberScoredSpectra += scoreOnePeptide(pCounter, pConditionedScan, scan, Scorer.PEAKS_BY_MASS, precursorCharge, tsSet);
+            }
 
-             // debugging code -t look at why some specrta are NOT scored
+            // debugging code -t look at why some specrta are NOT scored
 //             else {
 //                 // for the moment reiterate the code to find out why not scored
 //                 if (XTandemHadoopUtilities.isNotScored(pConditionedScan.getRaw())) {
@@ -656,10 +657,9 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
 //
 //                 }
 //             }
-         }
-         return numberScoredSpectra;
-     }
-
+        }
+        return numberScoredSpectra;
+    }
 
 
     /**
@@ -674,7 +674,8 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
      * @return comupted dot product
      */
     @Override
-    public  abstract  double dot_product(final IMeasuredSpectrum measured, final ITheoreticalSpectrum theory, final IonUseCounter counter, final List<DebugMatchPeak> holder, final Object... otherData) ;
+    public abstract double dot_product(final IMeasuredSpectrum measured, final ITheoreticalSpectrum theory, final IonUseCounter counter, final List<DebugMatchPeak> holder, final Object... otherData);
+
     /**
      * modify the theoretical spectrum before scoring - this may
      * involve reweighting or dropping peaks
@@ -683,5 +684,5 @@ public abstract  class AbstractScoringAlgorithm implements ITandemScoringAlgorit
      * @return !null modified spectrum
      */
     @Override
-    public  abstract  ITheoreticalSpectrum buildScoredScan(final ITheoreticalSpectrum pTs);
+    public abstract ITheoreticalSpectrum buildScoredScan(final ITheoreticalSpectrum pTs);
 }

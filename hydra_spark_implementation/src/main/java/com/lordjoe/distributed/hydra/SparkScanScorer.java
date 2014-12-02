@@ -10,6 +10,7 @@ import com.lordjoe.utilities.*;
 import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.*;
+import org.apache.spark.storage.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -148,6 +149,7 @@ public class SparkScanScorer {
         return SparkHydraUtilities.nameToPrintWriter(outputPath, pApplication);
     }
 
+
     public static final int SPARK_CONFIG_INDEX = 0;
     public static final int TANDEM_CONFIG_INDEX = 1;
     public static final int SPECTRA_INDEX = 2;
@@ -191,8 +193,9 @@ public class SparkScanScorer {
         // handler.buildLibraryIfNeeded();
         // find all polypeptides and modified polypeptides
         JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
-       // databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
-      //  System.out.println("Found " + databasePeptides.count() + " peptides");
+        databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
+        System.err.println("Found " + databasePeptides.count() + " peptides");
+
         timer.showElapsed("Found Peptides");
 
 
@@ -203,6 +206,9 @@ public class SparkScanScorer {
         // read spectra
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
         JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
+
+        spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
+        System.err.println("Scoring " + spectraToScore.count() + " spectra");
 
 
       //  spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
@@ -216,6 +222,10 @@ public class SparkScanScorer {
         // Map peptides into bins
         JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides = handler.mapFragmentsToKeys(databasePeptides);
 
+             // distribute the work
+        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
+
+
         // next line is for debugging
         //  keyedPeptides =  keyedPeptides.persist(StorageLevel.MEMORY_AND_DISK());
         // keyedPeptides = SparkUtilities.realizeAndReturn(keyedPeptides, new FindInterestingBinnedPeptides());
@@ -225,17 +235,23 @@ public class SparkScanScorer {
         // Map spectra into bins
         JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
 
+            // distribute the work
+        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
+
         // next line is for debugging
         // keyedSpectra = SparkUtilities.realizeAndReturn(keyedSpectra);
 
         // find spectra-peptide pairs to score
         JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs = keyedSpectra.join(keyedPeptides,
-                BinChargeKey.getPartitioner());
+                SparkUtilities.DEFAULT_PARTITIONER);
+        //          BinChargeKey.getPartitioner());
 
+          // next line is for debugging
+        /// binPairs = SparkUtilities.realizeAndReturn(binPairs);
 
         System.out.println("number partitions before " + binPairs.partitions().size());
 
-        // Todo - I wonder if this step ios needed - it is expensive SLewis
+        // Todo - I wonder if this step is needed - it is expensive SLewis
 //        System.out.println("number partitions forced " + SparkUtilities.getDefaultNumberPartitions());
 //        binPairs = binPairs.repartition(SparkUtilities.getDefaultNumberPartitions());
 //        System.out.println("number partitions after " + binPairs.partitions().size());
@@ -245,16 +261,22 @@ public class SparkScanScorer {
         timer.showElapsed("Joined Pairs");
 
 
-      //  binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
-      //   System.out.println("Pairs to Score " + binPairs.count() + " Pairs");
+        timer.reset();
+        binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
+        timer.showElapsed("Persist");
 
-//        Map<BinChargeKey, Object> binChargeKeyObjectMap = binPairs.countByKey();
-//        for (BinChargeKey binChargeKey : binChargeKeyObjectMap.keySet()) {
-//            System.out.println(binChargeKey.toString() + " has " + binChargeKeyObjectMap.get(binChargeKey));
-//        }
+        timer.reset();
+        System.err.println("Pairs to Score " + binPairs.count() + " Pairs");
+        timer.showElapsed("Counted Pairs");
 
+        timer.reset();
+        SparkUtilities.showCounts( binPairs);
+        timer.showElapsed("Counted by Key");
+
+        timer.reset();
         // now produce all peptide spectrum scores where spectrum and peptide are in the same bin
         JavaRDD<IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
+        timer.showElapsed("Counted by Key");
 
         // next line is for debugging
         //bestScores = SparkUtilities.realizeAndReturn(bestScores);

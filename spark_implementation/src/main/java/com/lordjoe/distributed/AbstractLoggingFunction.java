@@ -11,32 +11,32 @@ import java.io.*;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingFunction<K extends Serializable,V extends Serializable>
-        extends AbstractLoggingFunctionBase implements Function<K,V> {
+public abstract class AbstractLoggingFunction<K extends Serializable, V extends Serializable>
+        extends AbstractLoggingFunctionBase implements Function<K, V> {
 
 
     /**
      * override doCall
+     *
      * @param v1
      * @return
      * @throws Exception
      */
     @Override
-    public final V call(final K v1)  {
-       reportCalls();
-        try {
-            return doCall(v1);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-
-        }
+    public final V call(final K v1) throws Exception {
+        reportCalls();
+        long startTime = System.nanoTime();
+        V ret = doCall(v1);
+        long estimatedTime = System.nanoTime() - startTime;
+        totalTime += estimatedTime;
+        return ret;
     }
 
     /**
      * do work here
+     *
      * @param v1
      * @return
      */
-    public abstract V doCall(final K v1)  throws Exception;
+    public abstract V doCall(final K v1) throws Exception;
 }

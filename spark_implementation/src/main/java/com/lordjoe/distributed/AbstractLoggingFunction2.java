@@ -12,8 +12,7 @@ import java.io.*;
  * Date: 10/23/2014
  */
 public abstract class AbstractLoggingFunction2<T1 extends Serializable, T2 extends Serializable, R extends Serializable>
-        extends AbstractLoggingFunctionBase implements Function2<T1, T2, R>
-{
+        extends AbstractLoggingFunctionBase implements Function2<T1, T2, R> {
 
 
     /**
@@ -24,14 +23,14 @@ public abstract class AbstractLoggingFunction2<T1 extends Serializable, T2 exten
      * @throws Exception
      */
     @Override
-    public R call(final T1 v1, final T2 v2) {
+    public R call(final T1 v1, final T2 v2) throws Exception {
         reportCalls();
-        try {
-            return doCall(v1, v2);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        long startTime = System.nanoTime();
+        R ret = doCall(v1, v2);
+        long estimatedTime = System.nanoTime() - startTime;
+        totalTime += estimatedTime;
+        return ret;
+
     }
 
 

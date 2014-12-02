@@ -11,7 +11,6 @@ import com.lordjoe.distributed.spectrum.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.spark.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.*;
@@ -94,18 +93,13 @@ public class LibraryBuilder implements Serializable {
 
 
         JavaRDD<IProtein> proteins = readProteins(jctx);
-        List<Partition> partitions = proteins.partitions();
-        System.err.println("Number proteins Partitions " + partitions.size());
 
-        proteins = proteins.repartition(SparkUtilities.getDefaultNumberPartitions());
-        partitions = proteins.partitions();
-        System.err.println("Number proteins Partitions after coalesce" + partitions.size());
+        // distribute the work
+        proteins = SparkUtilities.guaranteePartition(proteins);
 
         JavaRDD<IPolypeptide> digested = proteins.flatMap(new DigestProteinFunction(app));
 
-        partitions = digested.partitions();
-        System.err.println("Number Partitions " + partitions.size());
-       // digested = digested.repartition(SparkUtilities.getDefaultNumberPartitions());
+         // digested = digested.repartition(SparkUtilities.getDefaultNumberPartitions());
          // uncomment when you want to look
         //  digested = SparkUtilities.realizeAndReturn(digested, jctx);
 
@@ -114,6 +108,8 @@ public class LibraryBuilder implements Serializable {
 
         JavaPairRDD<String, IPolypeptide> bySequence = digested.mapToPair(new MapPolyPeptideToSequenceKeys());
 
+          // distribute the work
+        bySequence = SparkUtilities.guaranteePairedPartition(bySequence);
 
         // uncomment when you want to look
         // bySequence = SparkUtilities.realizeAndReturn(bySequence, jctx);

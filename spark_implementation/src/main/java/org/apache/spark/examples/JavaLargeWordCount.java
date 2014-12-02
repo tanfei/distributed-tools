@@ -46,7 +46,7 @@ public final class
             int ret = s.charAt(0) - 'A';
             ret = Math.min(25, ret);
             ret = Math.max(0, ret);
-            return 25 - ret;
+            return  ret;
         }
     }
 
@@ -91,13 +91,21 @@ public final class
 
         words = words.repartition(NUMBER_PARTITIONS);
 
-
-        JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
+        JavaPairRDD<String, Integer> ones = words.flatMapToPair(new PairFlatMapFunction<String, String, Integer>() {
             @Override
-            public Tuple2<String, Integer> call(String s) {
-                return new Tuple2<String, Integer>(s, 1);
+            public Iterable<Tuple2<String, Integer>> call(final String t) throws Exception {
+                List<Tuple2<String, Integer>> holder = new ArrayList<Tuple2<String, Integer>>();
+                if(!t.startsWith("Z"))
+                    holder.add(new Tuple2<String, Integer>(t, 1));
+                      return holder;
             }
         });
+//        JavaPairRDD<String, Integer> ones = words.mapToPair(new PairFunction<String, String, Integer>() {
+//            @Override
+//            public Tuple2<String, Integer> call(String s) {
+//                return new Tuple2<String, Integer>(s, 1);
+//            }
+//        });
 
 
         ones = ones.partitionBy(new PartitionByStart());
@@ -138,12 +146,12 @@ public final class
         );
 
         List<WordNumber> answers = answer.collect();
-        /*
+
         List<WordNumber> objects = answer.toArray();
         for (WordNumber o : objects) {
             System.out.println(o);
         }
-        */
+
 
         SparkAccumulators.showAccumulators();
         java.lang.Long wordCount = totalWords.value();
