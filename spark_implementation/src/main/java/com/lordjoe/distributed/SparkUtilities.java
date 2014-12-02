@@ -1079,6 +1079,12 @@ public class SparkUtilities implements Serializable {
 
             byte[] mac = network.getHardwareAddress();
 
+            if(mac == null) {
+                mac = new byte[4] ;  // fake it if needed
+                mac[0] = 127;
+                mac[3] = 1;
+            }
+
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < mac.length; i++) {
