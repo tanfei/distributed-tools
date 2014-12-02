@@ -72,19 +72,23 @@ public class MachineUseAccumulator implements Serializable {
         }
 
         /**
-         * sort by count then value
+         * sort value - then count
          *
          * @param o
          * @return
          */
         @Override
         public int compareTo(final CountedItem o) {
+
+            int ret = getValue().compareTo(o.getValue());
+            if(ret != 0)
+                return ret; // sort by name
             long count = getCount();
             long ocount = o.getCount();
             // High count first
             if (count != ocount)
                 return count > ocount ? -1 : 1;
-            return getValue().compareTo(o.getValue());
+            return 0;
         }
 
         @Override

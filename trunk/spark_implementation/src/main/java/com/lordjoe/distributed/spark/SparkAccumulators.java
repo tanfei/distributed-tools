@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * com.lordjoe.distributed.spark.SparkAccumulators
- * this class implements a similar ides to Hadoop Accumulators
+ * this class implements a similar idea to Hadoop Accumulators
  * User: Steve
  * Date: 11/12/2014
  */

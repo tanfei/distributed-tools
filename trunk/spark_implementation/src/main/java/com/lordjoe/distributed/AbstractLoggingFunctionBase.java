@@ -25,9 +25,11 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         callReportInterval = pCallReportInterval;
     }
 
-    private transient boolean logged;   // transient so every machine keeps its own
+    private static transient boolean logged;   // transient so every machine keeps its own
     private transient long numberCalls;   // transient so every machine keeps its own
     private SparkAccumulators accumulators; // member so it will be serialized from the executor
+    protected transient long totalTime;
+
 
     protected AbstractLoggingFunctionBase() {
         if (!isFunctionCallsLogged())
@@ -83,8 +85,10 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         // report every 100,000 calls
         if (getCallReportInterval() > 0) {
             long numberCalls1 = getNumberCalls();
-            if (numberCalls1 > 0 && numberCalls1 % getCallReportInterval() == 0)
+            if (numberCalls1 > 0 && numberCalls1 % getCallReportInterval() == 0) {
                 System.err.println("Calling Function " + className + " " + numberCalls1 / 1000 + "k times");
+                System.err.println(" Function took " + className + " " + totalTime / (1000L * 1000L * 1000L) + " sec");
+             }
         }
         incrementNumberCalled();
 

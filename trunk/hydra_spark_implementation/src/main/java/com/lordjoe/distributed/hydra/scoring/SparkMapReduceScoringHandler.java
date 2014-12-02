@@ -3,12 +3,14 @@ package com.lordjoe.distributed.hydra.scoring;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.*;
 import com.lordjoe.distributed.hydra.fragment.*;
+import com.lordjoe.distributed.spark.*;
 import com.lordjoe.distributed.tandem.*;
 import com.lordjoe.utilities.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
+import org.apache.spark.storage.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -228,16 +230,58 @@ public class SparkMapReduceScoringHandler implements Serializable {
     }
 
 
+    public static final double MIMIMUM_HYPERSCORE = 50;
+
     public JavaRDD<IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
         ElapsedTimer timer = new ElapsedTimer();
 
-          // ==============================
+        JavaRDD<IScoredScan> scores = binPairs.values().map(new ScoreScansByCharge());
+
+     //   JavaRDD<IScoredScan> scores = binPairs.mapPartitions(new ScoreScansByCharge());
+        scores = scores.persist(StorageLevel.MEMORY_AND_DISK());
+        System.err.println("Scores " + scores.count());
+
+
+        JavaPairRDD<String, IScoredScan> scoreByID = scores.mapToPair(new ScoredScanToId());
+
+        scoreByID = scoreByID.persist(StorageLevel.MEMORY_AND_DISK());
+        System.err.println("Scores by Id " + scoreByID.count());
+
+
+        // next line is for debugging
+        boolean forceInCluster = true;
+        scoreByID = SparkUtilities.realizeAndReturn(scoreByID, forceInCluster);
+
+        scoreByID = scoreByID.combineByKey(SparkUtilities.IDENTITY_FUNCTION, new combineScoredScans(),
+                new combineScoredScans()
+        );
+
+        timer.showElapsed("built score by ids");
+
+
+        // sort by id
+        scoreByID = scoreByID.sortByKey();
+        // next line is for debugging
+        //scoreByID = SparkUtilities.realizeAndReturn(scoreByID);
+
+
+        return scoreByID.values();
+    }
+
+
+    public JavaRDD<IScoredScan> scoreBinPairsOldCode(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
+        ElapsedTimer timer = new ElapsedTimer();
+
+        // ==============================
         // New code - this worked this has not worked on a large case
         JavaPairRDD<String, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = binPairs.mapToPair(new ToScoringTuples());
-       //  END New code - this worked this has not worked on a large case
+        //  END New code - this worked this has not worked on a large case
+
+        // distribute the work
+        keyedScoringPairs = SparkUtilities.guaranteePairedPartition(keyedScoringPairs);
 
 
-          // ==============================
+        // ==============================
         // Old code - this worked 11/24
 
 //        // drop the keys- we no longer need them
@@ -261,8 +305,8 @@ public class SparkMapReduceScoringHandler implements Serializable {
 //
 //
 //        JavaPairRDD<String, Tuple2<IMeasuredSpectrum, IPolypeptide>> keyedScoringPairs = values.mapToPair(new MapToSpectrumIDKey());
-           // =End Old code
-          // ==============================
+        // =End Old code
+        // ==============================
 
         /// next line is for debugging
         //keyedScoringPairs = SparkUtilities.realizeAndReturn(keyedScoringPairs);
@@ -311,6 +355,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
         return scoreByID.values();
     }
 
+
     /**
      * delegate scoring to the algorithm
      *
@@ -348,6 +393,13 @@ public class SparkMapReduceScoringHandler implements Serializable {
         public Tuple2<String, Tuple2<IMeasuredSpectrum, IPolypeptide>> doCall(final Tuple2<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> t) throws Exception {
             Tuple2<IMeasuredSpectrum, IPolypeptide> tpl = t._2();
             return new Tuple2(tpl._1().getId(), tpl);
+        }
+    }
+
+    private static class ScoredScanToId extends AbstractLoggingPairFunction<IScoredScan, String, IScoredScan> {
+        @Override
+        public Tuple2<String, IScoredScan> doCall(final IScoredScan t) {
+            return new Tuple2<String, IScoredScan>(t.getBestMatch().getMeasured().getId(), t);
         }
     }
 
@@ -402,6 +454,66 @@ public class SparkMapReduceScoringHandler implements Serializable {
                 ((OriginatingScoredScan) original).addSpectralMatch(match);
             }
             return original;
+        }
+    }
+
+
+    private class ScoreScansByCharge extends AbstractLoggingFunction< Tuple2<IMeasuredSpectrum, IPolypeptide> , IScoredScan> {
+        private ScoreScansByCharge() {
+            SparkAccumulators.createAccumulator("NumberSavedScores");
+        }
+
+        @Override
+        public  IScoredScan  doCall(Tuple2<IMeasuredSpectrum, IPolypeptide> v1) throws Exception {
+
+            IMeasuredSpectrum spec = v1._1();
+            IPolypeptide pp = v1._2();
+            if (!(spec instanceof RawPeptideScan))
+                throw new IllegalStateException("We can only handle RawScans Here");
+            RawPeptideScan rs = (RawPeptideScan) spec;
+            IScoredScan ret = scoreOnePeptide(rs, pp);
+            return ret;
+        }
+
+
+    }
+
+
+    private class ScoreScansByChargeFlatMap extends AbstractLoggingFlatMapFunction<Iterator<Tuple2<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>>>, IScoredScan> {
+        private ScoreScansByChargeFlatMap() {
+            SparkAccumulators.createAccumulator("NumberSavedScores");
+        }
+
+        @Override
+        public Iterable<IScoredScan> doCall(final Iterator<Tuple2<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>>> t) throws Exception {
+            List<IScoredScan> holder = new ArrayList<IScoredScan>();
+
+            while (t.hasNext()) {
+                Tuple2<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> vx = t.next();
+                Tuple2<IMeasuredSpectrum, IPolypeptide> v1 = vx._2();
+                IMeasuredSpectrum spec = v1._1();
+                IPolypeptide pp = v1._2();
+                if (!(spec instanceof RawPeptideScan))
+                    throw new IllegalStateException("We can only handle RawScans Here");
+                RawPeptideScan rs = (RawPeptideScan) spec;
+                IScoredScan ret = scoreOnePeptide(rs, pp);
+                ISpectralMatch bestMatch = ret.getBestMatch();
+                if (bestMatch != null) {
+                    try {
+                        double hyperScore = bestMatch.getHyperScore();
+                        if (hyperScore > MIMIMUM_HYPERSCORE)
+                            holder.add(ret);
+                    }
+                    catch (Exception e) {
+                        // ignore any bad stuff and do not save score
+
+                    }
+                }
+            }
+            SparkAccumulators instance = SparkAccumulators.getInstance();
+            if (instance != null)
+                instance.incrementAccumulator("NumberSavedScores", holder.size());
+            return holder;
         }
     }
 

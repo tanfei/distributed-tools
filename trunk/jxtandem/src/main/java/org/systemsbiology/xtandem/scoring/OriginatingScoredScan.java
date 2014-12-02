@@ -457,7 +457,7 @@ public class OriginatingScoredScan implements IScoredScan, IAddable<IScoredScan>
             String originalId = bestMatch.getMeasured().getId();
             String matchId = added.getMeasured().getId();
             if (!originalId.equals(matchId))
-                throw new IllegalStateException("Trying to add " + matchId + " tp scores from " + originalId);
+                throw new IllegalStateException("Trying to add " + matchId + " to scores from " + originalId);
 
         }
 

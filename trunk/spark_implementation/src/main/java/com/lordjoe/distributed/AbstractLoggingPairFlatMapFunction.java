@@ -12,28 +12,29 @@ import java.io.Serializable;
  * User: Steve
  * Date: 10/23/2014
  */
-public abstract class AbstractLoggingPairFlatMapFunction<T ,K extends Serializable,V extends Serializable>
-        extends AbstractLoggingFunctionBase implements PairFlatMapFunction<T,K,V> {
+public abstract class AbstractLoggingPairFlatMapFunction<T, K extends Serializable, V extends Serializable>
+        extends AbstractLoggingFunctionBase implements PairFlatMapFunction<T, K, V> {
 
 
     /**
      * NOTE override doCall not this
+     *
      * @param t
      * @return
      */
     @Override
-    public final  Iterable<Tuple2<K, V>> call(final T t)  {
+    public final Iterable<Tuple2<K, V>> call(final T t) throws Exception {
         reportCalls();
-           try {
-            return doCall(t);
-          }
-         catch (Exception e) {
-             throw new RuntimeException(e);
-           }
-     }
+        long startTime = System.nanoTime();
+        Iterable<Tuple2<K, V>> ret = doCall(t);
+        long estimatedTime = System.nanoTime() - startTime;
+        totalTime += estimatedTime;
+        return ret;
+    }
 
     /**
      * do work here
+     *
      * @param v1
      * @return
      */
