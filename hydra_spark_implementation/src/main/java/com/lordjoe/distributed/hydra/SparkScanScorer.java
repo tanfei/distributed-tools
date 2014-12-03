@@ -1,5 +1,6 @@
 package com.lordjoe.distributed.hydra;
 
+import com.google.common.base.*;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.hydra.fragment.*;
@@ -9,8 +10,8 @@ import com.lordjoe.distributed.spectrum.*;
 import com.lordjoe.utilities.*;
 import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.*;
-import org.apache.spark.storage.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
 import org.systemsbiology.xtandem.peptide.*;
@@ -20,6 +21,7 @@ import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
 
 import java.io.*;
+import java.lang.Boolean;
 import java.util.*;
 
 
@@ -153,6 +155,9 @@ public class SparkScanScorer {
     public static final int SPARK_CONFIG_INDEX = 0;
     public static final int TANDEM_CONFIG_INDEX = 1;
     public static final int SPECTRA_INDEX = 2;
+    public static final int SPECTRA_TO_SCORE = 500;
+    public static final String MAX_PROTEINS_PROPERTY = "com.lordjoe.distributed.hydra.MaxProteins";
+    public static final String MAX_SPECTRA_PROPERTY = "com.lordjoe.distributed.hydra.MaxSpectra";
 
     /**
      * call with args like or20080320_s_silac-lh_1-1_11short.mzxml in Sample2
@@ -189,12 +194,25 @@ public class SparkScanScorer {
 
         SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(configStr);
 
+        int max_proteins = 0;
+        if (sparkProperties.containsKey(MAX_PROTEINS_PROPERTY)) {
+            max_proteins = Integer.parseInt(sparkProperties.getProperty(MAX_PROTEINS_PROPERTY));
+            System.err.println("Max Proteins " + max_proteins);
+        }
+
+        int max_spectra = SPECTRA_TO_SCORE;
+        if (sparkProperties.containsKey(MAX_SPECTRA_PROPERTY)) {
+            max_spectra = Integer.parseInt(sparkProperties.getProperty(MAX_SPECTRA_PROPERTY));
+        }
+        System.err.println("Max Proteins " + max_proteins);
+
+        System.err.println("Max Spectra " + max_spectra);
+
 
         // handler.buildLibraryIfNeeded();
         // find all polypeptides and modified polypeptides
-        JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
-        databasePeptides =  databasePeptides.persist(StorageLevel.MEMORY_AND_DISK());
-        System.err.println("Found " + databasePeptides.count() + " peptides");
+        JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary(max_proteins);
+        databasePeptides = SparkUtilities.persistAndCount("Database peptides", databasePeptides);
 
         timer.showElapsed("Found Peptides");
 
@@ -207,12 +225,29 @@ public class SparkScanScorer {
         JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(spectra);
         JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
 
-        spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
-        System.err.println("Scoring " + spectraToScore.count() + " spectra");
+        // drop bad ids
+        spectraToScore = spectraToScore.filter(new Function<IMeasuredSpectrum, java.lang.Boolean>() {
+            @Override
+            public Boolean call(final IMeasuredSpectrum v1) throws Exception {
+                String id = v1.getId();
+                return !Strings.isNullOrEmpty(id);
+            }
+        });
 
+        long[] spectraCountRef = new long[1];
+        spectraToScore = SparkUtilities.persistAndCount("Spectra  to Score", spectraToScore, spectraCountRef);
 
-      //  spectraToScore = spectraToScore.persist(StorageLevel.MEMORY_AND_DISK());
-      //  System.out.println("Scoring " + spectraToScore.count() + " spectra");
+        long spectraCount = spectraCountRef[0];
+
+        // filter to fewer spectra todo place in loop
+        if (max_spectra > 0 && spectraCount > 0) {
+            int countPercentile = (int) (100 * max_spectra / spectraCount);  // try scoring about 1000
+            if(countPercentile < 100) {
+                spectraToScore = spectraToScore.filter(new PercentileFilter<IMeasuredSpectrum>(countPercentile)); // todo make a loop
+                spectraToScore = SparkUtilities.persistAndCount("Filtered Spectra  to Score", spectraToScore, spectraCountRef);
+            }
+         }
+
 
         // next line is for debugging
         // spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
@@ -222,20 +257,16 @@ public class SparkScanScorer {
         // Map peptides into bins
         JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides = handler.mapFragmentsToKeys(databasePeptides);
 
-             // distribute the work
+        // distribute the work
         keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
 
-
-        // next line is for debugging
-        //  keyedPeptides =  keyedPeptides.persist(StorageLevel.MEMORY_AND_DISK());
-        // keyedPeptides = SparkUtilities.realizeAndReturn(keyedPeptides, new FindInterestingBinnedPeptides());
 
         timer.showElapsed("Mapped Peptides");
 
         // Map spectra into bins
         JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
 
-            // distribute the work
+        // distribute the work
         keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
 
         // next line is for debugging
@@ -246,15 +277,11 @@ public class SparkScanScorer {
                 SparkUtilities.DEFAULT_PARTITIONER);
         //          BinChargeKey.getPartitioner());
 
-          // next line is for debugging
+        // next line is for debugging
         /// binPairs = SparkUtilities.realizeAndReturn(binPairs);
 
-        System.out.println("number partitions before " + binPairs.partitions().size());
+        System.out.println("number partitions " + binPairs.partitions().size());
 
-        // Todo - I wonder if this step is needed - it is expensive SLewis
-//        System.out.println("number partitions forced " + SparkUtilities.getDefaultNumberPartitions());
-//        binPairs = binPairs.repartition(SparkUtilities.getDefaultNumberPartitions());
-//        System.out.println("number partitions after " + binPairs.partitions().size());
 
         // next line is for debugging
         // binPairs = SparkUtilities.realizeAndReturn(binPairs);
@@ -262,26 +289,14 @@ public class SparkScanScorer {
 
 
         timer.reset();
-        binPairs = binPairs.persist(StorageLevel.MEMORY_AND_DISK());
+        binPairs = SparkUtilities.persistAndCount("Binned Pairs", binPairs);
         timer.showElapsed("Persist");
-
-        timer.reset();
-        System.err.println("Pairs to Score " + binPairs.count() + " Pairs");
-        timer.showElapsed("Counted Pairs");
-
-        timer.reset();
-        SparkUtilities.showCounts( binPairs);
-        timer.showElapsed("Counted by Key");
 
         timer.reset();
         // now produce all peptide spectrum scores where spectrum and peptide are in the same bin
         JavaRDD<IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
-        timer.showElapsed("Counted by Key");
 
-        // next line is for debugging
-        //bestScores = SparkUtilities.realizeAndReturn(bestScores);
-        //bestScores = bestScores.persist(StorageLevel.MEMORY_AND_DISK());
-       // System.out.println("Scorings " + bestScores.count() + " Scores");
+        bestScores = SparkUtilities.persistAndCount("Best Scores", bestScores);
 
         timer.showElapsed("built best scores");
         //bestScores =  bestScores.persist(StorageLevel.MEMORY_AND_DISK());
@@ -302,8 +317,6 @@ public class SparkScanScorer {
         totalTime.showElapsed("Finished Scoring");
 
     }
-
-
 
 
 }

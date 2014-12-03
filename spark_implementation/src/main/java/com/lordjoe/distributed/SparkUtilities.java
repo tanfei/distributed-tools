@@ -1,6 +1,7 @@
 package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.database.*;
+import com.lordjoe.distributed.spark.MachineUseAccumulator.*;
 import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
@@ -14,7 +15,6 @@ import org.apache.spark.storage.*;
 import org.systemsbiology.common.*;
 import org.systemsbiology.hadoop.*;
 import scala.*;
-import com.lordjoe.distributed.spark.MachineUseAccumulator.CountedItem;
 
 import javax.annotation.*;
 import java.io.*;
@@ -46,6 +46,8 @@ public class SparkUtilities implements Serializable {
     private static String appName = DEFAULT_APP_NAME;
     private static String pathPrepend = "";
 
+
+    private static transient boolean logSetToWarn;
     private static boolean local;
 
     public static boolean isLocal() {
@@ -61,6 +63,8 @@ public class SparkUtilities implements Serializable {
     private static int defaultNumberPartitions = DEFAULT_NUMBER_PARTITIONS;
 
     public static int getDefaultNumberPartitions() {
+        if (isLocal())
+            return 1;
         return defaultNumberPartitions;
     }
 
@@ -285,12 +289,19 @@ public class SparkUtilities implements Serializable {
         SparkBroadcastObjects.createInstance();
 
         System.out.println("Set Log to Warn");
-        Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.WARN);
+        setLogToWarn();
 //        LoggerRepository loggerRepository = rootLogger.getLoggerRepository();
 //        Logger logger = loggerRepository.getLogger("storage.MemoryStore");
 //        logger.setLevel();
         return ret;
+    }
+
+    public static void setLogToWarn() {
+        if (!logSetToWarn) {
+            Logger rootLogger = Logger.getRootLogger();
+            rootLogger.setLevel(Level.WARN);
+            logSetToWarn = true;
+        }
     }
 
 
@@ -711,7 +722,7 @@ public class SparkUtilities implements Serializable {
      * @return output rdd of same type and data but partitioned
      */
     @Nonnull
-    public static <K extends Serializable, V > JavaPairRDD<K, V> guaranteePairedPartition(@Nonnull final JavaPairRDD<K, V> inp) {
+    public static <K extends Serializable, V> JavaPairRDD<K, V> guaranteePairedPartition(@Nonnull final JavaPairRDD<K, V> inp) {
         List<Partition> partitions = inp.partitions();
         int defaultNumberPartitions1 = getDefaultNumberPartitions();
         if (partitions.size() == defaultNumberPartitions1)
@@ -749,9 +760,9 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp) {
-     // if not local ignore
-        return realizeAndReturn(inp,false);
-     }
+        // if not local ignore
+        return realizeAndReturn(inp, false);
+    }
 
 
     /**
@@ -765,21 +776,23 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler) {
         // if not local ignore
-        return realizeAndReturn(inp,false);
+        return realizeAndReturn(inp, false);
     }
 
 
     /**
      * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
      *
-     * @param inp this is an RDD - usually one you want to examine during debugging
+     * @param inp   this is an RDD - usually one you want to examine during debugging
      * @param force only run the function on the cluster if true
-       * @param <T> whatever inp is a list of
+     * @param <T>   whatever inp is a list of
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, boolean force) {
         JavaSparkContext jcx = getCurrentContext();
+        if (force)
+            throw new UnsupportedOperationException("Fix This"); // ToDo
         if (!isLocal() && !force)    // not to use on the cluster - only for debugging
             return inp; //
         List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
@@ -797,14 +810,16 @@ public class SparkUtilities implements Serializable {
      * force a JavaPairRDD to evaluate then return the results as a JavaPairRDD
      *
      * @param inp     this is an RDD - usually one you want to examine during debugging
-     * @param force only run the function on the cluster if true
+     * @param force   only run the function on the cluster if true
      * @param handler all otuples are passed here
      * @param <T>     whatever inp is a list of
      * @return non-null RDD of the same values but realized
      */
     @Nonnull
-    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler,boolean force) {
+    public static <K, V> JavaPairRDD<K, V> realizeAndReturn(@Nonnull final JavaPairRDD<K, V> inp, ObjectFoundListener<Tuple2<K, V>> handler, boolean force) {
         JavaSparkContext jcx = getCurrentContext();
+        if (force)
+            throw new UnsupportedOperationException("Fix This"); // ToDo
         if (!isLocal() && !force)    // not to use on the cluster - only for debugging
             return inp; //
         List<Tuple2<K, V>> collect = (List<Tuple2<K, V>>) (List) inp.collect();    // break here and take a look
@@ -842,7 +857,7 @@ public class SparkUtilities implements Serializable {
      * @return
      */
     @Nonnull
-    public static <V> JavaRDD<V> presist(@Nonnull final JavaRDD<V> inp) {
+    public static <V> JavaRDD<V> persist(@Nonnull final JavaRDD<V> inp) {
         return inp.persist(StorageLevel.MEMORY_AND_DISK());
     }
 
@@ -857,6 +872,51 @@ public class SparkUtilities implements Serializable {
         return inp.persist(StorageLevel.MEMORY_AND_DISK());
     }
 
+
+    /**
+     * persist and show count
+     *
+     * @param message message to show
+     * @param inp     rdd
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V> persistAndCount(@Nonnull final String message, @Nonnull final JavaRDD<V> inp, long[] countRef) {
+        JavaRDD<V> ret = persist(inp);
+        long count = ret.count();
+        System.err.println(message + " has " + count);
+        countRef[0] = count;
+        return ret;
+    }
+
+
+    /**
+     * persist and show count
+     *
+     * @param message message to show
+     * @param inp     rdd
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V> persistAndCount(@Nonnull final String message, @Nonnull final JavaRDD<V> inp) {
+        JavaRDD<V> ret = persist(inp);
+        System.err.println(message + " has " + ret.count());
+        return ret;
+    }
+
+    /**
+     * persist and show count
+     *
+     * @param message message to show
+     * @param inp     rdd
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> persistAndCount(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp) {
+        JavaPairRDD<K, V> ret = persist(inp);
+        System.err.println(message + " has " + ret.count());
+        return ret;
+    }
 
     /**
      * make an RDD from an iterable
@@ -1079,8 +1139,8 @@ public class SparkUtilities implements Serializable {
 
             byte[] mac = network.getHardwareAddress();
 
-            if(mac == null) {
-                mac = new byte[4] ;  // fake it if needed
+            if (mac == null) {
+                mac = new byte[4];  // fake it if needed
                 mac[0] = 127;
                 mac[3] = 1;
             }
@@ -1129,49 +1189,51 @@ public class SparkUtilities implements Serializable {
     }
 
     public static final int MAX_COUNTS_SHOWN = 10;
+
     public static <K, V> void showCounts(JavaPairRDD<K, V> binPairs) {
         Map<K, Object> counts = binPairs.countByKey();
-        List< CountedItem> holder = new ArrayList< CountedItem>();
+        List<CountedItem> holder = new ArrayList<CountedItem>();
         for (K key : counts.keySet()) {
             Object countObj = counts.get(key);
             String keyStr = key.toString();
             long count = java.lang.Long.parseLong(countObj.toString());
-            holder.add(new CountedItem(keyStr,count));
+            holder.add(new CountedItem(keyStr, count));
         }
         Collections.sort(holder);
         int shown = 0;
         for (CountedItem countedItem : holder) {
             System.err.println(countedItem.getValue() + " " + countedItem.getValue());
-            if(shown++ > MAX_COUNTS_SHOWN)
+            if (shown++ > MAX_COUNTS_SHOWN)
                 break;
         }
-
 
 
     }
 
 
-    public static <T extends Serializable> JavaRDD<T> getFirstN(final long n,JavaRDD<T> inp) {
+    public static <T extends Serializable> JavaRDD<T> getFirstN(final long n, JavaRDD<T> inp) {
         return inp.filter(new FilterFirstN<T>(n));
     }
 
     /**
      * return a fraction of the original RDD
+     *
      * @param fraction
      * @param inp
      * @param <T>
      * @return
      */
-    public static <T extends Serializable> JavaRDD<T> getFraction(double fraction,JavaRDD<T> inp) {
+    public static <T extends Serializable> JavaRDD<T> getFraction(double fraction, JavaRDD<T> inp) {
         return inp.filter(new FilterRandomFraction<T>(fraction));
     }
 
     private static class FilterFirstN<T extends Serializable> extends AbstractLoggingFunction<T, Boolean> {
         private final long maxSaved;
         private long numberSaved;
+
         private FilterFirstN(long n) {
             maxSaved = n;
-          }
+        }
 
         @Override
         public Boolean doCall(final T v1) throws Exception {
@@ -1182,9 +1244,10 @@ public class SparkUtilities implements Serializable {
     private static class FilterRandomFraction<T extends Serializable> extends AbstractLoggingFunction<T, Boolean> {
         private final double fractionSaved;
         private final Random rnd = new Random();
+
         private FilterRandomFraction(double n) {
             fractionSaved = n;
-          }
+        }
 
         @Override
         public Boolean doCall(final T v1) throws Exception {

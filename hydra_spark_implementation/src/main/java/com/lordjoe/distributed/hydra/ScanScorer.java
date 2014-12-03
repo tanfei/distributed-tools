@@ -132,7 +132,7 @@ public class ScanScorer {
         SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(configStr);
 
         // handler.buildLibraryIfNeeded();
-        JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary();
+        JavaRDD<IPolypeptide> databasePeptides = handler.buildLibrary(0);
 
         // actually needed in a later stage
         //Map<Integer, Integer> databaseSizes = handler.getDatabaseSizes();
