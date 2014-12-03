@@ -80,6 +80,7 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         String className = getClass().getSimpleName();
         if (!isLogged()) {
             System.err.println("Starting Function " + className);
+            SparkUtilities.setLogToWarn();
             setLogged(true);  // done once
         }
         // report every 100,000 calls
@@ -87,7 +88,7 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
             long numberCalls1 = getNumberCalls();
             if (numberCalls1 > 0 && numberCalls1 % getCallReportInterval() == 0) {
                 System.err.println("Calling Function " + className + " " + numberCalls1 / 1000 + "k times");
-                System.err.println(" Function took " + className + " " + totalTime / (1000L * 1000L * 1000L) + " sec");
+                System.err.println(" Function took " + className + " " + String.format("%10.3f", totalTime / (1000000.0)) + " msec");
              }
         }
         incrementNumberCalled();
