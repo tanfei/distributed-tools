@@ -15,7 +15,7 @@ import java.io.*;
 public abstract class AbstractLoggingFunctionBase implements Serializable {
 
 
-    private static int callReportInterval = 100000;
+    private static int callReportInterval = 10000;
 
     public static int getCallReportInterval() {
         return callReportInterval;
@@ -25,7 +25,7 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         callReportInterval = pCallReportInterval;
     }
 
-    private static transient boolean logged;   // transient so every machine keeps its own
+    private transient boolean logged;   // transient so every machine keeps its own
     private transient long numberCalls;   // transient so every machine keeps its own
     private SparkAccumulators accumulators; // member so it will be serialized from the executor
     protected transient long totalTime;
@@ -80,7 +80,7 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         String className = getClass().getSimpleName();
         if (!isLogged()) {
             System.err.println("Starting Function " + className);
-            SparkUtilities.setLogToWarn();
+            //SparkUtilities.setLogToWarn();
             setLogged(true);  // done once
         }
         // report every 100,000 calls
