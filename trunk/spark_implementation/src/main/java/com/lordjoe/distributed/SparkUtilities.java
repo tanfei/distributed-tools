@@ -40,12 +40,20 @@ public class SparkUtilities implements Serializable {
     public static final String DEFAULT_APP_NAME = "Anonymous";
     public static final String MARKER_PROPERTY_NAME = "com.lordjoe.distributed.marker_property";
     public static final String NUMBER_PARTITIONS_PROPERTY_NAME = "com.lordjoe.distributed.number_partitions";
-    public static final String LOG_FUNCTIONS_PROPERTY_NAME = "com.lordjoe.distributed.logFunctionsByDefault";
+     public static final String LOG_FUNCTIONS_PROPERTY_NAME = "com.lordjoe.distributed.logFunctionsByDefault";
     public static final String MARKER_PROPERTY_VALUE = "spark_property_set";
 
     private static String appName = DEFAULT_APP_NAME;
     private static String pathPrepend = "";
+    private static JobSizeEnum jobSize = JobSizeEnum.Medium;
 
+    public static JobSizeEnum getJobSize() {
+        return jobSize;
+    }
+
+    public static void setJobSize(final JobSizeEnum pJobSize) {
+        jobSize = pJobSize;
+    }
 
     private static transient boolean logSetToWarn;
     private static boolean local;
@@ -849,6 +857,14 @@ public class SparkUtilities implements Serializable {
         return (JavaRDD<V>) jcx.parallelize(collect);
     }
 
+
+    public static int  getTaskID()
+    {
+        JavaSparkContext jcx = getCurrentContext();
+        SparkContext sc = jcx.sc();
+        TaskContext  tc;
+        throw new UnsupportedOperationException("Fix This"); // ToDo
+    }
 
     /**
      * persist in the best way - saves remembering which storage level

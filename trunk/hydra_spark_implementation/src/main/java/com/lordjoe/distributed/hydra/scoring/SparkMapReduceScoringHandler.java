@@ -224,12 +224,35 @@ public class SparkMapReduceScoringHandler implements Serializable {
 
 
     public static final double MIMIMUM_HYPERSCORE = 50;
+    public static final int DEFAULT_MAX_SCORINGS_PER_PARTITION = 20000;
+
+    private static int maxScoringPartitionSize = DEFAULT_MAX_SCORINGS_PER_PARTITION;
+
+    public static int getMaxScoringPartitionSize() {
+        return maxScoringPartitionSize;
+    }
+
+    public static void setMaxScoringPartitionSize(final int pMaxScoringPartitionSize) {
+        maxScoringPartitionSize = pMaxScoringPartitionSize;
+    }
 
     public JavaRDD<IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
         ElapsedTimer timer = new ElapsedTimer();
 
         JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
-        values = values.coalesce(SparkUtilities.getDefaultNumberPartitions(),true); // force a shuffle
+
+       long[] totalValues = new long[1];
+       //   JavaRDD<IScoredScan> scores = binPairs.mapPartitions(new ScoreScansByCharge());
+        values = SparkUtilities.persistAndCount("Scans to Score", values,totalValues);
+        long numberValues = totalValues[0];
+
+
+       int numberScoringPartitions = 1 + (int)(numberValues / getMaxScoringPartitionSize());
+        numberScoringPartitions = Math.max(SparkUtilities.getDefaultNumberPartitions(),numberScoringPartitions);
+        System.err.println("Number scoring partitions " + numberScoringPartitions);
+
+        values = values.coalesce(numberScoringPartitions,true); // force a shuffle
+      //  values = values.coalesce(SparkUtilities.getDefaultNumberPartitions(),true); // force a shuffle
 
         JavaRDD<IScoredScan> scores = values.flatMap(new ScoreScansByCharge());
 
@@ -361,7 +384,11 @@ public class SparkMapReduceScoringHandler implements Serializable {
         scorer1.addPeptide(pp);
         scorer1.generateTheoreticalSpectra();
         ITandemScoringAlgorithm algorithm1 = getAlgorithm();
-        return algorithm1.handleScan(scorer1, spec, pps);
+        IScoredScan ret = algorithm1.handleScan(scorer1, spec, pps);
+        // clean up
+        scorer1.clearPeptides();
+        scorer1.clearSpectra();
+        return ret;
     }
 
     public Map<Integer, Integer> getDatabaseSizes() {
