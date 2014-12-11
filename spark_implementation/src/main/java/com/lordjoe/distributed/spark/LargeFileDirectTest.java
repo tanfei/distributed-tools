@@ -1,10 +1,5 @@
 package com.lordjoe.distributed.spark;
 
-/**
- * com.lordjoe.distributed.spark.LargeFileTest
- * User: Steve
- * Date: 12/5/2014
- */
 
 import com.lordjoe.distributed.input.*;
 import org.apache.hadoop.conf.*;
@@ -22,7 +17,7 @@ import java.util.*;
 
 
 /**
- * com.lordjoe.spark.LargeFileSample
+ * com.lordjoe.spark.LargeFileDirectTest
  * User: Steve
  * Creates a target fasta file - looks like
  * >1
@@ -94,6 +89,8 @@ public class LargeFileDirectTest {
         }
         return sb.toString();
     }
+
+
 
 
     // make up a DNA fragment fragmentLength long
@@ -202,8 +199,19 @@ public class LargeFileDirectTest {
         Option<String> option = sparkConf.getOption("spark.master");
         if (!option.isDefined())    // use local over nothing
             sparkConf.setMaster("local[*]");
+        else
+            sparkConf.set("spark.shuffle.manager","HASH");
+
+        sparkConf.set("spark.mesos.coarse", "true");  // always allow a job to be killed
+        sparkConf.set("spark.ui.killEnabled", "true");  // always allow a job to be killed
+         sparkConf.set("spark.mesos.executor.memoryOverhead","1G");
+        sparkConf.set("spark.executor.memory","12G");
+        sparkConf.set("spark.task.cpus","4");
+        sparkConf.set("spark.shuffle.memoryFraction","0.5");
+        sparkConf.set("spark.default.parallelism","120");
 
         JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+
 
         // get hfs and make get rid of older files
         Configuration entries = ctx.hadoopConfiguration();
@@ -216,11 +224,12 @@ public class LargeFileDirectTest {
 
         System.err.println("Created " + numberCreated + "records");
 
-
+        /*
         // now read as lines with textFile  - later we will read with a Hadoop InputFormat
         JavaRDD<String> lines = ctx.textFile(hdfsFileName);
 
         long numberReadLines = lines.count();
+
 
         // each record should be 2 lines
         long diff = (numberReadLines / 2) - numberCreated;
@@ -228,7 +237,7 @@ public class LargeFileDirectTest {
         System.out.println("using textFile lines " + numberLines + " numberCreated " + numberCreated + " difference " + diff);
 
         guaranteeDifferentMesosID();
-
+         */
         // now read using a Hadoop InputFormat
 
         Class inputFormatClass = FastaInputFormat.class;
@@ -254,6 +263,14 @@ public class LargeFileDirectTest {
                 return new DNAFragment(v1._1(), v1._2());
             }
         });
+
+
+       boolean forceShuffle = true;
+        dnaData.coalesce(120, forceShuffle);
+
+      //  dnaData = dnaData.persist(StorageLevel.DISK_ONLY());
+
+
 
               //lines = lines.persist(StorageLevel.DISK_ONLY());
         long numberFragments = dnaData.count();

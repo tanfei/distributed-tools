@@ -74,6 +74,24 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
         return accumulators;
     }
 
+    public static final double MILLISEC_IN_NANOSEC = 1000 * 1000;
+    public static final double SEC_IN_NANOSEC = MILLISEC_IN_NANOSEC * 1000;
+    public static final double MIN_IN_NANOSEC = SEC_IN_NANOSEC * 60;
+    public static final double HOUR_IN_NANOSEC = MIN_IN_NANOSEC * 60;
+    public static final double DAY_IN_NANOSEC = HOUR_IN_NANOSEC * 24;
+
+    public static String formatNanosec(long timeNanosec)   {
+        if(timeNanosec < 10 * SEC_IN_NANOSEC)
+            return String.format("%10.2f", timeNanosec / MILLISEC_IN_NANOSEC) + " msec";
+        if(timeNanosec < 10 * MIN_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / SEC_IN_NANOSEC) + " sec";
+        if(timeNanosec < 10 * HOUR_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / MIN_IN_NANOSEC) + " min";
+        if(timeNanosec < 10 * DAY_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / HOUR_IN_NANOSEC) + " hour";
+        return String.format("%10.2f", timeNanosec / DAY_IN_NANOSEC) + " days";
+     }
+
     public void reportCalls() {
         if (!isFunctionCallsLogged())
             return;
@@ -88,7 +106,7 @@ public abstract class AbstractLoggingFunctionBase implements Serializable {
             long numberCalls1 = getNumberCalls();
             if (numberCalls1 > 0 && numberCalls1 % getCallReportInterval() == 0) {
                 System.err.println("Calling Function " + className + " " + numberCalls1 / 1000 + "k times");
-                System.err.println(" Function took " + className + " " + String.format("%10.3f", totalTime / (1000000.0)) + " msec");
+                System.err.println(" Function took " + className + " " + formatNanosec(totalTime));
              }
         }
         incrementNumberCalled();

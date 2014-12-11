@@ -15,7 +15,7 @@ public class MGFStringTupleToSpectrumTuple extends AbstractLoggingPairFunction<T
 
     @Override
     public Tuple2<String, IMeasuredSpectrum> doCall(final Tuple2<String, String> kv) throws Exception {
-        String s = kv._2().toString();   // _2 is really a StringBuffer
+        String s = kv._2(); // .toString();   // _2 is really a StringBuffer
         LineNumberReader inp = new LineNumberReader(new StringReader(s));
         IMeasuredSpectrum spectrum = XTandemUtilities.readMGFScan(inp, "");
         return new Tuple2<String, IMeasuredSpectrum>(kv._1(), spectrum);
