@@ -1,6 +1,5 @@
 package com.lordjoe.distributed.hydra;
 
-import com.google.common.base.*;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.hydra.fragment.*;
@@ -11,7 +10,6 @@ import com.lordjoe.utilities.*;
 import org.apache.hadoop.conf.*;
 import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.*;
 import org.systemsbiology.xtandem.hadoop.*;
@@ -22,7 +20,6 @@ import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
 
 import java.io.*;
-import java.lang.Boolean;
 import java.util.*;
 
 
@@ -161,6 +158,81 @@ public class SparkScanScorer {
     public static final String MAX_SPECTRA_PROPERTY = "com.lordjoe.distributed.hydra.MaxSpectra";
     public static final String SKIP_SCORING_PROPERTY = "com.lordjoe.distributed.hydra.SkipScoring";
     public static final String SCORING_PARTITIONS_SCANS_NAME = "com.lordjoe.distributed.max_scoring_partition_scans";
+    public static final long MAX_SPECTRA_TO_SCORE_IN_ONE_PASS = 100000;
+
+
+    public static JavaPairRDD<BinChargeKey, IPolypeptide> getBinChargePeptides(final Properties pSparkProperties, final SparkMapReduceScoringHandler pHandler) {
+        int max_proteins = 0;
+        if (pSparkProperties.containsKey(MAX_PROTEINS_PROPERTY)) {
+            max_proteins = Integer.parseInt(pSparkProperties.getProperty(MAX_PROTEINS_PROPERTY));
+            System.err.println("Max Proteins " + max_proteins);
+        }
+        System.err.println("Max Proteins " + max_proteins);
+
+
+        // handler.buildLibraryIfNeeded();
+        // find all polypeptides and modified polypeptides
+        JavaRDD<IPolypeptide> databasePeptides = pHandler.buildLibrary(max_proteins);
+        databasePeptides = SparkUtilities.persistAndCount("Database peptides", databasePeptides);
+
+
+        // Map peptides into bins
+        JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides = pHandler.mapFragmentsToKeys(databasePeptides);
+
+        // distribute the work
+        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
+
+        // distribute the work
+        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
+        return keyedPeptides;
+    }
+
+    public static JavaRDD<IMeasuredSpectrum> getMeasuredSpectra(final ElapsedTimer pTimer, final Properties pSparkProperties, final String pSpectra) {
+        int max_spectra = SPECTRA_TO_SCORE;
+        if (pSparkProperties.containsKey(MAX_SPECTRA_PROPERTY)) {
+            max_spectra = Integer.parseInt(pSparkProperties.getProperty(MAX_SPECTRA_PROPERTY));
+        }
+        System.err.println("Max Spectra " + max_spectra);
+        // next line is for debugging
+        // databasePeptides = SparkUtilities.realizeAndReturn(databasePeptides,new FindInterestingPeptides());
+        // System.out.println("Scoring " + databasePeptides.count() + " Peptides");
+
+        // read spectra
+        JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(pSpectra);
+
+        System.err.println("Scans Partitions " + scans.partitions().size());
+        JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
+
+         // drop bad ids
+//        spectraToScore = spectraToScore.filter(new Function<IMeasuredSpectrum, Boolean>() {
+//            @Override
+//            public Boolean call(final IMeasuredSpectrum v1) throws Exception {
+//                String id = v1.getId();
+//                return !Strings.isNullOrEmpty(id);
+//            }
+//        });
+//
+//        long[] spectraCountRef = new long[1];
+//        spectraToScore = SparkUtilities.persistAndCount("Spectra  to Score", spectraToScore, spectraCountRef);
+//
+//        long spectraCount = spectraCountRef[0];
+//
+//        // filter to fewer spectra todo place in loop
+//        if (max_spectra > 0 && spectraCount > 0) {
+//            int countPercentile = (int) (100 * max_spectra / spectraCount);  // try scoring about 1000
+//            if (countPercentile < 100) {
+//                spectraToScore = spectraToScore.filter(new PercentileFilter<IMeasuredSpectrum>(countPercentile)); // todo make a loop
+//                spectraToScore = SparkUtilities.persistAndCount("Filtered Spectra  to Score", spectraToScore, spectraCountRef);
+//            }
+//        }
+
+        spectraToScore = SparkUtilities.persist(spectraToScore);
+
+        // next line is for debugging
+        // spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
+        pTimer.showElapsed("got Spectra to Score");
+        return spectraToScore;
+    }
 
     /**
      * call with args like or20080320_s_silac-lh_1-1_11short.mzxml in Sample2
@@ -199,12 +271,26 @@ public class SparkScanScorer {
         String configStr = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX]);
 
         Configuration hadoopConfiguration = SparkUtilities.getHadoopConfiguration();
-        hadoopConfiguration.setLong(org.apache.hadoop.mapreduce.lib.input.FileInputFormat.SPLIT_MAXSIZE, 64 * 1024L * 1024L);
+    //    hadoopConfiguration.setLong(org.apache.hadoop.mapreduce.lib.input.FileInputFormat.SPLIT_MAXSIZE, 64 * 1024L * 1024L);
 
-        Configuration hadoopConfiguration2 = SparkUtilities.getHadoopConfiguration();
+        Configuration hadoopConfiguration2 = SparkUtilities.getHadoopConfiguration();  // did we change the original or a copy
 
         String spectra = SparkUtilities.buildPath(args[SPECTRA_INDEX]);
-        JavaRDD<IMeasuredSpectrum> spectraToScore = getiMeasuredSpectra(timer, sparkProperties, spectra);
+        JavaRDD<IMeasuredSpectrum> spectraToScore = getMeasuredSpectra(timer, sparkProperties, spectra);
+        System.out.println("number partitions " + spectraToScore.partitions().size());
+
+        long[] spectraCounts = new long[1];
+        SparkUtilities.persistAndCount("Read Spectra",spectraToScore,spectraCounts);
+
+        long spectraCount = spectraCounts[0];
+//        if(spectraCount > MAX_SPECTRA_TO_SCORE_IN_ONE_PASS)  {
+//            int percentileKept = (int)((100L * MAX_SPECTRA_TO_SCORE_IN_ONE_PASS) /  spectraCount);
+//            System.err.println("Keeping " + percentileKept + "% spectra");
+//            spectraToScore = spectraToScore.filter(new PercentileFilter(percentileKept)) ;
+//        }
+
+      //  if(true)
+      //      return;
 
         SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(configStr);
 
@@ -215,7 +301,7 @@ public class SparkScanScorer {
         JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
 
 
-        // next line is for debugging
+         // next line is for debugging
         // keyedSpectra = SparkUtilities.realizeAndReturn(keyedSpectra);
 
         // find spectra-peptide pairs to score
@@ -238,7 +324,10 @@ public class SparkScanScorer {
         timer.showElapsed("Joined Pairs");
 
         String skipScoring = sparkProperties.getProperty(SKIP_SCORING_PROPERTY);
-        if (!"true".equals(skipScoring)) {
+        if ( "true".equals(skipScoring)) {
+            System.err.println("Skipped scoring");
+        }
+        else {
             timer.reset();
             // now produce all peptide spectrum scores where spectrum and peptide are in the same bin
             JavaRDD<IScoredScan> bestScores = handler.scoreBinPairs(binPairs);
@@ -265,80 +354,4 @@ public class SparkScanScorer {
         totalTime.showElapsed("Finished Scoring");
 
     }
-
-    public static JavaPairRDD<BinChargeKey, IPolypeptide> getBinChargePeptides(final Properties pSparkProperties, final SparkMapReduceScoringHandler pHandler) {
-        int max_proteins = 0;
-        if (pSparkProperties.containsKey(MAX_PROTEINS_PROPERTY)) {
-            max_proteins = Integer.parseInt(pSparkProperties.getProperty(MAX_PROTEINS_PROPERTY));
-            System.err.println("Max Proteins " + max_proteins);
-        }
-        System.err.println("Max Proteins " + max_proteins);
-
-
-        // handler.buildLibraryIfNeeded();
-        // find all polypeptides and modified polypeptides
-        JavaRDD<IPolypeptide> databasePeptides = pHandler.buildLibrary(max_proteins);
-        databasePeptides = SparkUtilities.persistAndCount("Database peptides", databasePeptides);
-
-
-        // Map peptides into bins
-        JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides = pHandler.mapFragmentsToKeys(databasePeptides);
-
-        // distribute the work
-        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
-
-        // distribute the work
-        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
-        return keyedPeptides;
-    }
-
-    public static JavaRDD<IMeasuredSpectrum> getiMeasuredSpectra(final ElapsedTimer pTimer, final Properties pSparkProperties, final String pSpectra) {
-        int max_spectra = SPECTRA_TO_SCORE;
-        if (pSparkProperties.containsKey(MAX_SPECTRA_PROPERTY)) {
-            max_spectra = Integer.parseInt(pSparkProperties.getProperty(MAX_SPECTRA_PROPERTY));
-        }
-        System.err.println("Max Spectra " + max_spectra);
-        // next line is for debugging
-        // databasePeptides = SparkUtilities.realizeAndReturn(databasePeptides,new FindInterestingPeptides());
-        // System.out.println("Scoring " + databasePeptides.count() + " Peptides");
-
-        // read spectra
-        JavaPairRDD<String, IMeasuredSpectrum> scans = SparkSpectrumUtilities.parseSpectrumFile(pSpectra);
-
-        boolean forceShuffle = true;
-        scans.coalesce(SparkUtilities.getDefaultNumberPartitions(), forceShuffle);
-        JavaRDD<IMeasuredSpectrum> spectraToScore = scans.values();
-
-        scans.coalesce(SparkUtilities.getDefaultNumberPartitions(), forceShuffle);
-        // drop bad ids
-        spectraToScore = spectraToScore.filter(new Function<IMeasuredSpectrum, Boolean>() {
-            @Override
-            public Boolean call(final IMeasuredSpectrum v1) throws Exception {
-                String id = v1.getId();
-                return !Strings.isNullOrEmpty(id);
-            }
-        });
-
-        long[] spectraCountRef = new long[1];
-        spectraToScore = SparkUtilities.persistAndCount("Spectra  to Score", spectraToScore, spectraCountRef);
-
-        long spectraCount = spectraCountRef[0];
-
-        // filter to fewer spectra todo place in loop
-        if (max_spectra > 0 && spectraCount > 0) {
-            int countPercentile = (int) (100 * max_spectra / spectraCount);  // try scoring about 1000
-            if (countPercentile < 100) {
-                spectraToScore = spectraToScore.filter(new PercentileFilter<IMeasuredSpectrum>(countPercentile)); // todo make a loop
-                spectraToScore = SparkUtilities.persistAndCount("Filtered Spectra  to Score", spectraToScore, spectraCountRef);
-            }
-        }
-
-
-        // next line is for debugging
-        // spectraToScore = SparkUtilities.realizeAndReturn(spectraToScore);
-        pTimer.showElapsed("got Spectra to Score");
-        return spectraToScore;
-    }
-
-
 }

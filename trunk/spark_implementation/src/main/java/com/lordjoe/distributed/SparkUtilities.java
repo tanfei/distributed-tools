@@ -31,6 +31,7 @@ import java.util.*;
  */
 public class SparkUtilities implements Serializable {
 
+    private transient static org.slf4j.spi.LoggerFactoryBinder FORCE_LOAD = null;
     //  private transient static ThreadLocal<JavaSparkContext> threadContext;
     private transient static JavaSparkContext threadContext;
     //  private transient static ThreadLocal<JavaSQLContext> threadContext;
@@ -866,6 +867,7 @@ public class SparkUtilities implements Serializable {
         throw new UnsupportedOperationException("Fix This"); // ToDo
     }
 
+    public static final StorageLevel DEFAULT_STORAGE_LEVEL = StorageLevel.DISK_ONLY();
     /**
      * persist in the best way - saves remembering which storage level
      *
@@ -874,7 +876,10 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <V> JavaRDD<V> persist(@Nonnull final JavaRDD<V> inp) {
-        return inp.persist(StorageLevel.MEMORY_AND_DISK());
+        StorageLevel storageLevel = inp.getStorageLevel();
+        if(storageLevel == null)
+            storageLevel = DEFAULT_STORAGE_LEVEL;
+        return inp.persist(storageLevel);
     }
 
     /**
@@ -885,7 +890,10 @@ public class SparkUtilities implements Serializable {
      */
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> persist(@Nonnull final JavaPairRDD<K, V> inp) {
-        return inp.persist(StorageLevel.MEMORY_AND_DISK());
+        StorageLevel storageLevel = inp.getStorageLevel();
+        if(storageLevel == null)
+            storageLevel = DEFAULT_STORAGE_LEVEL;
+        return inp.persist(storageLevel);
     }
 
 
@@ -928,7 +936,7 @@ public class SparkUtilities implements Serializable {
      * @return
      */
     @Nonnull
-    public static <K, V> JavaPairRDD<K, V> persistAndCount(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp) {
+    public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> persistAndCount(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp) {
         JavaPairRDD<K, V> ret = persist(inp);
         System.err.println(message + " has " + ret.count());
         return ret;
@@ -977,7 +985,7 @@ public class SparkUtilities implements Serializable {
      * @param <K>
      */
     public static void showPairRDD(JavaPairRDD inp) {
-        inp.persist(StorageLevel.MEMORY_ONLY());
+        inp = persist(inp);
         List<Tuple2> collect = inp.collect();
         for (Tuple2 kvTuple2 : collect) {
             System.out.println(kvTuple2._1().toString() + " : " + kvTuple2._2().toString());
@@ -1203,6 +1211,25 @@ public class SparkUtilities implements Serializable {
         n /= ONE_THOUSAND;
         return java.lang.Long.toString(n) + "G";
     }
+
+    public static final double MILLISEC_IN_NANOSEC = 1000 * 1000;
+    public static final double SEC_IN_NANOSEC = MILLISEC_IN_NANOSEC * 1000;
+    public static final double MIN_IN_NANOSEC = SEC_IN_NANOSEC * 60;
+    public static final double HOUR_IN_NANOSEC = MIN_IN_NANOSEC * 60;
+    public static final double DAY_IN_NANOSEC = HOUR_IN_NANOSEC * 24;
+
+    public static String formatNanosec(long timeNanosec)   {
+        if(timeNanosec < 10 * SEC_IN_NANOSEC)
+            return String.format("%10.2f", timeNanosec / MILLISEC_IN_NANOSEC) + " msec";
+        if(timeNanosec < 10 * MIN_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / SEC_IN_NANOSEC) + " sec";
+        if(timeNanosec < 10 * HOUR_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / MIN_IN_NANOSEC) + " min";
+        if(timeNanosec < 10 * DAY_IN_NANOSEC)
+              return String.format("%10.2f", timeNanosec / HOUR_IN_NANOSEC) + " hour";
+        return String.format("%10.2f", timeNanosec / DAY_IN_NANOSEC) + " days";
+     }
+
 
     public static final int MAX_COUNTS_SHOWN = 10;
 

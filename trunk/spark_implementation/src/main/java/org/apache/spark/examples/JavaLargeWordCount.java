@@ -84,6 +84,8 @@ public final class
         String inputPath = SparkUtilities.buildPath(args[INPUT_FILE_INDEX]);
         JavaRDD<String> lines = ctx.textFile(inputPath, 1);
 
+        lines = SparkUtilities.persistAndCount("lines",lines);
+
         lines = lines.repartition(NUMBER_PARTITIONS);
 
         // use my function not theirs

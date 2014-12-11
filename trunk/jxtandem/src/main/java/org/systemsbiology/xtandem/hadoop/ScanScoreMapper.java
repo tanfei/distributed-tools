@@ -14,7 +14,6 @@ import java.io.*;
  * Date: 3/7/11
  */
 public class ScanScoreMapper extends AbstractTandemMapper<Text> {
-    public static final ScanScoreMapper[] EMPTY_ARRAY = {};
 
 
     public ScanScoreMapper() {

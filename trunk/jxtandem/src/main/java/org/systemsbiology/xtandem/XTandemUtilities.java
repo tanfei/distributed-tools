@@ -42,8 +42,6 @@ public class XTandemUtilities {
     public static final String CREATE_DECOY_FOR_MODIFIED_PEPTIDES_PROPERTY = "org.systemsbiology.xtandem.CreateDecoyPeptidesForModifiedPeptides";
 
 
-
-
     public static final String EMAIL_ADDRESS_PROPERTY = "org.systemsbiology.xtandem.sender";
     //# password to send emmail
     public static final String EMAIL_PASSWORD_PROPERTY = "org.systemsbiology.xtandem.encryptedEmailPassword";
@@ -51,7 +49,7 @@ public class XTandemUtilities {
     public static final String EMAIL_RECIPIENT_PROPERTY = "org.systemsbiology.xtandem.emailrecipient";
 
 
-     // do not plan to deal with larger charges
+    // do not plan to deal with larger charges
     public static final int MAX_CHARGE = 4;
 
     public static final int INTEGER_SIZE = 4; // bytes per integer
@@ -688,14 +686,14 @@ public class XTandemUtilities {
     /**
      * convert a String to something which sorts well ablpabeticalli - if it is a number append
      * 00 else return the string
+     *
      * @param s
      * @return
      */
-    public static String asAlphabeticalId(String s)
-    {
+    public static String asAlphabeticalId(String s) {
         // can we trreat as number
-        for(int i = 0; i < s.length(); i++)  {
-            if(!Character.isDigit(s.charAt(i)))
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isDigit(s.charAt(i)))
                 return s.trim(); // not a number
         }
         // ok it is a number
@@ -909,11 +907,11 @@ public class XTandemUtilities {
 
 
     public static double getMaxPeak(ISpectrum peaks) {
-        if(peaks == null)
+        if (peaks == null)
             return 0;
         ISpectrumPeak[] pks = peaks.getPeaks();
-        if(pks == null)
-             return 0;
+        if (pks == null)
+            return 0;
         return getMaxPeak(pks);
     }
 
@@ -930,12 +928,12 @@ public class XTandemUtilities {
 
 
     public static double getSumPeaks(ISpectrum peaks) {
-         if(peaks == null)
-             return 0;
+        if (peaks == null)
+            return 0;
 
         ISpectrumPeak[] peaks1 = peaks.getPeaks();
-        if(peaks1 == null)
-             return 0;
+        if (peaks1 == null)
+            return 0;
         return getSumPeaks(peaks1);
     }
 
@@ -1110,7 +1108,6 @@ public class XTandemUtilities {
     }
 
 
-
     /**
      * parse an xml file using a specific handler
      *
@@ -1214,12 +1211,12 @@ public class XTandemUtilities {
         if (handler1 instanceof AbstractXTandemElementSaxHandler) {
             AbstractXTandemElementSaxHandler handlerx = (AbstractXTandemElementSaxHandler) handler1;
             Map<String, String> notes = handlerx.getNotes();
-          return notes;
+            return notes;
 
         }
         throw new UnsupportedOperationException("Fix This"); // ToDo
 
-     }
+    }
 
 
     /**
@@ -1418,10 +1415,15 @@ public class XTandemUtilities {
             while (line != null) {
                 line = line.trim();
                 // ignore empty lines
-                if(line.length() == 0) {
+                if (line.length() == 0) {
                     line = inp.readLine();
                     continue;
                 }
+                if (line.endsWith(" 0.0")) {
+                    line = inp.readLine();
+                    continue;
+                }
+
 
                 if (line.contains("=")) {
                     if (line.startsWith("TITLE=")) {
@@ -1455,7 +1457,6 @@ public class XTandemUtilities {
                             line = inp.readLine();
                             break;
                         }
-
                     }
                     if (tagIsNotHandled)
                         continue;
@@ -1486,8 +1487,10 @@ public class XTandemUtilities {
                         try {
                             double peakMass = Double.parseDouble(items[0].trim());
                             float peakIntensity = Float.parseFloat(items[1].trim());
-                            SpectrumPeak added = new SpectrumPeak(peakMass, peakIntensity);
-                            holder.add(added);
+                            if(peakIntensity > 0) {
+                                SpectrumPeak added = new SpectrumPeak(peakMass, peakIntensity);
+                                holder.add(added);
+                            }
                         }
                         catch (NumberFormatException e) {
                             // I am not happy but I guess we can forgive a little bad data
@@ -1499,7 +1502,6 @@ public class XTandemUtilities {
                         handleBadMGFData(line);
                     }
                     line = inp.readLine();
-
                 }
             }
             return null; // or should an exception be thrown - we did not hit an END IONS tag
@@ -2147,7 +2149,7 @@ use contrast angle - controls the use of contrast angle duplicate spectrum delet
 
     public static MassSpecRun[] parseMZXMLStream(InputStream is, String url) {
         MzXMLHandler handler = new MzXMLHandler();
-        MassSpecRun[] runs =  parseFile(is, handler, url);
+        MassSpecRun[] runs = parseFile(is, handler, url);
         return runs;
     }
 
@@ -2209,7 +2211,7 @@ use contrast angle - controls the use of contrast angle duplicate spectrum delet
         }
         finally {
             out.close();
-     //       m_Notes.outputLine("Scans Seen " + numberScans);
+            //       m_Notes.outputLine("Scans Seen " + numberScans);
         }
 
     }
