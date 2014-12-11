@@ -86,7 +86,7 @@ public final class JavaBigDataWordCount {
      */
     public static class CaseVariationFunction implements FlatMapFunction<String, String> {
         public Iterable<String> call(String s) {
-            // HELP - I don't think a List will work for long inputs given WHAT else can I use
+            // HELP - I dont think a List will work for long inputs given WHAT else can I use
             List<String> holder = new ArrayList<String>();  // holds variants
             holder.add(s);
             makeVariations(s.toCharArray(), holder, 0);  // do real work filling in holder
@@ -114,7 +114,7 @@ public final class JavaBigDataWordCount {
         }
     }
 
-    // a few lines of text so we don't need to read a file is we don't want to
+    // a few lines of text so we dont need to read a file is we dont want to
     public static final String GETTYSBURG =
             "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in liberty," +
                     " and dedicated to the proposition that “all men are created equal.”\n" +

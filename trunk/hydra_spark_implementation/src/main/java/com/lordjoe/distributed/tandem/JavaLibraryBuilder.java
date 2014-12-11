@@ -2,7 +2,6 @@ package com.lordjoe.distributed.tandem;
 
 import com.lordjoe.distributed.*;
 import org.systemsbiology.xtandem.*;
-import com.lordjoe.distributed.hydra.protein.*;
 
 import java.io.*;
 import java.util.*;
@@ -63,35 +62,35 @@ public class JavaLibraryBuilder {
         return application;
     }
 
-    public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("usage configFile fastaFile");
-            return;
-        }
-        File config = new File(args[0]);
-        String fasta = args[1];
-        JavaLibraryBuilder lb = new JavaLibraryBuilder(config);
-
-         List<KeyValueObject<String, String>> proteins =  parseFastaFile(fasta);
-
-        ProteinMapper pm = new ProteinMapper(lb.getApplication());
-        ProteinReducer pr = new ProteinReducer(lb.getApplication());
-
-        JavaMapReduce handler = new JavaMapReduce(pm, pr, IPartitionFunction.HASH_PARTITION);
-
-        handler.mapReduceSource(proteins);
-
-        Iterable<KeyValueObject<String, String>> list = handler.collect();
-
-
-
-        int index = 0;
-        for (KeyValueObject<String, String> keyValueObject : list) {
-            System.out.println(keyValueObject);
-            if(index++ > 1000)
-                break;
-        }
-
-
-    }
+//    public static void main(String[] args) {
+//        if (args.length == 0) {
+//            System.out.println("usage configFile fastaFile");
+//            return;
+//        }
+//        File config = new File(args[0]);
+//        String fasta = args[1];
+//        JavaLibraryBuilder lb = new JavaLibraryBuilder(config);
+//
+//         List<KeyValueObject<String, String>> proteins =  parseFastaFile(fasta);
+//
+//        ProteinMapper pm = new ProteinMapper(lb.getApplication());
+//        ProteinReducer pr = new ProteinReducer(lb.getApplication());
+//
+//        JavaMapReduce handler = new JavaMapReduce(pm, pr, IPartitionFunction.HASH_PARTITION);
+//
+//        handler.mapReduceSource(proteins);
+//
+//        Iterable<KeyValueObject<String, String>> list = handler.collect();
+//
+//
+//
+//        int index = 0;
+//        for (KeyValueObject<String, String> keyValueObject : list) {
+//            System.out.println(keyValueObject);
+//            if(index++ > 1000)
+//                break;
+//        }
+//
+//
+//    }
 }
