@@ -22,7 +22,9 @@ public class NofKFilter<T extends Serializable> extends AbstractLoggingFunction<
 
     private final int setSize;
     private final int setStart;
-    private transient long index;
+    // use of a thread local makes sure multiple threads do not see the same
+    // index and increment it
+    private transient ThreadLocal<Long> index;
 
     public NofKFilter(final int pSetSize, final int pSetStart) {
         setSize = pSetSize;
@@ -34,6 +36,22 @@ public class NofKFilter<T extends Serializable> extends AbstractLoggingFunction<
      }
 
     /**
+     * return the current index creating a Threadlocal as needed and
+     * increment the current value
+     * @return
+     */
+    protected long getIndex()
+    {
+        if(index == null) {
+            index = new ThreadLocal<Long>();
+            index.set(0L);
+        }
+        long ret = index.get();
+        index.set(ret + 1);
+        return ret;
+    }
+
+    /**
      * do work here
      *
      * @param v1
@@ -41,6 +59,6 @@ public class NofKFilter<T extends Serializable> extends AbstractLoggingFunction<
      */
     @Override
     public Boolean doCall(final T v1) throws Exception {
-        return (((index++ + setStart) % setSize) == 0);
+        return (((getIndex() + setStart) % setSize) == 0);
     }
 }
