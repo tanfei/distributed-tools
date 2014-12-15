@@ -236,22 +236,22 @@ public class SparkMapReduceScoringHandler implements Serializable {
         maxScoringPartitionSize = pMaxScoringPartitionSize;
     }
 
-    public JavaRDD<IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2<IMeasuredSpectrum, IPolypeptide>> binPairs) {
+    public JavaRDD<IScoredScan> scoreBinPairs(JavaPairRDD<BinChargeKey, Tuple2< IPolypeptide,IMeasuredSpectrum>> binPairs) {
         ElapsedTimer timer = new ElapsedTimer();
 
-        JavaRDD<Tuple2<IMeasuredSpectrum, IPolypeptide>> values = binPairs.values();
+        JavaRDD<Tuple2<IPolypeptide,IMeasuredSpectrum>> values = binPairs.values();
 
-       long[] totalValues = new long[1];
-       //   JavaRDD<IScoredScan> scores = binPairs.mapPartitions(new ScoreScansByCharge());
-        values = SparkUtilities.persistAndCount("Scans to Score", values,totalValues);
-        long numberValues = totalValues[0];
+//       long[] totalValues = new long[1];
+//       //   JavaRDD<IScoredScan> scores = binPairs.mapPartitions(new ScoreScansByCharge());
+//        values = SparkUtilities.persistAndCountTuple("Scans to Score", values, totalValues);
+//        long numberValues = totalValues[0];
 
-
-       int numberScoringPartitions = 1 + (int)(numberValues / getMaxScoringPartitionSize());
-        numberScoringPartitions = Math.max(SparkUtilities.getDefaultNumberPartitions(),numberScoringPartitions);
-        System.err.println("Number scoring partitions " + numberScoringPartitions);
-
-        values = values.coalesce(numberScoringPartitions,true); // force a shuffle
+        values = SparkUtilities.repartitionTupleIfNeeded(values);
+//       int numberScoringPartitions = 1 + (int)(numberValues / getMaxScoringPartitionSize());
+//        numberScoringPartitions = Math.max(SparkUtilities.getDefaultNumberPartitions(),numberScoringPartitions);
+//        System.err.println("Number scoring partitions " + numberScoringPartitions);
+//
+//        values = values.coalesce(numberScoringPartitions,true); // force a shuffle
       //  values = values.coalesce(SparkUtilities.getDefaultNumberPartitions(),true); // force a shuffle
 
         JavaRDD<IScoredScan> scores = values.flatMap(new ScoreScansByCharge());
@@ -480,7 +480,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
     }
 
 
-    private class ScoreScansByCharge extends AbstractLoggingFlatMapFunction<Tuple2<IMeasuredSpectrum, IPolypeptide>, IScoredScan> {
+    private class ScoreScansByCharge extends AbstractLoggingFlatMapFunction<Tuple2< IPolypeptide,IMeasuredSpectrum>, IScoredScan> {
         private ScoreScansByCharge() {
             SparkAccumulators.createAccumulator("NumberSavedScores");
         }
@@ -491,12 +491,12 @@ public class SparkMapReduceScoringHandler implements Serializable {
          * @param t@return
          */
         @Override
-        public Iterable<IScoredScan> doCall(final Tuple2<IMeasuredSpectrum, IPolypeptide> t) throws Exception {
+        public Iterable<IScoredScan> doCall(final Tuple2<IPolypeptide,IMeasuredSpectrum> t) throws Exception {
             List<IScoredScan> holder = new ArrayList<IScoredScan>();
 
 
-            IMeasuredSpectrum spec = t._1();
-            IPolypeptide pp = t._2();
+            IMeasuredSpectrum spec = t._2();
+            IPolypeptide pp = t._1();
             if (!(spec instanceof RawPeptideScan))
                 throw new IllegalStateException("We can only handle RawScans Here");
             RawPeptideScan rs = (RawPeptideScan) spec;

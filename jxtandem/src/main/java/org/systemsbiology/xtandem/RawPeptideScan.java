@@ -834,7 +834,14 @@ public class RawPeptideScan implements IMeasuredSpectrum, ISpectralScan, Compara
     public void setPeaks(final ISpectrumPeak[] pPeaks) {
         if (pPeaks != null)
             Arrays.sort(pPeaks, BY_MZ);
-        m_Peaks = pPeaks;
+        // slewis added a filter to take out o height peaks
+        List<ISpectrumPeak> filtered = new ArrayList<ISpectrumPeak>(pPeaks.length);
+        for (int i = 0; i < pPeaks.length; i++) {
+            ISpectrumPeak peak = pPeaks[i];
+            if(peak.getPeak() > 0)
+                filtered.add(peak);
+        }
+        m_Peaks = filtered.toArray(new ISpectrumPeak[filtered.size()]);
     }
 
     public IScanPrecursorMZ getPrecursorMz() {
