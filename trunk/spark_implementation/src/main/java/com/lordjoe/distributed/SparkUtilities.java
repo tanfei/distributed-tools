@@ -1,6 +1,7 @@
 package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.database.*;
+import com.lordjoe.distributed.output.*;
 import com.lordjoe.distributed.spark.MachineUseAccumulator.*;
 import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.conf.*;
@@ -883,6 +884,20 @@ public class SparkUtilities implements Serializable {
     }
 
     /**
+      * persist in the best way - saves remembering which storage level
+      *
+      * @param inp
+      * @return
+      */
+     @Nonnull
+     public static <K,V> JavaRDD<Tuple2<K,V>> persistTuple(@Nonnull final JavaRDD<Tuple2<K,V>> inp) {
+         StorageLevel storageLevel = inp.getStorageLevel();
+         if(storageLevel == null)
+             storageLevel = DEFAULT_STORAGE_LEVEL;
+         return inp.persist(storageLevel);
+     }
+
+     /**
      * persist in the best way - saves remembering which storage level
      *
      * @param inp
@@ -908,10 +923,40 @@ public class SparkUtilities implements Serializable {
     public static <V> JavaRDD<V> persistAndCount(@Nonnull final String message, @Nonnull final JavaRDD<V> inp, long[] countRef) {
         JavaRDD<V> ret = persist(inp);
         long count = ret.count();
-        System.err.println(message + " has " + count);
+        System.err.println(message + " has " + Long_Formatter.format(count));
         countRef[0] = count;
         return ret;
     }
+    /**
+      * persist and show count
+      *
+      * @param message message to show
+      * @param inp     rdd
+      * @return
+      */
+     @Nonnull
+     public static <K,V> JavaRDD<Tuple2<K,V>> persistAndCountTuple(@Nonnull final String message, @Nonnull final JavaRDD<Tuple2<K,V>> inp, long[] countRef) {
+         JavaRDD<Tuple2<K,V>> ret = persistTuple(inp);
+         long count = ret.count();
+         System.err.println(message + " has " +  Long_Formatter.format(count));
+         countRef[0] = count;
+         return ret;
+     }
+    /**
+        * persist and show count
+        *
+        * @param message message to show
+        * @param inp     rdd
+        * @return
+        */
+       @Nonnull
+       public static <K,V> JavaPairRDD<K,V> persistAndCountPair(@Nonnull final String message, @Nonnull final JavaPairRDD<K,V> inp, long[] countRef) {
+           JavaPairRDD<K,V> ret = persist(inp);
+           long count = ret.count();
+           System.err.println(message + " has "  + Long_Formatter.format(count));
+           countRef[0] = count;
+           return ret;
+       }
 
 
     /**
@@ -924,7 +969,7 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <V> JavaRDD<V> persistAndCount(@Nonnull final String message, @Nonnull final JavaRDD<V> inp) {
         JavaRDD<V> ret = persist(inp);
-        System.err.println(message + " has " + ret.count());
+        System.err.println(message + " has " + Long_Formatter.format(ret.count()));
         return ret;
     }
 
@@ -938,7 +983,7 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> persistAndCount(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp) {
         JavaPairRDD<K, V> ret = persist(inp);
-        System.err.println(message + " has " + ret.count());
+        System.err.println(message + " has "  + Long_Formatter.format(ret.count()));
         return ret;
     }
 
@@ -961,6 +1006,114 @@ public class SparkUtilities implements Serializable {
         }
         return ctx.parallelize(holder);
     }
+
+    /**
+          * repartition inp of get within tolerance of numberPartitions
+          * @param inp
+            * @param <V>
+          * @return
+          */
+         @Nonnull
+         public static <K,V> JavaRDD<Tuple2<K,V>> repartitionTupleIfNeeded(  @Nonnull final JavaRDD<Tuple2<K,V>> inp) {
+             return repartitionTupleIfNeeded(inp, getDefaultNumberPartitions(), 0.25);
+         }
+
+       /**
+        * repartition inp of get within tolerance of numberPartitions
+        * @param inp
+        * @param numberPartitions desired partitons
+        * @param tolerance  tolerance
+        * @param <V>
+        * @return
+        */
+       @Nonnull
+       public static <K,V> JavaRDD<Tuple2<K,V>> repartitionTupleIfNeeded(  @Nonnull final JavaRDD<Tuple2<K,V>> inp,int numberPartitions,double tolerance) {
+           int currentPartitions = inp.partitions().size();
+           if(numberPartitions == currentPartitions)
+               return inp;
+           if(numberPartitions > currentPartitions)   {
+               double ratio = currentPartitions / numberPartitions;
+               if(Math.abs(1.0 - ratio) < tolerance)
+                   return inp;
+           }
+
+           System.err.println("Repartitioning Tuple from " + currentPartitions + " to " + numberPartitions);
+           boolean forceRepartition = true;
+           JavaRDD<Tuple2<K,V>> ret = inp.coalesce(numberPartitions,forceRepartition);
+             return ret;
+       }
+
+
+    /**
+       * repartition inp of get within tolerance of numberPartitions
+       * @param inp
+         * @param <V>
+       * @return
+       */
+      @Nonnull
+      public static <V> JavaRDD<V> repartitionIfNeeded(  @Nonnull final JavaRDD<V> inp) {
+          return repartitionIfNeeded(inp,getDefaultNumberPartitions(),0.25);
+      }
+
+    /**
+     * repartition inp of get within tolerance of numberPartitions
+     * @param inp
+     * @param numberPartitions desired partitons
+     * @param tolerance  tolerance
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V> repartitionIfNeeded(  @Nonnull final JavaRDD<V> inp,int numberPartitions,double tolerance) {
+        int currentPartitions = inp.partitions().size();
+        if(numberPartitions == currentPartitions)
+            return inp;
+        if(numberPartitions > currentPartitions)   {
+            double ratio = currentPartitions / numberPartitions;
+            if(Math.abs(1.0 - ratio) < tolerance)
+                return inp;
+        }
+
+        boolean forceRepartition = true;
+        System.err.println("Repartitioning from " + currentPartitions + " to " + numberPartitions);
+        JavaRDD<V> ret = inp.coalesce(numberPartitions,forceRepartition);
+          return ret;
+    }
+    /**
+         * repartition inp of get within tolerance of numberPartitions
+         * @param inp
+           * @param <V>
+         * @return
+         */
+        @Nonnull
+        public static <K,V> JavaPairRDD<K,V> repartitionIfNeeded(  @Nonnull final JavaPairRDD<K,V> inp) {
+            return repartitionIfNeeded(inp,getDefaultNumberPartitions(),0.25);
+        }
+
+      /**
+       * repartition inp of get within tolerance of numberPartitions
+       * @param inp
+       * @param numberPartitions desired partitons
+       * @param tolerance  tolerance
+       * @param <V>
+       * @return
+       */
+      @Nonnull
+      public static <K,V> JavaPairRDD<K,V> repartitionIfNeeded(  @Nonnull final JavaPairRDD<K,V> inp,int numberPartitions,double tolerance) {
+          int currentPartitions = inp.partitions().size();
+          if(numberPartitions == currentPartitions)
+              return inp;
+          if(numberPartitions > currentPartitions)   {
+              double ratio = currentPartitions / numberPartitions;
+              if(Math.abs(1.0 - ratio) < tolerance)
+                  return inp;
+          }
+
+          boolean forceRepartition = true;
+          System.err.println("Repartitioning Pair from " + currentPartitions + " to " + numberPartitions);
+          JavaPairRDD<K,V> ret = inp.coalesce(numberPartitions,forceRepartition);
+            return ret;
+      }
 
 
     /**

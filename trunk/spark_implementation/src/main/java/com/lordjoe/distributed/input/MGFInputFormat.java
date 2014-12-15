@@ -33,7 +33,16 @@ public class MGFInputFormat extends FileInputFormat<String, String> implements S
 
     @Override
     public List<InputSplit> getSplits(final JobContext job) throws IOException {
-         return super.getSplits(job);
+
+        List<InputSplit> splits = super.getSplits(job);
+        // make sure not too many splits
+        while(splits.size() > 200)  {
+            Configuration configuration = job.getConfiguration();
+            long oldMax = configuration.getLong(FileInputFormat.SPLIT_MAXSIZE,Integer.MAX_VALUE);
+            configuration.setLong(FileInputFormat.SPLIT_MAXSIZE, oldMax * 2);
+            splits = super.getSplits(job);
+        }
+        return splits;
     }
 
     @SuppressWarnings("UnusedDeclaration")
