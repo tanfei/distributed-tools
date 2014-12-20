@@ -1,6 +1,5 @@
 package com.lordjoe.distributed.hydra;
 
-import com.google.common.base.*;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.hydra.fragment.*;
@@ -22,7 +21,6 @@ import org.systemsbiology.xtandem.reporting.*;
 import org.systemsbiology.xtandem.scoring.*;
 import scala.*;
 
-import javax.swing.text.*;
 import java.io.*;
 import java.lang.Boolean;
 import java.lang.Long;
@@ -224,7 +222,7 @@ public class SparkScanScorer {
             @Override
             public Boolean call(final IMeasuredSpectrum v1) throws Exception {
                 String id = v1.getId();
-                return !Strings.isNullOrEmpty(id);
+                return id != null && id.length() > 0;
             }
         });
 
