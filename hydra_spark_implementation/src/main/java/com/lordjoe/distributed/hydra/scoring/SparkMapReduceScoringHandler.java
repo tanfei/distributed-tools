@@ -43,7 +43,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
 
         SparkUtilities.setAppName("SparkMapReduceScoringHandler");
 
-        InputStream is = SparkUtilities.readFrom(congiguration);
+        InputStream is = HydraSparkUtilities.readFrom(congiguration);
 
         application = new SparkXTandemMain(is, congiguration);
 
@@ -144,7 +144,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
                 buildDatabase = true;
                 // kill the database
                 Path dpath = XTandemHadoopUtilities.getRelativePath(application.getDatabaseName());
-                IFileSystem fileSystem = SparkUtilities.getHadoopFileSystem();
+                IFileSystem fileSystem = HydraSparkUtilities.getHadoopFileSystem();
                 fileSystem.expunge(dpath.toString());
             }
 
@@ -207,6 +207,7 @@ public class SparkMapReduceScoringHandler implements Serializable {
 
 
     public JavaPairRDD<BinChargeKey, IMeasuredSpectrum> mapMeasuredSpectrumToKeys(JavaRDD<IMeasuredSpectrum> inp) {
+        inp = SparkUtilities.repartitionIfNeeded(inp);
         return binMapper.mapMeasuredSpectrumToKeys(inp);
     }
 

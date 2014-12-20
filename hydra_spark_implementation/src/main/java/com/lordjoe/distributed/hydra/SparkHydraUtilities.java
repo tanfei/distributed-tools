@@ -1,6 +1,7 @@
 package com.lordjoe.distributed.hydra;
 
 import com.lordjoe.distributed.*;
+import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.systemsbiology.common.*;
@@ -57,7 +58,7 @@ public class SparkHydraUtilities {
      * @throws IllegalArgumentException if there is an attempt to write to a directory
      */
     public static OutputStream nameToOutputStream(String name, XTandemMain app) {
-        IFileSystem fs = SparkUtilities.getHadoopFileSystem();
+        IFileSystem fs = HydraSparkUtilities.getHadoopFileSystem();
         Path dd = XTandemHadoopUtilities.getRelativePath(name);
         String path = dd.toString();
         if (fs.exists(path)) {
@@ -93,7 +94,7 @@ public class SparkHydraUtilities {
      * @return input stream or null if the file does not exist
      */
     public static InputStream nameToInputStream(String name, XTandemMain app) {
-        IFileSystem fs = SparkUtilities.getHadoopFileSystem();
+        IFileSystem fs = HydraSparkUtilities.getHadoopFileSystem();
         Path dd = XTandemHadoopUtilities.getRelativePath(name);
         String path = dd.toString();
         if (!fs.exists(path)) {
@@ -110,7 +111,7 @@ public class SparkHydraUtilities {
       * @return input stream or null if the file does not exist
       */
      public static void throwBadPathException(String name, XTandemMain app) {
-         IFileSystem fs = SparkUtilities.getHadoopFileSystem();
+         IFileSystem fs = HydraSparkUtilities.getHadoopFileSystem();
          Path dd = XTandemHadoopUtilities.getRelativePath(name);
          String path = dd.toString();
          throw new IllegalArgumentException("Cannot find path " + name + " as " + path);

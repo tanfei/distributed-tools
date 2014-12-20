@@ -3,14 +3,17 @@ package com.lordjoe.distributed.tandem;
 import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.hydra.*;
+import com.lordjoe.distributed.hydra.fragment.*;
 import com.lordjoe.distributed.hydra.peptide.*;
 import com.lordjoe.distributed.hydra.protein.*;
 import com.lordjoe.distributed.hydra.scoring.*;
 import com.lordjoe.distributed.protein.*;
 import com.lordjoe.distributed.spectrum.*;
+import com.lordjoe.utilities.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.*;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.*;
@@ -408,17 +411,53 @@ public class LibraryBuilder implements Serializable {
             System.out.println("usage LibraryBuilder sparkconfigFile tandem.xml");
             return;
         }
+      // code to run class loader
+        //String runner = SparkUtilities.buildLoggingClassLoaderPropertiesFile(ScanScorer.class  , args);
+        //System.out.println(runner);
+        ElapsedTimer timer = new ElapsedTimer();
+        ElapsedTimer totalTime = new ElapsedTimer();
+
+        if (args.length < TANDEM_CONFIG_INDEX + 1) {
+            System.out.println("usage sparkconfig configFile fastaFile");
+            return;
+        }
         SparkUtilities.readSparkProperties(args[SPARK_CONFIG_INDEX]);
 
+        System.out.println("Set Log to Warn");
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.WARN);
 
-        String congiguration = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX]);
-        SparkUtilities.setAppName("SparkMapReduceScoringHandler");
 
-        InputStream is = SparkUtilities.readFrom(congiguration);
-        XTandemMain application = new SparkXTandemMain(is, congiguration);
-        LibraryBuilder builder = new LibraryBuilder(application);
+        Properties sparkProperties = SparkUtilities.getSparkProperties();
+        String pathPrepend = sparkProperties.getProperty("com.lordjoe.distributed.PathPrepend");
+        if (pathPrepend != null)
+            XTandemHadoopUtilities.setDefaultPath(pathPrepend);
 
-        builder.buildLibrary();
+        String maxScoringPartitionSize = sparkProperties.getProperty(SparkScanScorer.SCORING_PARTITIONS_SCANS_NAME);
+        if (maxScoringPartitionSize != null)
+            SparkMapReduceScoringHandler.setMaxScoringPartitionSize(Integer.parseInt(maxScoringPartitionSize));
+
+
+        String configStr = SparkUtilities.buildPath(args[TANDEM_CONFIG_INDEX]);
+
+        Configuration hadoopConfiguration = SparkUtilities.getHadoopConfiguration();
+        //hadoopConfiguration.setLong(org.apache.hadoop.mapreduce.lib.input.FileInputFormat.SPLIT_MAXSIZE, 64 * 1024L * 1024L);
+
+        Configuration hadoopConfiguration2 = SparkUtilities.getHadoopConfiguration();  // did we change the original or a copy
+
+
+        SparkMapReduceScoringHandler handler = new SparkMapReduceScoringHandler(configStr);
+
+        LibraryBuilder builder = new LibraryBuilder(handler);
+
+        String name =  builder.buildDatabaseName();
+
+        JavaRDD<IPolypeptide> peptides = builder.buildLibrary();
+
+        JavaRDD<PeptideSchemaBean> beans = peptides.map(PeptideSchemaBean.TO_BEAN);
+
+        DatabaseUtilities.buildParaquetDatabase(name,beans,PeptideSchemaBean.class);
+
 
     }
 }

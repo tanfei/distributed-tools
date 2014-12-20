@@ -193,15 +193,14 @@ public class SparkScanScorer {
             databasePeptides = SparkUtilities.persistAndCount("Database peptides", databasePeptides);
 
 
+        databasePeptides = SparkUtilities.repartitionIfNeeded(databasePeptides);
+
         // Map peptides into bins
         JavaPairRDD<BinChargeKey, IPolypeptide> keyedPeptides = pHandler.mapFragmentsToKeys(databasePeptides);
 
-        // distribute the work
-        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
+        keyedPeptides = SparkUtilities.repartitionIfNeeded(keyedPeptides);
 
-        // distribute the work
-        keyedPeptides = SparkUtilities.guaranteePairedPartition(keyedPeptides);
-        return keyedPeptides;
+         return keyedPeptides;
     }
 
     public static JavaRDD<IMeasuredSpectrum> getMeasuredSpectra(final ElapsedTimer pTimer, final Properties pSparkProperties, final String pSpectra) {
@@ -319,19 +318,20 @@ public class SparkScanScorer {
         if(isDebuggingCountMade()) {
             keyedPeptides = SparkUtilities.persistAndCountPair("Mapped Peptides", keyedPeptides, counts);
         }
+        long peptidecounts =  counts[0];
 
         JavaPairRDD<BinChargeKey, IMeasuredSpectrum> keyedSpectra = handler.mapMeasuredSpectrumToKeys(spectraToScore);
         if(isDebuggingCountMade()) {
             keyedSpectra = SparkUtilities.persistAndCountPair("Mapped Spectra", keyedSpectra, counts);
         }
+
+
         if(isDebuggingCountMade()) {
             showBinPairSizes(keyedPeptides, keyedSpectra);
         }
+        long spectracounts =  counts[0];
 
         timer.showElapsed("Counted Scoring pairs", System.err);
-
-       // if (true)
-        //    return;
 
 
         // next line is for debugging
@@ -339,13 +339,13 @@ public class SparkScanScorer {
 
         // find spectra-peptide pairs to score
         JavaPairRDD<BinChargeKey, Tuple2<IPolypeptide,IMeasuredSpectrum>> binPairs = keyedPeptides.join(keyedSpectra,
-        //        SparkUtilities.DEFAULT_PARTITIONER);
-                 BinChargeKey.getPartitioner());
+                SparkUtilities.DEFAULT_PARTITIONER);
 
         // next line is for debugging
         /// binPairs = SparkUtilities.realizeAndReturn(binPairs);
 
         System.out.println("number partitions after join" + binPairs.partitions().size());
+
 
 
         // next line is for debugging
@@ -356,6 +356,13 @@ public class SparkScanScorer {
         if(isDebuggingCountMade())
             binPairs = SparkUtilities.persistAndCount("Binned Pairs", binPairs);
         timer.showElapsed("Joined Pairs",System.err);
+
+
+        if (true) {
+            System.err.println("Exiting before scoring peptidecounts " + peptidecounts + " spectra counts " + spectracounts);
+            return;
+        }
+
 
         String skipScoring = sparkProperties.getProperty(SKIP_SCORING_PROPERTY);
         if ("true".equals(skipScoring)) {
@@ -423,21 +430,36 @@ public class SparkScanScorer {
         List<BinChargeKey> keys = new ArrayList(peptideCounts.keySet());
         List<PairCounter> pairs = new ArrayList<PairCounter>();
 
+        long specCount = 0;
+        long peptideCount = 0;
+        long pairCount = 0;
+
         Collections.sort(keys);
         for (BinChargeKey key : keys) {
             Object spectralCount = spectraCountsMap.get(key);
-            Object peptideCount = peptideCounts.get(key);
-            if (spectralCount == null || peptideCount == null)
+            Object peptideCountObj = peptideCounts.get(key);
+            if (spectralCount == null || peptideCountObj == null)
                 continue;
             long spCount = Long.parseLong(spectralCount.toString());
-            long pepCount = Long.parseLong(peptideCount.toString());
-            pairs.add(new PairCounter(key, spCount, pepCount));
+            specCount += spCount;
+            long pepCount = Long.parseLong(peptideCountObj.toString());
+            peptideCount += pepCount;
+            PairCounter pairCounter = new PairCounter(key, spCount, pepCount);
+            pairs.add(pairCounter);
+            pairCount +=  pairCounter.product;
         }
 
         Collections.sort(pairs);
-        List<PairCounter> pairCounters = pairs.subList(0, Math.min(20,pairs.size()));
+        List<PairCounter> pairCounters = pairs.subList(0, Math.min(200,pairs.size()));
         for (PairCounter pairCounter : pairCounters) {
             System.err.println(pairCounter.toString());
         }
+
+        System.err.println("Total Spectra " + Long_Formatter.format(specCount) +
+                        " peptides " + Long_Formatter.format(peptideCount) +
+                        " bins " + keys.size() +
+                 " pairs " + Long_Formatter.format(pairCount)
+
+        );
     }
 }

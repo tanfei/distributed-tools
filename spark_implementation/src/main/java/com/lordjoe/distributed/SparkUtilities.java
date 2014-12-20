@@ -2,10 +2,9 @@ package com.lordjoe.distributed;
 
 import com.lordjoe.distributed.database.*;
 import com.lordjoe.distributed.output.*;
-import com.lordjoe.distributed.spark.MachineUseAccumulator.*;
 import com.lordjoe.distributed.spark.*;
+import com.lordjoe.distributed.spark.MachineUseAccumulator.*;
 import org.apache.hadoop.conf.*;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
@@ -13,8 +12,7 @@ import org.apache.spark.api.java.function.*;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.api.java.*;
 import org.apache.spark.storage.*;
-import org.systemsbiology.common.*;
-import org.systemsbiology.hadoop.*;
+import parquet.org.slf4j.spi.*;
 import scala.*;
 
 import javax.annotation.*;
@@ -23,7 +21,6 @@ import java.io.Serializable;
 import java.lang.Boolean;
 import java.net.*;
 import java.util.*;
-
 /**
  * com.lordjoe.distributed.SpareUtilities
  * A very useful class representing a number of static functions useful in Spark
@@ -32,7 +29,7 @@ import java.util.*;
  */
 public class SparkUtilities implements Serializable {
 
-    private transient static org.slf4j.spi.LoggerFactoryBinder FORCE_LOAD = null;
+    private transient static LoggerFactoryBinder FORCE_LOAD = null;
     //  private transient static ThreadLocal<JavaSparkContext> threadContext;
     private transient static JavaSparkContext threadContext;
     //  private transient static ThreadLocal<JavaSQLContext> threadContext;
@@ -42,20 +39,11 @@ public class SparkUtilities implements Serializable {
     public static final String DEFAULT_APP_NAME = "Anonymous";
     public static final String MARKER_PROPERTY_NAME = "com.lordjoe.distributed.marker_property";
     public static final String NUMBER_PARTITIONS_PROPERTY_NAME = "com.lordjoe.distributed.number_partitions";
-     public static final String LOG_FUNCTIONS_PROPERTY_NAME = "com.lordjoe.distributed.logFunctionsByDefault";
+    public static final String LOG_FUNCTIONS_PROPERTY_NAME = "com.lordjoe.distributed.logFunctionsByDefault";
     public static final String MARKER_PROPERTY_VALUE = "spark_property_set";
 
     private static String appName = DEFAULT_APP_NAME;
     private static String pathPrepend = "";
-    private static JobSizeEnum jobSize = JobSizeEnum.Medium;
-
-    public static JobSizeEnum getJobSize() {
-        return jobSize;
-    }
-
-    public static void setJobSize(final JobSizeEnum pJobSize) {
-        jobSize = pJobSize;
-    }
 
     private static transient boolean logSetToWarn;
     private static boolean local;
@@ -283,6 +271,9 @@ public class SparkUtilities implements Serializable {
 //            System.err.println("timeout = " + option.get());
         ret = new JavaSparkContext(sparkConf);
 
+        SparkContext sparkContext = JavaSparkContext.toSparkContext(ret);
+
+          sparkContext.addSparkListener(new JavaSparkListener());
 
         threadContext = ret;
 
@@ -348,32 +339,6 @@ public class SparkUtilities implements Serializable {
         return sparkProperties;
     }
 
-    /**
-     * return the content of an existing file in the path
-     *
-     * @param path
-     * @return the content of what is presumed to be a text file as an strings  one per line
-     */
-    public static
-    @Nonnull
-    String[] pathLines(@Nonnull String path) {
-        String wholeFile = getPathContent(path);
-        return wholeFile.split("\n");
-    }
-
-    /**
-     * return the content of an existing file in the path
-     *
-     * @param path
-     * @return the content of what is presumed to be a text file as a string
-     */
-    public static
-    @Nonnull
-    String getPathContent(@Nonnull String path) {
-        IFileSystem accessor = getHadoopFileSystem();
-        path = mapToPath(path); // make sure we understand the path
-        return accessor.readFromFileSystem(path);
-    }
 
 
     /**
@@ -397,36 +362,9 @@ public class SparkUtilities implements Serializable {
         return getPathPrepend() + cannonicPath;
     }
 
-    /**
-     * return a reference to the current hadoop file system using the currrent Spark Context
-     */
-    public static IFileSystem getHadoopFileSystem() {
-        final IFileSystem accessor;
-        try {
-            JavaSparkContext ctx = getCurrentContext();
-            Configuration entries = ctx.hadoopConfiguration();
-            accessor = new HDFSAccessor(FileSystem.get(entries));
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-
-        }
-        return accessor;
-    }
 
     /**
      * read a path and return it as a LineNumber reader of the content
-     * Needed to fake reading a file
-     *
-     * @param ctx
-     * @param path
-     * @return
-     */
-    public static InputStream readFrom(String path) {
-        IFileSystem accessor = getHadoopFileSystem();
-        path = mapToPath(path); // make sure we understand the path
-        return accessor.openPath(path);
-    }
 
     /**
      * read a file with a list of desired properties
@@ -437,6 +375,7 @@ public class SparkUtilities implements Serializable {
     public static void readSparkProperties(String fileName) {
         try {
             File f = new File(fileName);
+            //noinspection UnnecessaryLocalVariable,UnusedDeclaration,UnusedAssignment
             String path = f.getAbsolutePath();
             sparkProperties.load(new FileReader(f));  // read spark properties
         }
@@ -554,8 +493,7 @@ public class SparkUtilities implements Serializable {
 
     /**
      * @param pathName given path - we may need to predend hdfs access
-     * @param props
-     * @return
+       * @return
      */
     public static String buildPath(final String pathName) {
         if (pathName.startsWith("hdfs://"))
@@ -860,15 +798,15 @@ public class SparkUtilities implements Serializable {
     }
 
 
-    public static int  getTaskID()
-    {
+    public static int getTaskID() {
         JavaSparkContext jcx = getCurrentContext();
         SparkContext sc = jcx.sc();
-        TaskContext  tc;
+        TaskContext tc;
         throw new UnsupportedOperationException("Fix This"); // ToDo
     }
 
     public static final StorageLevel DEFAULT_STORAGE_LEVEL = StorageLevel.DISK_ONLY();
+
     /**
      * persist in the best way - saves remembering which storage level
      *
@@ -878,26 +816,26 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <V> JavaRDD<V> persist(@Nonnull final JavaRDD<V> inp) {
         StorageLevel storageLevel = inp.getStorageLevel();
-        if(storageLevel == null)
+        if (storageLevel == null)
             storageLevel = DEFAULT_STORAGE_LEVEL;
         return inp.persist(storageLevel);
     }
 
     /**
-      * persist in the best way - saves remembering which storage level
-      *
-      * @param inp
-      * @return
-      */
-     @Nonnull
-     public static <K,V> JavaRDD<Tuple2<K,V>> persistTuple(@Nonnull final JavaRDD<Tuple2<K,V>> inp) {
-         StorageLevel storageLevel = inp.getStorageLevel();
-         if(storageLevel == null)
-             storageLevel = DEFAULT_STORAGE_LEVEL;
-         return inp.persist(storageLevel);
-     }
+     * persist in the best way - saves remembering which storage level
+     *
+     * @param inp
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaRDD<Tuple2<K, V>> persistTuple(@Nonnull final JavaRDD<Tuple2<K, V>> inp) {
+        StorageLevel storageLevel = inp.getStorageLevel();
+        if (storageLevel == null)
+            storageLevel = DEFAULT_STORAGE_LEVEL;
+        return inp.persist(storageLevel);
+    }
 
-     /**
+    /**
      * persist in the best way - saves remembering which storage level
      *
      * @param inp
@@ -906,7 +844,7 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K, V> JavaPairRDD<K, V> persist(@Nonnull final JavaPairRDD<K, V> inp) {
         StorageLevel storageLevel = inp.getStorageLevel();
-        if(storageLevel == null)
+        if (storageLevel == null)
             storageLevel = DEFAULT_STORAGE_LEVEL;
         return inp.persist(storageLevel);
     }
@@ -927,36 +865,38 @@ public class SparkUtilities implements Serializable {
         countRef[0] = count;
         return ret;
     }
+
     /**
-      * persist and show count
-      *
-      * @param message message to show
-      * @param inp     rdd
-      * @return
-      */
-     @Nonnull
-     public static <K,V> JavaRDD<Tuple2<K,V>> persistAndCountTuple(@Nonnull final String message, @Nonnull final JavaRDD<Tuple2<K,V>> inp, long[] countRef) {
-         JavaRDD<Tuple2<K,V>> ret = persistTuple(inp);
-         long count = ret.count();
-         System.err.println(message + " has " +  Long_Formatter.format(count));
-         countRef[0] = count;
-         return ret;
-     }
+     * persist and show count
+     *
+     * @param message message to show
+     * @param inp     rdd
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaRDD<Tuple2<K, V>> persistAndCountTuple(@Nonnull final String message, @Nonnull final JavaRDD<Tuple2<K, V>> inp, long[] countRef) {
+        JavaRDD<Tuple2<K, V>> ret = persistTuple(inp);
+        long count = ret.count();
+        System.err.println(message + " has " + Long_Formatter.format(count));
+        countRef[0] = count;
+        return ret;
+    }
+
     /**
-        * persist and show count
-        *
-        * @param message message to show
-        * @param inp     rdd
-        * @return
-        */
-       @Nonnull
-       public static <K,V> JavaPairRDD<K,V> persistAndCountPair(@Nonnull final String message, @Nonnull final JavaPairRDD<K,V> inp, long[] countRef) {
-           JavaPairRDD<K,V> ret = persist(inp);
-           long count = ret.count();
-           System.err.println(message + " has "  + Long_Formatter.format(count));
-           countRef[0] = count;
-           return ret;
-       }
+     * persist and show count
+     *
+     * @param message message to show
+     * @param inp     rdd
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> persistAndCountPair(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp, long[] countRef) {
+        JavaPairRDD<K, V> ret = persist(inp);
+        long count = ret.count();
+        System.err.println(message + " has " + Long_Formatter.format(count));
+        countRef[0] = count;
+        return ret;
+    }
 
 
     /**
@@ -983,7 +923,7 @@ public class SparkUtilities implements Serializable {
     @Nonnull
     public static <K extends Serializable, V extends Serializable> JavaPairRDD<K, V> persistAndCount(@Nonnull final String message, @Nonnull final JavaPairRDD<K, V> inp) {
         JavaPairRDD<K, V> ret = persist(inp);
-        System.err.println(message + " has "  + Long_Formatter.format(ret.count()));
+        System.err.println(message + " has " + Long_Formatter.format(ret.count()));
         return ret;
     }
 
@@ -997,7 +937,7 @@ public class SparkUtilities implements Serializable {
      */
     public static
     @Nonnull
-    <T> JavaRDD<T> fromIterable(@Nonnull final Iterable<T> inp) {
+    <T> JavaRDD<T> fromIterable(@Nonnull final java.lang.Iterable<T> inp) {
         JavaSparkContext ctx = SparkUtilities.getCurrentContext();
 
         List<T> holder = new ArrayList<T>();
@@ -1008,112 +948,119 @@ public class SparkUtilities implements Serializable {
     }
 
     /**
-          * repartition inp of get within tolerance of numberPartitions
-          * @param inp
-            * @param <V>
-          * @return
-          */
-         @Nonnull
-         public static <K,V> JavaRDD<Tuple2<K,V>> repartitionTupleIfNeeded(  @Nonnull final JavaRDD<Tuple2<K,V>> inp) {
-             return repartitionTupleIfNeeded(inp, getDefaultNumberPartitions(), 0.25);
-         }
-
-       /**
-        * repartition inp of get within tolerance of numberPartitions
-        * @param inp
-        * @param numberPartitions desired partitons
-        * @param tolerance  tolerance
-        * @param <V>
-        * @return
-        */
-       @Nonnull
-       public static <K,V> JavaRDD<Tuple2<K,V>> repartitionTupleIfNeeded(  @Nonnull final JavaRDD<Tuple2<K,V>> inp,int numberPartitions,double tolerance) {
-           int currentPartitions = inp.partitions().size();
-           if(numberPartitions == currentPartitions)
-               return inp;
-           if(numberPartitions > currentPartitions)   {
-               double ratio = currentPartitions / numberPartitions;
-               if(Math.abs(1.0 - ratio) < tolerance)
-                   return inp;
-           }
-
-           System.err.println("Repartitioning Tuple from " + currentPartitions + " to " + numberPartitions);
-           boolean forceRepartition = true;
-           JavaRDD<Tuple2<K,V>> ret = inp.coalesce(numberPartitions,forceRepartition);
-             return ret;
-       }
-
-
-    /**
-       * repartition inp of get within tolerance of numberPartitions
-       * @param inp
-         * @param <V>
-       * @return
-       */
-      @Nonnull
-      public static <V> JavaRDD<V> repartitionIfNeeded(  @Nonnull final JavaRDD<V> inp) {
-          return repartitionIfNeeded(inp,getDefaultNumberPartitions(),0.25);
-      }
-
-    /**
      * repartition inp of get within tolerance of numberPartitions
+     *
      * @param inp
-     * @param numberPartitions desired partitons
-     * @param tolerance  tolerance
      * @param <V>
      * @return
      */
     @Nonnull
-    public static <V> JavaRDD<V> repartitionIfNeeded(  @Nonnull final JavaRDD<V> inp,int numberPartitions,double tolerance) {
+    public static <K, V> JavaRDD<Tuple2<K, V>> repartitionTupleIfNeeded(@Nonnull final JavaRDD<Tuple2<K, V>> inp) {
+        return repartitionTupleIfNeeded(inp, getDefaultNumberPartitions(), 0.25);
+    }
+
+    /**
+     * repartition inp of get within tolerance of numberPartitions
+     *
+     * @param inp
+     * @param numberPartitions desired partitons
+     * @param tolerance        tolerance
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaRDD<Tuple2<K, V>> repartitionTupleIfNeeded(@Nonnull final JavaRDD<Tuple2<K, V>> inp, int numberPartitions, double tolerance) {
         int currentPartitions = inp.partitions().size();
-        if(numberPartitions == currentPartitions)
+        if (numberPartitions == currentPartitions)
             return inp;
-        if(numberPartitions > currentPartitions)   {
+        if (numberPartitions > currentPartitions) {
             double ratio = currentPartitions / numberPartitions;
-            if(Math.abs(1.0 - ratio) < tolerance)
+            if (Math.abs(1.0 - ratio) < tolerance)
+                return inp;
+        }
+
+        System.err.println("Repartitioning Tuple from " + currentPartitions + " to " + numberPartitions);
+        boolean forceRepartition = true;
+        JavaRDD<Tuple2<K, V>> ret = inp.coalesce(numberPartitions, forceRepartition);
+        return ret;
+    }
+
+
+    /**
+     * repartition inp of get within tolerance of numberPartitions
+     *
+     * @param inp
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V> repartitionIfNeeded(@Nonnull final JavaRDD<V> inp) {
+        return repartitionIfNeeded(inp, getDefaultNumberPartitions(), 0.25);
+    }
+
+    /**
+     * repartition inp of get within tolerance of numberPartitions
+     *
+     * @param inp
+     * @param numberPartitions desired partitons
+     * @param tolerance        tolerance
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <V> JavaRDD<V> repartitionIfNeeded(@Nonnull final JavaRDD<V> inp, int numberPartitions, double tolerance) {
+        int currentPartitions = inp.partitions().size();
+        if (numberPartitions == currentPartitions)
+            return inp;
+        if (numberPartitions > currentPartitions) {
+            double ratio = currentPartitions / numberPartitions;
+            if (Math.abs(1.0 - ratio) < tolerance)
                 return inp;
         }
 
         boolean forceRepartition = true;
         System.err.println("Repartitioning from " + currentPartitions + " to " + numberPartitions);
-        JavaRDD<V> ret = inp.coalesce(numberPartitions,forceRepartition);
-          return ret;
+        JavaRDD<V> ret = inp.coalesce(numberPartitions, forceRepartition);
+        return ret;
     }
+
     /**
-         * repartition inp of get within tolerance of numberPartitions
-         * @param inp
-           * @param <V>
-         * @return
-         */
-        @Nonnull
-        public static <K,V> JavaPairRDD<K,V> repartitionIfNeeded(  @Nonnull final JavaPairRDD<K,V> inp) {
-            return repartitionIfNeeded(inp,getDefaultNumberPartitions(),0.25);
+     * repartition inp of get within tolerance of numberPartitions
+     *
+     * @param inp
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> repartitionIfNeeded(@Nonnull final JavaPairRDD<K, V> inp) {
+        return repartitionIfNeeded(inp, getDefaultNumberPartitions(), 0.25);
+    }
+
+    /**
+     * repartition inp of get within tolerance of numberPartitions
+     *
+     * @param inp
+     * @param numberPartitions desired partitons
+     * @param tolerance        tolerance
+     * @param <V>
+     * @return
+     */
+    @Nonnull
+    public static <K, V> JavaPairRDD<K, V> repartitionIfNeeded(@Nonnull final JavaPairRDD<K, V> inp, int numberPartitions, double tolerance) {
+        int currentPartitions = inp.partitions().size();
+        if (numberPartitions == currentPartitions)
+            return inp;
+        if (numberPartitions > currentPartitions) {
+            double ratio = currentPartitions / numberPartitions;
+            if (Math.abs(1.0 - ratio) < tolerance)
+                return inp;
         }
 
-      /**
-       * repartition inp of get within tolerance of numberPartitions
-       * @param inp
-       * @param numberPartitions desired partitons
-       * @param tolerance  tolerance
-       * @param <V>
-       * @return
-       */
-      @Nonnull
-      public static <K,V> JavaPairRDD<K,V> repartitionIfNeeded(  @Nonnull final JavaPairRDD<K,V> inp,int numberPartitions,double tolerance) {
-          int currentPartitions = inp.partitions().size();
-          if(numberPartitions == currentPartitions)
-              return inp;
-          if(numberPartitions > currentPartitions)   {
-              double ratio = currentPartitions / numberPartitions;
-              if(Math.abs(1.0 - ratio) < tolerance)
-                  return inp;
-          }
-
-          boolean forceRepartition = true;
-          System.err.println("Repartitioning Pair from " + currentPartitions + " to " + numberPartitions);
-          JavaPairRDD<K,V> ret = inp.coalesce(numberPartitions,forceRepartition);
-            return ret;
-      }
+        boolean forceRepartition = true;
+        System.err.println("Repartitioning Pair from " + currentPartitions + " to " + numberPartitions);
+        JavaPairRDD<K, V> ret = inp.coalesce(numberPartitions, forceRepartition);
+        return ret;
+    }
 
 
     /**
@@ -1242,7 +1189,7 @@ public class SparkUtilities implements Serializable {
 
             @Override
             public Tuple2<Integer, K> call(final K t) throws Exception {
-                return new Tuple2(index++, t);
+                return new Tuple2<Integer, K>(index++, t);
             }
         });
     }
@@ -1371,17 +1318,17 @@ public class SparkUtilities implements Serializable {
     public static final double HOUR_IN_NANOSEC = MIN_IN_NANOSEC * 60;
     public static final double DAY_IN_NANOSEC = HOUR_IN_NANOSEC * 24;
 
-    public static String formatNanosec(long timeNanosec)   {
-        if(timeNanosec < 10 * SEC_IN_NANOSEC)
+    public static String formatNanosec(long timeNanosec) {
+        if (timeNanosec < 10 * SEC_IN_NANOSEC)
             return String.format("%10.2f", timeNanosec / MILLISEC_IN_NANOSEC) + " msec";
-        if(timeNanosec < 10 * MIN_IN_NANOSEC)
-              return String.format("%10.2f", timeNanosec / SEC_IN_NANOSEC) + " sec";
-        if(timeNanosec < 10 * HOUR_IN_NANOSEC)
-              return String.format("%10.2f", timeNanosec / MIN_IN_NANOSEC) + " min";
-        if(timeNanosec < 10 * DAY_IN_NANOSEC)
-              return String.format("%10.2f", timeNanosec / HOUR_IN_NANOSEC) + " hour";
+        if (timeNanosec < 10 * MIN_IN_NANOSEC)
+            return String.format("%10.2f", timeNanosec / SEC_IN_NANOSEC) + " sec";
+        if (timeNanosec < 10 * HOUR_IN_NANOSEC)
+            return String.format("%10.2f", timeNanosec / MIN_IN_NANOSEC) + " min";
+        if (timeNanosec < 10 * DAY_IN_NANOSEC)
+            return String.format("%10.2f", timeNanosec / HOUR_IN_NANOSEC) + " hour";
         return String.format("%10.2f", timeNanosec / DAY_IN_NANOSEC) + " days";
-     }
+    }
 
 
     public static final int MAX_COUNTS_SHOWN = 10;
@@ -1450,4 +1397,27 @@ public class SparkUtilities implements Serializable {
             return rnd.nextDouble() < fractionSaved;
         }
     }
+
+    /**
+     * Follows code in http://www.tutorialspoint.com/java/java_serialization.htm
+     * finds object size by serializing it - do not call very ofter but
+     * useful in determining Spark impact in terms of memory
+     * @param test
+     * @return
+     */
+    public static int objectSize(@Nonnull final Object test) {
+        try {
+            ByteArrayOutputStream fileOut =
+                    new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(test);
+            out.close();
+            return fileOut.toByteArray().length;
+         }
+        catch (IOException i) {
+            throw new RuntimeException(i);
+        }
+    }
 }
+
+

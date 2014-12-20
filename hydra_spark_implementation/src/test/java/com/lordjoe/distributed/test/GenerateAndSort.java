@@ -48,7 +48,7 @@ public class GenerateAndSort {
 
         private final Random RND = new Random();
         public NShotInputFormat() {
-            AbstractNShotInputFormat.setNumberKeys(numberGenerated);
+            setNumberKeys(numberGenerated);
         }
 
         /**

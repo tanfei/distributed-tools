@@ -101,11 +101,11 @@ public class NLineInputFormat extends FileInputFormat<LongWritable, Text> {
 
         /**
          * Get the progress within the split
-         */
-        @Override
-        public float getProgress()  {
-            return super.getProgress();    //To change body of overridden methods use File | Settings | File Templates.
-        }
+//         */
+//        @Override
+//        public float getProgress()  {
+//            return super.getProgress();    //To change body of overridden methods use File | Settings | File Templates.
+//        }
 
         @Override
         public void close() throws IOException {

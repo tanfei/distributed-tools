@@ -7,7 +7,7 @@ import org.apache.spark.api.java.function.*;
 * User: Steve
 * Date: 10/16/2014
 */
-class ReadPeopleFile implements Function<String, Person> {
+public class ReadPeopleFile implements Function<String, Person> {
     public Person call(String line) throws Exception {
         String[] parts = line.split(",");
 

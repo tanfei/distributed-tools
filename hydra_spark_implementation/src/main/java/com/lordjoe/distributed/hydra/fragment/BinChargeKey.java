@@ -12,7 +12,9 @@ import java.io.*;
  */
 public class BinChargeKey implements Serializable, Comparable<BinChargeKey> {
 
-
+    public static int mzAsInt(double mz)  {
+          return (int)(mz / QUANTIZATION);
+    }
     public static Partitioner getPartitioner() {
         return new BinChargeKeyPartitioner();
     }
@@ -32,7 +34,7 @@ public class BinChargeKey implements Serializable, Comparable<BinChargeKey> {
 
 
 
-    public static final double QUANTIZATION = 0.0001;
+    public static final double QUANTIZATION = 0.001;
     public final int charge;
     public final double mz;
 
@@ -42,7 +44,7 @@ public class BinChargeKey implements Serializable, Comparable<BinChargeKey> {
     }
 
     protected int mzAsInt() {
-        return (int) (mz / QUANTIZATION);
+       return mzAsInt(mz);
     }
 
     @Override
