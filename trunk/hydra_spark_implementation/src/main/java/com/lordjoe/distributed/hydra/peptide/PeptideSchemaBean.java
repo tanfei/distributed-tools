@@ -2,6 +2,7 @@ package com.lordjoe.distributed.hydra.peptide;
 
 
 import com.lordjoe.distributed.database.*;
+import com.lordjoe.distributed.hydra.fragment.*;
 import org.apache.spark.api.java.function.*;
 import org.systemsbiology.xtandem.peptide.*;
 import org.apache.spark.sql.api.java.Row;
@@ -90,7 +91,7 @@ public class PeptideSchemaBean implements IDatabaseBean {
         int index = 0;
         setSequence(pp.getSequence());
         setMass(pp.getMass());
-        setMassBin((int) pp.getMatchingMass());
+        setMassBin((BinChargeKey.mzAsInt(pp.getMatchingMass())));
         IProteinPosition[] proteinPositions = pp.getProteinPositions();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < proteinPositions.length; i++) {

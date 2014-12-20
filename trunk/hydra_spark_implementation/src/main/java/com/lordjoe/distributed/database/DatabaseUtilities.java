@@ -16,7 +16,7 @@ import java.io.*;
  */
 public class DatabaseUtilities {
 
-    public static <K> void buildParaquetDatabase( String name,JavaRDD<K> data,Class bean) {
+    public static <K> void buildParaquetDatabase( String name,JavaRDD  data,Class  bean) {
         try {
             JavaSparkContext sc = SparkUtilities.getCurrentContext();
             JavaSQLContext sqlContext = SparkUtilities.getCurrentSQLContext();

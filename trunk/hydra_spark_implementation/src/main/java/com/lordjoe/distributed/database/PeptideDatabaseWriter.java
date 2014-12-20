@@ -1,8 +1,8 @@
 package com.lordjoe.distributed.database;
 
 import com.lordjoe.algorithms.*;
-import com.lordjoe.distributed.*;
 import com.lordjoe.distributed.hydra.peptide.*;
+import com.lordjoe.distributed.spark.*;
 import org.apache.hadoop.fs.*;
 import org.apache.spark.*;
 import org.apache.spark.api.java.*;
@@ -195,7 +195,7 @@ public class PeptideDatabaseWriter implements Serializable {
 
     protected void setWriterPath(final Path pDbPath) {
         closeCurrentWriter();
-        IFileSystem hadoopFileSystem = SparkUtilities.getHadoopFileSystem();
+        IFileSystem hadoopFileSystem = HydraSparkUtilities.getHadoopFileSystem();
         String hdfsPath = pDbPath.toString();
         hadoopFileSystem.guaranteeDirectory(hdfsPath);
 

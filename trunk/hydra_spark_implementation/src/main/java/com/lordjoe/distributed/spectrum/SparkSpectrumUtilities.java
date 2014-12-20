@@ -76,7 +76,7 @@ public class SparkSpectrumUtilities {
         );
 
         // debug code
-        spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
+        //spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
 
         // filter out MS Level 1 spectra
         spectraAsStrings = spectraAsStrings.filter( new Function<Tuple2<String,String>, Boolean>() {
@@ -86,7 +86,7 @@ public class SparkSpectrumUtilities {
          });
 
          // debug code
-        spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
+        //spectraAsStrings = SparkUtilities.realizeAndReturn(spectraAsStrings);
 
         // parse scan tags as  IMeasuredSpectrum
         JavaPairRDD<String, IMeasuredSpectrum> parsed = spectraAsStrings.mapToPair(new MapSpectraStringToRawScan());
