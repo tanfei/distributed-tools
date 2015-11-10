@@ -1,0 +1,1 @@
+A collection of project featuring a generic way to describe the operations in Map-reduce and specific implementations using Java 7, Java 8 streaming, Hadoop and Spark
